@@ -1,0 +1,21 @@
+{
+  "name": "CDR-01 ROS 2 Jazzy + Gazebo Harmonic",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "remoteUser": "root",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "containerEnv": {
+    "ROS_DOMAIN_ID": "42"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-vscode.cpptools",
+        "ms-iot.vscode-ros"
+      ]
+    }
+  },
+  "postCreateCommand": "bash -lc 'source /opt/ros/jazzy/setup.bash && python3 -m unittest discover -s tests'"
+}
