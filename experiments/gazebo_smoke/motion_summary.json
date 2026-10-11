@@ -1,0 +1,19 @@
+{
+  "evidence_type": "ACTUAL_GAZEBO_HARMONIC_SIMULATION_TELEMETRY_NOT_HARDWARE",
+  "gazebo_version": "8.15.0",
+  "github_actions_run_url": "https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099667180",
+  "source_commit_sha": "ddac6f66a7d98a44b6ce7633ff234fe7fe74eb03",
+  "observation": "Gazebo DiffDrive velocity commands, odometry output in physics-enabled headless simulator",
+  "samples": 397,
+  "first_gazebo_sim_s": 17,
+  "last_gazebo_sim_s": 36,
+  "initial_x_m": -7.305035494016591e-18,
+  "final_x_m": 4.398957500024709,
+  "maximum_x_m": 4.398957500024709,
+  "displacement_reported_by_odometry_m": 4.398957500024709,
+  "caveats": [
+    "Odometry reported displacement, not independently evaluated ground-truth physical pose",
+    "No Nav2 path following or battery/torque instrumentation",
+    "No physical robot measured"
+  ]
+}
