@@ -114,10 +114,10 @@
     1
   ],
   "collision_samples_total": 0,
-  "duration_sim_s_mean_completed": 40.0095,
+  "duration_sim_s_mean_completed": 40.012,
   "duration_sim_s_p95_completed": 44.3,
   "rmse_m_mean_all": 0.03798,
-  "energy_estimated_wh_mean_all": 0.32345,
+  "energy_estimated_wh_mean_all": 0.32347,
   "max_speed_mps_all": 0.8,
   "max_wheel_torque_estimated_nm_all": 0.89145,
   "failure_reasons": {},
