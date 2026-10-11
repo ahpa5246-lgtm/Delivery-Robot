@@ -1,6 +1,6 @@
 # Delivery-Robot — Campus Autonomous Delivery Robot (CDR-01)
 
-> Status: **Design specification / pre-implementation** (2026-10-11). No ROS 2 packages, simulation, hardware, or benchmark results are implemented yet.
+> Status: **Early executable prototype** (2026-10-11). Python planar simulator and SDF generator exist; full ROS 2/Gazebo/navigation/physical validation is still pending.
 
 This repository will host a simulation-first **autonomous ground delivery robot** for university campuses and controlled outdoor pedestrian walkways. The initial scope is **one robot**, with a clean interface for a future multi-robot fleet.
 
@@ -36,9 +36,29 @@ This repository will host a simulation-first **autonomous ground delivery robot*
 6. Every reported run carries version/configuration identifiers, simulation settings, seed and data files.
 7. A release must pass defined exit gates before new features are added.
 
-## Current status
+## Executed evidence (2026-10-11)
 
-Only requirements and planning documentation are being authored. **No executable simulation has been run** and no claimed performance metric has been measured.
+**16 Python behavioral tests** and **100 seed-controlled planar delivery simulations** were executed locally: 100 deliveries complete, zero collision contacts, mean 40.0095 simulated seconds, mean 0.03798 m dead-reckoning RMSE, and 0.32345 Wh calculated energy per run. A separate **270-run parameter sensitivity sweep** also completed without detected contacts on the same scripted corridor model.
+
+**Do not conflate these with Gazebo or physical measurements:** the results are produced by a simple 2D Python surrogate with known scripted pedestrian motion; it does not perform Nav2, LiDAR raytracing, realistic contact mechanics, charging or a live delivery API. Energy and torque are simplified model outputs, **not measured hardware readings**.
+
+- [Execution evidence and limitations](docs/EXECUTION_EVIDENCE.md)
+- [Executed 100-run summary](experiments/planar_baseline/summary.json)
+- [270-run sensitivity evidence](docs/PARAMETER_SWEEP_EVIDENCE.md)
+- [Planar GitHub Actions test run](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099288446)
+- [Gazebo Harmonic smoke test workflow](.github/workflows/gazebo-headless.yml) — separate runtime gate
+- [Gazebo SDF world generator](scripts/generate_gazebo_world.py)
+
+Run the tested software baseline with any Python 3.11+ installation:
+
+```bash
+python -m unittest discover -s tests -v
+python scripts/run_benchmark.py --count 100 --output experiments/planar_baseline
+python -m scripts.run_parameter_sweep
+python scripts/generate_gazebo_world.py
+```
+
+**Next verification:** actual Gazebo physics start-up and odometry logging, then ROS 2/Nav2 sensor-level integration and independent truth-based benchmarking. No claims of real-world deployment or certified human safety have been established.
 
 ## Primary technical references
 
