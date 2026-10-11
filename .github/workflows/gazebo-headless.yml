@@ -1,0 +1,48 @@
+name: Gazebo Harmonic headless smoke
+on:
+  push:
+    paths:
+      - 'scripts/generate_gazebo_world.py'
+      - 'tests/test_gazebo_geometry.py'
+      - '.github/workflows/gazebo-headless.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gazebo-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate and statically validate SDF
+        run: |
+          python3 scripts/generate_gazebo_world.py
+          python3 -m unittest discover -s tests -p 'test_gazebo_geometry.py' -v
+          mkdir -p experiments/gazebo_smoke
+      - name: Install ROS Jazzy Gazebo integration in ephemeral container and run headless
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/work" ros:jazzy-ros-base bash -euo pipefail -c '
+            apt-get update
+            DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ros-jazzy-ros-gz
+            source /opt/ros/jazzy/setup.bash
+            gz sim --versions | tee /work/experiments/gazebo_smoke/gz_version.txt
+            gz sdf -k /work/simulation/campus_v0.sdf > /work/experiments/gazebo_smoke/sdf_validation.txt 2>&1
+            gz sim -s -r -v 3 /work/simulation/campus_v0.sdf > /work/experiments/gazebo_smoke/server.log 2>&1 &
+            server_pid=$!
+            trap "kill $server_pid 2>/dev/null || true" EXIT
+            sleep 10
+            gz topic -l > /work/experiments/gazebo_smoke/topics.txt
+            grep -F "/model/cdr01/odometry" /work/experiments/gazebo_smoke/topics.txt
+            timeout 7 gz topic -e -t /model/cdr01/odometry > /work/experiments/gazebo_smoke/odometry.txt 2>&1 || true
+            test -s /work/experiments/gazebo_smoke/odometry.txt
+            grep -Eq "pose|twist|header" /work/experiments/gazebo_smoke/odometry.txt
+            echo "PASS: actual Gazebo headless odometry topic observed" > /work/experiments/gazebo_smoke/outcome.txt
+          '
+      - name: Upload actual Gazebo startup and observation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gazebo-harmonic-headless-smoke
+          path: experiments/gazebo_smoke/
