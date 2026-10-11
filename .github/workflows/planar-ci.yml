@@ -1,0 +1,37 @@
+name: Planar simulator verification
+on:
+  push:
+    paths:
+      - 'cdr_sim/**'
+      - 'tests/**'
+      - 'scripts/run_benchmark.py'
+      - '.github/workflows/planar-ci.yml'
+  pull_request:
+    paths:
+      - 'cdr_sim/**'
+      - 'tests/**'
+      - 'scripts/run_benchmark.py'
+  workflow_dispatch:
+jobs:
+  planar:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Unit and regression tests
+        run: python -m unittest discover -s tests -v
+      - name: Execute 100-seed simulation baseline
+        run: |
+          python scripts/run_benchmark.py --count 100 --output experiments/ci_baseline
+          python -c "import json; from pathlib import Path; p=json.loads(Path('experiments/ci_baseline/summary.json').read_text()); assert p['completed']==100 and p['collision_samples_total']==0, p"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: planar-execution-results
+          path: experiments/ci_baseline/
