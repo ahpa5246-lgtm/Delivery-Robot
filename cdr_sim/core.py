@@ -184,7 +184,7 @@ def obstacle_range(x: float, y: float, obstacles: list[tuple[float,float,float]]
 
 
 def run_mission(seed: int, cfg: Config | None = None, *, obstacle: bool = True,
-                inject_sensor_fault: bool = False) -> dict:
+                inject_sensor_fault: bool = False, blocked_route: bool = False) -> dict:
     """Execute one reproducible scripted delivery to a point in a 2D physics-inspired model."""
     c = cfg or Config()
     bot = Robot(c, seed)
@@ -213,6 +213,8 @@ def run_mission(seed: int, cfg: Config | None = None, *, obstacle: bool = True,
         pedestrian_y = py0+crossing_speed*max(0.0,bot.t-crossing_start)
         pedestrian_y = min(2.5,pedestrian_y)
         obstacles=([(px,pedestrian_y,0.28),(8.0,2.0,0.35),(20.0,-1.8,0.35)] if obstacle else [])
+        if blocked_route:
+            obstacles.append((15.0, 0.0, 0.5))
         actual_proximity = obstacle_range(bot.x,bot.y,obstacles)
         # Prospective stop checks are restricted to obstacles in the drive corridor.
         # This is NOT a Nav2 costmap or a full obstacle-tracking algorithm.
