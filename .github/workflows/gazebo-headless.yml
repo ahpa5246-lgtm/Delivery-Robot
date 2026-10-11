@@ -49,6 +49,16 @@ jobs:
             wait $motion_log_pid || true
             python3 /work/scripts/check_gazebo_motion.py /work/experiments/gazebo_smoke/odometry_motion.txt /work/experiments/gazebo_smoke/motion_summary.json
             echo "PASS: measured displacement in Gazebo model after velocity command" >> /work/experiments/gazebo_smoke/outcome.txt
+            ros2 launch ros_gz_bridge ros_gz_bridge.launch.py bridge_name:=cdr01_bridge config_file:=/work/simulation/ros_gz_bridge.yaml > /work/experiments/gazebo_smoke/ros_bridge.log 2>&1 &
+            bridge_pid=$!
+            sleep 5
+            ros2 topic list > /work/experiments/gazebo_smoke/ros_topics.txt
+            grep -Fx "/robot1/odom" /work/experiments/gazebo_smoke/ros_topics.txt
+            timeout 12 ros2 topic echo --once /robot1/odom > /work/experiments/gazebo_smoke/ros_odometry.txt 2>&1 || true
+            test -s /work/experiments/gazebo_smoke/ros_odometry.txt
+            grep -q "pose:" /work/experiments/gazebo_smoke/ros_odometry.txt
+            kill $bridge_pid 2>/dev/null || true
+            echo "PASS: Gazebo odometry bridged into ROS2 /robot1/odom" >> /work/experiments/gazebo_smoke/outcome.txt
           '
       - name: Upload actual Gazebo startup and observation logs
         if: always()
