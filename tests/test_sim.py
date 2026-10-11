@@ -18,6 +18,11 @@ class EngineeringTests(unittest.TestCase):
         r=run_mission(17,cfg=Config(grade_deg=5),obstacle=False)
         self.assertEqual(r['status'],'COMPLETED')
         self.assertLessEqual(r['maximum_wheel_torque_estimated_nm'],5.0)
+    def test_blocked_route_fails_safe(self):
+        r=run_mission(3,blocked_route=True)
+        self.assertEqual(r['status'],'FAILED')
+        self.assertEqual(r['failure_reason'],'SIMULATION_TIMEOUT')
+        self.assertEqual(r['collision_samples'],0)
     def test_seed_reproducibility(self):
         self.assertEqual(run_mission(9),run_mission(9))
     def test_payload_limit(self):
