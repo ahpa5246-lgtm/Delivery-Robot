@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+build/
+install/
+log/
+rosbag2_*/
+experiments/runs/
+experiments/ci_baseline/
+*.db3
+*.mcap
+.DS_Store
