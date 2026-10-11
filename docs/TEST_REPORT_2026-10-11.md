@@ -4,7 +4,7 @@
 ## Test evidence status
 | Level | Observed result | Evidence | Verdict |
 | --- | --- | --- | --- |
-| Python behavioral tests | 29 tests passed (22 previous behavioral/geometry + 7 watchdog fail-safe cases), incl. 1000-seed safety regression and blocked-route timeout | [Actions verification](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099576072) | **PASS for scoped Python model** |
+| Python behavioral tests | 29 tests passed (22 previous behavioral/geometry + 7 watchdog fail-safe cases), incl. 1000-seed safety regression and blocked-route timeout | [Actions verification](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38100258134) | **PASS for scoped Python model** |
 | Python nominal benchmark | 100/100 completed; 0 contact samples; mean simulated 40.012 s; RMSE 0.03798 m; calculated energy 0.32347 Wh | [100-run summary](../experiments/planar_baseline/summary.json) | **PASS, scripted numerical model only** |
 | Python robustness stress | 1000/1000 completed; 0 detected contacts; mean simulated 39.9478 s | [1000-run summary](../experiments/stress_1000/summary.json) | **PASS, scripted numerical model only** |
 | Physics parameter sanity | 270 combinations/seeds, all completed, zero contacts; calculated energy 0.28438–0.55550 Wh | [Parameter-sweep report](PARAMETER_SWEEP_EVIDENCE.md) | **PASS, simplified equations only** |
