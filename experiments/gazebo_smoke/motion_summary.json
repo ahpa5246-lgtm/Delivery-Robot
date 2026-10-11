@@ -15,5 +15,8 @@
     "Odometry reported displacement, not independently evaluated ground-truth physical pose",
     "No Nav2 path following or battery/torque instrumentation",
     "No physical robot measured"
-  ]
+  ],
+  "max_odometry_linear_velocity_mps": 0.2500000001017826,
+  "final_odometry_linear_velocity_mps": 0.24999999999996803,
+  "final_odometry_y_m": 8.070766512681293e-12
 }
