@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Requires Jazzy/Harmonic; intended for the provided Codespace (NOT run in planning environment).
-set -euo pipefail
+set -eo pipefail
 cd "$(dirname "$0")/.."
 source /opt/ros/jazzy/setup.bash
 python3 scripts/generate_gazebo_world.py
