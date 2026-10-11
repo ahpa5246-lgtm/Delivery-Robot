@@ -38,7 +38,7 @@ This repository will host a simulation-first **autonomous ground delivery robot*
 
 ## Executed evidence (2026-10-11)
 
-**22 Python behavioral/geometry tests** and **100 seed-controlled planar delivery simulations** were executed locally: 100 deliveries complete, zero collision contacts, mean 40.012 simulated seconds, mean 0.03798 m dead-reckoning RMSE, and 0.32347 Wh calculated energy per run. A separate **270-run parameter sensitivity sweep** and a **1000-seed scripted-scenario stress test** completed without detected contacts on the same controlled corridor model.
+**29 Python behavioral/geometry/watchdog tests** and **100 seed-controlled planar delivery simulations** were executed locally: 100 deliveries complete, zero collision contacts, mean 40.012 simulated seconds, mean 0.03798 m dead-reckoning RMSE, and 0.32347 Wh calculated energy per run. A separate **270-run parameter sensitivity sweep** and a **1000-seed scripted-scenario stress test** completed without detected contacts on the same controlled corridor model.
 
 **Do not conflate these with Gazebo or physical measurements:** the results are produced by a simple 2D Python surrogate with known scripted pedestrian motion; it does not perform Nav2, LiDAR raytracing, realistic contact mechanics, charging or a live delivery API. Energy and torque are simplified model outputs, **not measured hardware readings**.
 
@@ -51,7 +51,8 @@ This repository will host a simulation-first **autonomous ground delivery robot*
 - [Gazebo actual commanded movement: 4.3989575 m odometry displacement](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099667180)
 - [Measured Gazebo motion summary](experiments/gazebo_smoke/motion_summary.json)
 - [Verification pass/fail report](docs/TEST_REPORT_2026-10-11.md)
-- [Gazebo headless motion test workflow](.github/workflows/gazebo-headless.yml) — separate dynamic runtime gate
+- [Gazebo Harmonic + live ROS 2 bridge + watchdog safe-stop passed](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38100301247): 28 active relay messages, 52/52 post-timeout zero commands, and 0m additional odometry travel in a 36-sample stationary window.
+- [Gazebo headless reproducible test workflow](.github/workflows/gazebo-headless.yml)
 - [Gazebo SDF world generator](scripts/generate_gazebo_world.py)
 
 Run the tested software baseline with any Python 3.11+ installation:
@@ -63,7 +64,7 @@ python -m scripts.run_parameter_sweep
 python scripts/generate_gazebo_world.py
 ```
 
-**Next verification:** actual Gazebo physics start-up and odometry logging, then ROS 2/Nav2 sensor-level integration and independent truth-based benchmarking. No claims of real-world deployment or certified human safety have been established.
+**Next verification:** Nav2 / localization / LiDAR integration, independent ground-truth-versus-odometry benchmarking, motor torque / contact / charging models and complete delivery workflow. ROS 2 Jazzy/Gazebo startup, commanded odometry, bridged odometry and ROS watchdog timeout have already passed narrow real-simulator smoke/acceptance checks. No claims of real-world deployment or certified human safety have been established.
 
 ## Primary technical references
 
