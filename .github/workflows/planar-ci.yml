@@ -30,8 +30,14 @@ jobs:
         run: |
           python scripts/run_benchmark.py --count 100 --output experiments/ci_baseline
           python -c "import json; from pathlib import Path; p=json.loads(Path('experiments/ci_baseline/summary.json').read_text()); assert p['completed']==100 and p['collision_samples_total']==0, p"
+      - name: Execute 1000-seed stress trial and preserve raw output
+        run: |
+          python scripts/run_benchmark.py --count 1000 --output experiments/ci_stress
+          python -c "import json; from pathlib import Path; p=json.loads(Path('experiments/ci_stress/summary.json').read_text()); assert p['completed']==1000 and p['collision_samples_total']==0, p"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: planar-execution-results
-          path: experiments/ci_baseline/
+          path: |
+            experiments/ci_baseline/
+            experiments/ci_stress/
