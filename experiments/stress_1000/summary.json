@@ -1,0 +1,22 @@
+{
+  "measurement_type": "EXECUTED_NUMERICAL_SIMULATION_NOT_GAZEBO_OR_HARDWARE",
+  "model": "planar-non-ros-surrogate-v0.1",
+  "seed_range": [
+    0,
+    999
+  ],
+  "count": 1000,
+  "completed": 1000,
+  "collision_samples_total": 0,
+  "duration_sim_s_mean_completed": 39.9478,
+  "duration_sim_s_p95_completed": 44,
+  "rmse_m_mean_all": 0.03746,
+  "energy_estimated_wh_mean_all": 0.32306,
+  "scenario": "same scripted 25m straight campus lane; known pedestrian future positions",
+  "limitations": [
+    "pre-scripted pedestrian motion",
+    "no ROS2/Nav2",
+    "no Gazebo dynamics",
+    "not safety validation"
+  ]
+}
