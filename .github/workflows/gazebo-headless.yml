@@ -39,6 +39,16 @@ jobs:
             test -s /work/experiments/gazebo_smoke/odometry.txt
             grep -Eq "pose|twist|header" /work/experiments/gazebo_smoke/odometry.txt
             echo "PASS: actual Gazebo headless odometry topic observed" > /work/experiments/gazebo_smoke/outcome.txt
+            timeout 20 gz topic -e -t /model/cdr01/odometry > /work/experiments/gazebo_smoke/odometry_motion.txt 2>&1 &
+            motion_log_pid=$!
+            sleep 1
+            for i in $(seq 1 50); do
+              gz topic -t /model/cdr01/cmd_vel -m gz.msgs.Twist -p "linear: {x: 0.25}" >/dev/null 2>&1
+              sleep 0.1
+            done
+            wait $motion_log_pid || true
+            python3 /work/scripts/check_gazebo_motion.py /work/experiments/gazebo_smoke/odometry_motion.txt /work/experiments/gazebo_smoke/motion_summary.json
+            echo "PASS: measured displacement in Gazebo model after velocity command" >> /work/experiments/gazebo_smoke/outcome.txt
           '
       - name: Upload actual Gazebo startup and observation logs
         if: always()
