@@ -38,15 +38,17 @@ This repository will host a simulation-first **autonomous ground delivery robot*
 
 ## Executed evidence (2026-10-11)
 
-**16 Python behavioral tests** and **100 seed-controlled planar delivery simulations** were executed locally: 100 deliveries complete, zero collision contacts, mean 40.0095 simulated seconds, mean 0.03798 m dead-reckoning RMSE, and 0.32345 Wh calculated energy per run. A separate **270-run parameter sensitivity sweep** also completed without detected contacts on the same scripted corridor model.
+**22 Python behavioral/geometry tests** and **100 seed-controlled planar delivery simulations** were executed locally: 100 deliveries complete, zero collision contacts, mean 40.012 simulated seconds, mean 0.03798 m dead-reckoning RMSE, and 0.32347 Wh calculated energy per run. A separate **270-run parameter sensitivity sweep** and a **1000-seed scripted-scenario stress test** completed without detected contacts on the same controlled corridor model.
 
 **Do not conflate these with Gazebo or physical measurements:** the results are produced by a simple 2D Python surrogate with known scripted pedestrian motion; it does not perform Nav2, LiDAR raytracing, realistic contact mechanics, charging or a live delivery API. Energy and torque are simplified model outputs, **not measured hardware readings**.
 
 - [Execution evidence and limitations](docs/EXECUTION_EVIDENCE.md)
 - [Executed 100-run summary](experiments/planar_baseline/summary.json)
+- [Executed 1000-run stress summary](experiments/stress_1000/summary.json)
 - [270-run sensitivity evidence](docs/PARAMETER_SWEEP_EVIDENCE.md)
 - [Planar GitHub Actions test run](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099288446)
-- [Gazebo Harmonic smoke test workflow](.github/workflows/gazebo-headless.yml) — separate runtime gate
+- [Gazebo Harmonic smoke run with actual at-rest odometry](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099440173)
+- [Gazebo headless motion test workflow](.github/workflows/gazebo-headless.yml) — separate dynamic runtime gate
 - [Gazebo SDF world generator](scripts/generate_gazebo_world.py)
 
 Run the tested software baseline with any Python 3.11+ installation:
