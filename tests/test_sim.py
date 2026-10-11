@@ -14,6 +14,10 @@ class EngineeringTests(unittest.TestCase):
         reports=[run_mission(i) for i in range(100)]
         self.assertEqual(sum(x['collision_samples'] for x in reports),0)
         self.assertTrue(all(x['status']=='COMPLETED' for x in reports))
+    def test_thousand_seed_robustness(self):
+        reports=[run_mission(i) for i in range(1000)]
+        self.assertEqual(sum(x['collision_samples'] for x in reports),0)
+        self.assertTrue(all(x['status']=='COMPLETED' for x in reports))
     def test_nominal_incline_five_deg(self):
         r=run_mission(17,cfg=Config(grade_deg=5),obstacle=False)
         self.assertEqual(r['status'],'COMPLETED')
