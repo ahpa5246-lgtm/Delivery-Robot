@@ -10,7 +10,8 @@
 | Physics parameter sanity | 270 combinations/seeds, all completed, zero contacts; calculated energy 0.28438–0.55550 Wh | [Parameter-sweep report](PARAMETER_SWEEP_EVIDENCE.md) | **PASS, simplified equations only** |
 | Gazebo geometry static checks | 6 physical links, 5 joints, 25 kg total loaded mass and valid XML | 4 SDF geometry tests | **PASS XML-level only** |
 | Gazebo 8.15 headless physics startup | Loaded world, Gazebo DiffDrive plugin subscribed to commands, and real Gazebo odometry packets observed at standstill | [Successful GitHub Actions run](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099440173) and artifact | **PASS startup + at-rest odometry** |
-| Gazebo driving / ROS2 bridge + Nav2 | Motion regression separately tracked; ROS bridge and Nav2 not end-to-end verified | [Dynamic workflow](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099667180) | **NOT YET ACCEPTED** |
+| Gazebo commanded driving | 397 actual Gazebo odometry messages; reported 4.3989575 m displacement over simulation timestamps 17–36 s | [Passing dynamic run](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099667180), artifact `motion_summary.json` + raw odometry | **PASS Gazebo odometry response** |
+| ROS2 bridge + Nav2 | ROS2 bridge integration and Nav2 not end-to-end verified | [Follow-up issue #1](https://github.com/ahpa5246-lgtm/Delivery-Robot/issues/1) | **NOT YET ACCEPTED** |
 | Hardware sensor/electrical measurements | No fabricated physical readings; no robot built | No physical device | **NOT TESTED** |
 | Full delivery, charging and fleet | Components remain engineering requirements / GitHub issues | [Issues](https://github.com/ahpa5246-lgtm/Delivery-Robot/issues) | **NOT IMPLEMENTED / NOT TESTED** |
 
@@ -28,10 +29,10 @@
 - No real-world pedestrian safety claims or safety certification can be made.
 
 ## Next acceptance gates
-1. Demonstrate **nonzero, repeatable Gazebo physical displacement** under recorded wheel commands; save raw Gazebo odometry and log operating configuration.
+1. Demonstrate **repeatable** Gazebo motion across multiple speeds/slopes/payloads; cross-check Gazebo odometry against independent simulator world pose and save both. One successful commanded-motion run of 4.3989575m has been observed.
 2. Prove ROS2 Jazzy `ros_gz_bridge` message flow and then Nav2 waypoint navigation with *sensor-only* perception and separate truth evaluator.
 3. Add realistic wheel/contact model, physics-tuned casters, controller effort and measured motor electrical model; test slopes, braking and payload.
 4. Implement cargo latch interlocks, mission API and persistent event log; carry out 100 full delivery missions, fault injection and statistical reporting.
 5. To claim **hardware measurements**, build or borrow a robot and instrument current/voltage/encoder/IMU/torque measurements with calibrated equipment.
 
-**Conclusion:** A reproducible numerical prototype and a functioning Gazebo startup exist. The complete autonomous delivery system is **not yet developed or validated**.
+**Conclusion:** A reproducible numerical prototype and a functioning Gazebo startup plus a single commanded-driving run exist. The complete autonomous delivery system is **not yet developed or validated**.
