@@ -23,7 +23,7 @@ jobs:
           mkdir -p experiments/gazebo_smoke
       - name: Install ROS Jazzy Gazebo integration in ephemeral container and run headless
         run: |
-          docker run --rm -v "$GITHUB_WORKSPACE:/work" ros:jazzy-ros-base bash -euo pipefail -c '
+          docker run --rm -v "$GITHUB_WORKSPACE:/work" ros:jazzy-ros-base bash -e -o pipefail -c '
             apt-get update
             DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ros-jazzy-ros-gz
             source /opt/ros/jazzy/setup.bash
