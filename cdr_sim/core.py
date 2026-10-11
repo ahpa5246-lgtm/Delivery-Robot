@@ -218,7 +218,7 @@ def run_mission(seed: int, cfg: Config | None = None, *, obstacle: bool = True,
         actual_proximity = obstacle_range(bot.x,bot.y,obstacles)
         # Prospective stop checks are restricted to obstacles in the drive corridor.
         # This is NOT a Nav2 costmap or a full obstacle-tracking algorithm.
-        pedestrian_future_y = min(2.5, py0+crossing_speed*max(0.0,bot.t+8.0-crossing_start))
+        pedestrian_future_y = min(2.5, py0+crossing_speed*max(0.0,bot.t+30.0-crossing_start))
         driving_hazards = []
         for j,(ox,oy,rr) in enumerate(obstacles):
             future_y = pedestrian_future_y if j == 0 else oy
