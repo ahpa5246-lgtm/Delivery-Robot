@@ -59,6 +59,12 @@ jobs:
             grep -q "pose:" /work/experiments/gazebo_smoke/ros_odometry.txt
             kill $bridge_pid 2>/dev/null || true
             echo "PASS: Gazebo odometry bridged into ROS2 /robot1/odom" >> /work/experiments/gazebo_smoke/outcome.txt
+            python3 /work/scripts/ros_velocity_watchdog.py > /work/experiments/gazebo_smoke/watchdog.log 2>&1 &
+            watchdog_pid=$!
+            sleep 3
+            python3 /work/scripts/verify_ros_watchdog_live.py > /work/experiments/gazebo_smoke/watchdog_acceptance.json
+            kill $watchdog_pid 2>/dev/null || true
+            echo "PASS: ROS2 watchdog relays motion and auto-stops Gazebo on command timeout" >> /work/experiments/gazebo_smoke/outcome.txt
           '
       - name: Upload actual Gazebo startup and observation logs
         if: always()
