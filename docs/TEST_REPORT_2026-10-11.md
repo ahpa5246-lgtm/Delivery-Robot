@@ -11,9 +11,14 @@
 | Gazebo geometry static checks | 6 physical links, 5 joints, 25 kg total loaded mass and valid XML | 4 SDF geometry tests | **PASS XML-level only** |
 | Gazebo 8.15 headless physics startup | Loaded world, Gazebo DiffDrive plugin subscribed to commands, and real Gazebo odometry packets observed at standstill | [Successful GitHub Actions run](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099440173) and artifact | **PASS startup + at-rest odometry** |
 | Gazebo commanded driving | 397 actual Gazebo odometry messages; reported 4.3989575 m displacement over simulation timestamps 17–36 s | [Passing dynamic run](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099667180), artifact `motion_summary.json` + raw odometry | **PASS Gazebo odometry response** |
-| ROS2 bridge + Nav2 | ROS2 bridge integration and Nav2 not end-to-end verified | [Follow-up issue #1](https://github.com/ahpa5246-lgtm/Delivery-Robot/issues/1) | **NOT YET ACCEPTED** |
+| ROS 2 Jazzy ↔ Gazebo odometry bridge | Live `/robot1/odom` received actual Gazebo output as `nav_msgs/msg/Odometry` (sample: Gazebo timestamp 76.85s, x 14.3827m) | [Passing bridge run](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099966149), raw `ros_odometry.txt` | **PASS basic bridge** |
+| Nav2 sensor-driven autonomous delivery | SLAM/AMCL/Nav2 not yet integrated or verified | [Issue #1](https://github.com/ahpa5246-lgtm/Delivery-Robot/issues/1) | **NOT IMPLEMENTED** |
 | Hardware sensor/electrical measurements | No fabricated physical readings; no robot built | No physical device | **NOT TESTED** |
 | Full delivery, charging and fleet | Components remain engineering requirements / GitHub issues | [Issues](https://github.com/ahpa5246-lgtm/Delivery-Robot/issues) | **NOT IMPLEMENTED / NOT TESTED** |
+
+## New safety issue observed during Gazebo↔ROS test
+
+The bridge reported x=14.3827m at simulation time 76.85s although the earlier motion logging phase ended near 36s and commanded driving was only broadcast for about 5s. This strongly suggests that **the Gazebo DiffDrive plugin retained its last nonzero command without an enforced command-timeout/watchdog**. This is unacceptable for a delivery robot and must be corrected with an explicit zero-velocity stop plus an independent command freshness watchdog, validated with fault injection. The observation does not establish a real-world acceleration/braking law.
 
 ## Critical failures found and corrected
 - Initial numerical model reported successful deliveries even with 1109 pedestrian contact *samples* across 100 trials. Fixed safety anticipation and fail-on-contact event.
