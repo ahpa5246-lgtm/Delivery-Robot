@@ -47,7 +47,10 @@ This repository will host a simulation-first **autonomous ground delivery robot*
 - [Executed 1000-run stress summary](experiments/stress_1000/summary.json)
 - [270-run sensitivity evidence](docs/PARAMETER_SWEEP_EVIDENCE.md)
 - [Planar GitHub Actions test run](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099288446)
-- [Gazebo Harmonic smoke run with actual at-rest odometry](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099440173)
+- [Gazebo Harmonic at-rest odometry smoke run](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099440173)
+- [Gazebo actual commanded movement: 4.3989575 m odometry displacement](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099667180)
+- [Measured Gazebo motion summary](experiments/gazebo_smoke/motion_summary.json)
+- [Verification pass/fail report](docs/TEST_REPORT_2026-10-11.md)
 - [Gazebo headless motion test workflow](.github/workflows/gazebo-headless.yml) — separate dynamic runtime gate
 - [Gazebo SDF world generator](scripts/generate_gazebo_world.py)
 
