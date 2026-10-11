@@ -40,11 +40,11 @@ See [1000-run summary](../experiments/stress_1000/summary.json) and [parameter s
 
 ## What remains not tested
 
-Full Gazebo driving dynamics beyond startup/at-rest odometry smoke test, realistic Gazebo sensor plugins, full ROS 2 navigation, realistic collision geometry and caster dynamics, true sensor noise/occlusion, charging, secure API/dashboard, outdoor pedestrian hazards, cargo motor actuation, multi-robot fleet and physical safety. **Do not claim these have passed.**
+Full Gazebo contact/ground-truth validation beyond the passed startup and 4.3989575 m commanded odometry trial, realistic Gazebo sensor plugins, full ROS 2 navigation, realistic collision geometry and caster dynamics, true sensor noise/occlusion, charging, secure API/dashboard, outdoor pedestrian hazards, cargo motor actuation, multi-robot fleet and physical safety. **Do not claim these have passed.**
 
 ## Available execution artifacts
 
 `experiments/planar_baseline/summary.json` captures the current observed aggregated metrics and configuration. Running the benchmark produces `results.csv` (100 rows) and `trace_seed_0.json` (1 Hz trace) for independent review.
 
-The GitHub Actions workflow `.github/workflows/planar-ci.yml` reruns the software tests. A completed workflow run is available at https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099116310.
+The GitHub Actions workflow `.github/workflows/planar-ci.yml` reruns the software tests. A separate Gazebo Harmonic 8.15 run yielded 397 physics-engine odometry samples, reporting 4.3989575 m displacement and 0.25 m/s maximum speed under a velocity command. This proves a basic simulated drive response, not contact calibration, Nav2 localization or real-world travel. See [Gazebo motion data](../experiments/gazebo_smoke/motion_summary.json). A completed workflow run is available at https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099116310.
 
