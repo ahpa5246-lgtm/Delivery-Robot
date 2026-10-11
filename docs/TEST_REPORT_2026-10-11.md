@@ -4,7 +4,7 @@
 ## Test evidence status
 | Level | Observed result | Evidence | Verdict |
 | --- | --- | --- | --- |
-| Python behavioral tests | 22 tests passed, incl. 1000-seed safety regression and blocked-route timeout | [Actions verification](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099576072) | **PASS for scoped Python model** |
+| Python behavioral tests | 29 tests passed (22 previous behavioral/geometry + 7 watchdog fail-safe cases), incl. 1000-seed safety regression and blocked-route timeout | [Actions verification](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099576072) | **PASS for scoped Python model** |
 | Python nominal benchmark | 100/100 completed; 0 contact samples; mean simulated 40.012 s; RMSE 0.03798 m; calculated energy 0.32347 Wh | [100-run summary](../experiments/planar_baseline/summary.json) | **PASS, scripted numerical model only** |
 | Python robustness stress | 1000/1000 completed; 0 detected contacts; mean simulated 39.9478 s | [1000-run summary](../experiments/stress_1000/summary.json) | **PASS, scripted numerical model only** |
 | Physics parameter sanity | 270 combinations/seeds, all completed, zero contacts; calculated energy 0.28438–0.55550 Wh | [Parameter-sweep report](PARAMETER_SWEEP_EVIDENCE.md) | **PASS, simplified equations only** |
@@ -12,13 +12,14 @@
 | Gazebo 8.15 headless physics startup | Loaded world, Gazebo DiffDrive plugin subscribed to commands, and real Gazebo odometry packets observed at standstill | [Successful GitHub Actions run](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099440173) and artifact | **PASS startup + at-rest odometry** |
 | Gazebo commanded driving | 397 actual Gazebo odometry messages; reported 4.3989575 m displacement over simulation timestamps 17–36 s | [Passing dynamic run](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099667180), artifact `motion_summary.json` + raw odometry | **PASS Gazebo odometry response** |
 | ROS 2 Jazzy ↔ Gazebo odometry bridge | Live `/robot1/odom` received actual Gazebo output as `nav_msgs/msg/Odometry` (sample: Gazebo timestamp 76.85s, x 14.3827m) | [Passing bridge run](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099966149), raw `ros_odometry.txt` | **PASS basic bridge** |
+| ROS 2 velocity watchdog timeout and Gazebo stop | With source commands for 2 s then silence: 28 positive relay samples; 52 post-timeout zero-speed samples; **0 nonzero stale-speed samples**; 36 stable odometry samples with **0.0 m logged drift** | [Passing live watchdog+Gazebo workflow](https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38100301247) and `watchdog_acceptance.json` | **PASS scoped simulated control-path test** |
 | Nav2 sensor-driven autonomous delivery | SLAM/AMCL/Nav2 not yet integrated or verified | [Issue #1](https://github.com/ahpa5246-lgtm/Delivery-Robot/issues/1) | **NOT IMPLEMENTED** |
 | Hardware sensor/electrical measurements | No fabricated physical readings; no robot built | No physical device | **NOT TESTED** |
 | Full delivery, charging and fleet | Components remain engineering requirements / GitHub issues | [Issues](https://github.com/ahpa5246-lgtm/Delivery-Robot/issues) | **NOT IMPLEMENTED / NOT TESTED** |
 
 ## New safety issue observed during Gazebo↔ROS test
 
-The bridge reported x=14.3827m at simulation time 76.85s although the earlier motion logging phase ended near 36s and commanded driving was only broadcast for about 5s. This strongly suggests that **the Gazebo DiffDrive plugin retained its last nonzero command without an enforced command-timeout/watchdog**. This is unacceptable for a delivery robot and must be corrected with an explicit zero-velocity stop plus an independent command freshness watchdog, validated with fault injection. The observation does not establish a real-world acceleration/braking law.
+The bridge reported x=14.3827m at simulation time 76.85s although the earlier motion logging phase ended near 36s and commanded driving was only broadcast for about 5s. This demonstrates the **Gazebo DiffDrive plugin retained its last nonzero command without a built-in command-timeout in this configuration**. We implemented a 20Hz ROS2 command watchdog with 0.5s freshness cutoff. A passing live test observed 52/52 zero commands after staleness and zero logged Gazebo displacement over the stable 36-sample observation window. Direct commands to the Gazebo topic can still bypass the watchdog; an actual robot needs a motor-driver watchdog and independent safety system. The observation does not establish a real-world acceleration/braking law.
 
 ## Critical failures found and corrected
 - Initial numerical model reported successful deliveries even with 1109 pedestrian contact *samples* across 100 trials. Fixed safety anticipation and fail-on-contact event.
