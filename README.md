@@ -77,6 +77,7 @@ delivery robot**.
 python -m unittest discover -s tests -v
 python scripts/run_campus_demo.py --seed 7 --scenario construction
 python scripts/serve_dashboard.py
+python scripts/generate_campus_gazebo.py
 # Visit http://127.0.0.1:8765
 ```
 

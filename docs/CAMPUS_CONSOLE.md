@@ -52,13 +52,13 @@ The local HTTP contract:
 Input validation rejects unknown fields, duplicate values, unsupported stops,
 negative / excessive seeds and unsupported scenarios.
 
-## Scientific interpretation
+To generate the separate 3D candidate world aligned to the same map:\n\n```bash\npython scripts/generate_campus_gazebo.py\n# requires a Jazzy/Harmonic environment for these next two commands\ngz sdf -k simulation/campus_delivery.sdf\ngz sim -s -r simulation/campus_delivery.sdf\n```\n\n## Scientific interpretation
 
 This is an *algorithmic test fixture*, not physically representative evidence.
 A* sees buildings in a static *offline known map*; it does **not** perform SLAM.
 Construction is a scripted event and its modeled cells become available to the
 planner only when that event fires; it is **not** a real LiDAR detection pipeline.
-The motion loop interpolates between planned waypoints with a scalar
+Some simulated closures eliminate the only reachable corridor (notably near\nthe engineering destination); the supervisor then records `ROUTE_BLOCKED` and\nstops safely rather than claiming to find a nonexistent bypass.\nThe motion loop interpolates between planned waypoints with a scalar
 acceleration cap; it does not model differential-drive heading, wheel slip,
 torque, curb contact or pedestrian response. No digital twin localization
 pipeline, accuracy ground truth, or ROS 2 actuator bridge was measured by this

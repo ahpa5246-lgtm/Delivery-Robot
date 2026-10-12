@@ -5,7 +5,6 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 const state = { map: null, run: null, playing: true, simTime: 0, lastWallTime: 0 };
 const W = canvas.width, H = canvas.height;
 const inset = {x: 38, y: 28, w: W-76, h: H-56};
-const rgba = (hex, alpha) => hex;
 const px = (x) => inset.x + x / state.map.width_m * inset.w;
 const py = (y) => inset.y + (1 - y / state.map.height_m) * inset.h;
 const number = (n, digits = 1) => Number(n).toFixed(digits);
@@ -47,13 +46,14 @@ function draw() {
   }
   if(state.run){
     // Previously issued plans stay visible as low-opacity dashed paths.
+    const activeRouteIndex = state.run.routes.reduce((active, route, index) => route.time_s <= state.simTime ? index : active, -1);
     for(let n=0;n<state.run.routes.length;n++){
       const route=state.run.routes[n];
       if(route.time_s>state.simTime || route.points.length<2)continue;
-      ctx.beginPath();ctx.setLineDash(n===state.run.routes.length-1?[]:[5,11]);
+      ctx.beginPath();ctx.setLineDash(n===activeRouteIndex?[]:[5,11]);
       route.points.forEach(([x,y],i)=>i?ctx.lineTo(px(x),py(y)):ctx.moveTo(px(x),py(y)));
-      ctx.strokeStyle=n===state.run.routes.length-1?'#88f3c8ba':'#779da366';
-      ctx.lineWidth=n===state.run.routes.length-1?5:3;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
+      ctx.strokeStyle=n===activeRouteIndex?'#88f3c8ba':'#779da366';
+      ctx.lineWidth=n===activeRouteIndex?5:3;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
     }
     ctx.setLineDash([]);
     if(state.run.closure_cells.length && state.run.events.some(e=>e.state==='REPLANNING'&&e.time_s<=state.simTime)){
