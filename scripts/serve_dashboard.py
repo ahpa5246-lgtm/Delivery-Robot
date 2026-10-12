@@ -6,6 +6,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from cdr_sim.campus import Campus, ReplayOptions, replay
 
 ROOT = Path(__file__).resolve().parents[1] / "dashboard"

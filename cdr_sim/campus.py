@@ -311,7 +311,7 @@ def replay(options: ReplayOptions = ReplayOptions(), campus: Campus | None = Non
             # Consume waypoints only once reached. Segment interpolation is collision
             # checked against the known inflated occupancy grid.
             while len(route) > 1 and hypot(position[0]-route[1][0],
-                                           position[1]-route[1][1]) < 0.10:
+                                           position[1]-route[1][1]) < 1e-6:
                 route.pop(0)
             if len(route) <= 1:
                 status, reason, phase = "PAUSED_SAFE", "INVALID_ROUTE", "PAUSED_SAFE"
