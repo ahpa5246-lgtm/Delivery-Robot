@@ -81,6 +81,32 @@ class CampusPlannerTests(unittest.TestCase):
                 self.assertGreaterEqual(a["replans"], 1)
                 self.assertFalse(a["collision_detected_in_known_map"])
 
+    def test_construction_replan_destination_matrix(self):
+        for destination in ("library", "engineering", "student_center"):
+            for seed in range(25):
+                with self.subTest(destination=destination, seed=seed):
+                    run = replay(ReplayOptions(destination=destination,
+                                               scenario="construction", seed=seed))
+                    self.assertEqual(run["status"], "COMPLETED",
+                                     (destination, seed, run["reason"]))
+                    self.assertGreaterEqual(run["replans"], 1)
+
+    def test_telemetry_invariants(self):
+        run = replay(ReplayOptions(seed=41, scenario="construction"))
+        self.assertEqual(run["status"], "COMPLETED")
+        stamps = [f["time_s"] for f in run["frames"]]
+        self.assertEqual(stamps, sorted(stamps))
+        self.assertGreater(len(stamps), 30)
+        for f in run["frames"]:
+            self.assertGreaterEqual(f["soc"], .20)
+            self.assertLessEqual(f["speed_mps"], .65 + 1e-5)
+        for a, b in zip(run["frames"], run["frames"][1:]):
+            self.assertLessEqual(b["soc"], a["soc"] + 1e-6)
+            self.assertLessEqual(hypot(b["x_m"]-a["x_m"],b["y_m"]-a["y_m"]),
+                                 .65*(b["time_s"]-a["time_s"]) + .01)
+        self.assertEqual([e["time_s"] for e in run["events"]],
+                         sorted(e["time_s"] for e in run["events"]))
+
     def test_invalid_options(self):
         for args in ({"scenario": "unknown"}, {"speed_mps": -1},
                      {"initial_soc": 1.5}, {"seed": -1},
