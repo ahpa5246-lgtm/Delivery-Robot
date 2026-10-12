@@ -72,12 +72,49 @@ class Campus:
         )
 
     def visible(self, a: Point, b: Point, closure: frozenset[Cell] = frozenset()) -> bool:
-        # Grid-sampled segment; maintain a bounded step relative to occupancy resolution.
-        dist = hypot(a[0]-b[0], a[1]-b[1])
-        n = max(1, int(dist / (self.resolution / 4)) + 1)
-        return all(self.free(self.cell((a[0]+(b[0]-a[0])*k/n,
-                                         a[1]+(b[1]-a[1])*k/n)), closure)
-                   for k in range(n+1))
+        """Supercover cell traversal: *every* grid square touched must be free.
+
+        A grid sample test can skip a thin occupied sliver between samples,
+        leading to false-free straight-line shortcuts. Explicit cell traversal
+        uses boundary crossing times (2-D DDA) and checks corner neighbors.
+        """
+        from math import inf
+        start, target = self.cell(a), self.cell(b)
+        if not self.free(start, closure) or not self.free(target, closure):
+            return False
+        if start == target:
+            return True
+        dx, dy = b[0]-a[0], b[1]-a[1]
+        step_x = (1 if dx > 0 else -1) if dx else 0
+        step_y = (1 if dy > 0 else -1) if dy else 0
+        delta_x = abs(self.resolution/dx) if dx else inf
+        delta_y = abs(self.resolution/dy) if dy else inf
+        x, y = start
+        bound_x = (x+1 if dx > 0 else x)*self.resolution
+        bound_y = (y+1 if dy > 0 else y)*self.resolution
+        t_x = (bound_x-a[0])/dx if dx else inf
+        t_y = (bound_y-a[1])/dy if dy else inf
+        # A segment cannot traverse more grid cells than the map perimeter.
+        for _ in range(sum(self.shape)+5):
+            if (x, y) == target:
+                return True
+            if t_x < t_y-1e-12:
+                x += step_x
+                t_x += delta_x
+            elif t_y < t_x-1e-12:
+                y += step_y
+                t_y += delta_y
+            else:
+                if not (self.free((x+step_x,y),closure)
+                        and self.free((x,y+step_y),closure)):
+                    return False
+                x += step_x
+                y += step_y
+                t_x += delta_x
+                t_y += delta_y
+            if not self.free((x,y),closure):
+                return False
+        return False
 
     def as_dict(self) -> dict:
         return {"width_m": self.width, "height_m": self.height,
