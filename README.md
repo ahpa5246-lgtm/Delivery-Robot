@@ -66,6 +66,27 @@ python scripts/generate_gazebo_world.py
 
 **Next verification:** Nav2 / localization / LiDAR integration, independent ground-truth-versus-odometry benchmarking, motor torque / contact / charging models and complete delivery workflow. ROS 2 Jazzy/Gazebo startup, commanded odometry, bridged odometry and ROS watchdog timeout have already passed narrow real-simulator smoke/acceptance checks. No claims of real-world deployment or certified human safety have been established.
 
+## Campus navigation and control-room demo (new offline subsystem)
+
+A campus-map path planner, mission replay and responsive local monitoring dashboard
+are now implemented *in addition* to the earlier planar and Gazebo work. This
+subsystem is **not yet ROS/Nav2-integrated and is not a physically validated
+delivery robot**.
+
+```bash
+python -m unittest discover -s tests -v
+python scripts/run_campus_demo.py --seed 7 --scenario construction
+python scripts/serve_dashboard.py
+python scripts/generate_campus_gazebo.py
+# Visit http://127.0.0.1:8765
+```
+
+The console shows multi-stop A* route planning, a scripted construction
+replan, simulated pickup/authorized handover/return to dock, battery reserve
+screening, sensor-loss and emergency stop demonstrations, and replayable
+timestamped telemetry. See [Campus navigation console scope and test gates](docs/CAMPUS_CONSOLE.md).
+The API uses localhost only and **cannot command motors**.
+
 ## Primary technical references
 
 - [Gazebo / ROS compatibility](https://gazebosim.org/docs/harmonic/ros_installation/)
