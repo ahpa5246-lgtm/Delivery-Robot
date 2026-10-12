@@ -82,14 +82,32 @@ class CampusPlannerTests(unittest.TestCase):
                 self.assertFalse(a["collision_detected_in_known_map"])
 
     def test_construction_replan_destination_matrix(self):
+        # A construction closure can remove the only campus corridor.
+        # Safe stop on NO_ROUTE is an intended *correct* outcome, not a failure
+        # to plan an impossible path.
+        world = Campus()
+        completed = 0
+        blocked = 0
         for destination in ("library", "engineering", "student_center"):
             for seed in range(25):
                 with self.subTest(destination=destination, seed=seed):
                     run = replay(ReplayOptions(destination=destination,
                                                scenario="construction", seed=seed))
-                    self.assertEqual(run["status"], "COMPLETED",
-                                     (destination, seed, run["reason"]))
-                    self.assertGreaterEqual(run["replans"], 1)
+                    self.assertIn("REPLANNING", [e["state"] for e in run["events"]])
+                    if run["status"] == "COMPLETED":
+                        completed += 1
+                        self.assertGreaterEqual(run["replans"], 1)
+                    else:
+                        blocked += 1
+                        self.assertEqual(run["status"], "PAUSED_SAFE")
+                        self.assertEqual(run["reason"], "ROUTE_BLOCKED")
+                        self.assertEqual(run["frames"][-1]["speed_mps"], 0)
+                        closure = frozenset(tuple(p) for p in run["closure_cells"])
+                        with self.assertRaises(NoRoute):
+                            astar(world, tuple(run["final_pose_m"]),
+                                  world.stops[destination], closure)
+        self.assertGreater(completed, 0)
+        self.assertGreater(blocked, 0)
 
     def test_telemetry_invariants(self):
         run = replay(ReplayOptions(seed=41, scenario="construction"))
