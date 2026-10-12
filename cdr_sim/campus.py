@@ -147,18 +147,25 @@ def astar(campus: Campus, start: Point, goal: Point,
             while chain[-1] != s:
                 chain.append(parent[chain[-1]])
             chain.reverse()
-            # Conservative line-of-sight shortcut only, checked against inflated occupancy.
-            points = [start]
-            route = [campus.center(p) for p in chain[1:-1]] + [goal]
+            # Keep both start and goal cell centers. Arbitrary world points
+            # may lie on grid boundaries; skipping their cell centers can
+            # create diagonal shortcuts not certified by the A* grid path.
+            vertices = [start] + [campus.center(p) for p in chain] + [goal]
+            for a, b in zip(vertices, vertices[1:]):
+                if not campus.visible(a, b, closure):
+                    raise NoRoute("grid edge failed conservative supercover check")
+            # Greedy shortcut through known free cells; never prune a segment
+            # unless the supercover checker certifies it.
+            points = [vertices[0]]
             i = 0
-            while i < len(route):
-                j = len(route)-1
-                while j > i and not campus.visible(points[-1], route[j], closure):
-                    j -= 1
-                if not campus.visible(points[-1], route[j], closure):
+            while i < len(vertices)-1:
+                j = len(vertices)-1
+                while j>i+1 and not campus.visible(vertices[i], vertices[j], closure):
+                    j-=1
+                if not campus.visible(vertices[i], vertices[j], closure):
                     raise NoRoute("grid route was not segment-safe")
-                points.append(route[j])
-                i = j+1
+                points.append(vertices[j])
+                i=j
             return points
         for dx, dy in neighbors:
             nxt = (cell[0]+dx, cell[1]+dy)
