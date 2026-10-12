@@ -321,9 +321,14 @@ def replay(options: ReplayOptions = ReplayOptions(), campus: Campus | None = Non
                         status, reason, phase = "PAUSED_SAFE", "ROUTE_BLOCKED", "PAUSED_SAFE"
                         event(phase, reason)
                         break
-                    if not enough_energy(path_length(route) +
-                                         (path_length(astar(world,goal,home,closure))
-                                          if phase=="OUTBOUND" else 0)):
+                    try:
+                        return_length = (path_length(astar(world, goal, home, closure))
+                                         if phase == "OUTBOUND" else 0.0)
+                    except NoRoute:
+                        status, reason, phase = "PAUSED_SAFE", "RETURN_ROUTE_BLOCKED", "PAUSED_SAFE"
+                        event(phase, reason)
+                        break
+                    if not enough_energy(path_length(route) + return_length):
                         status, reason, phase = "PAUSED_SAFE", "LOW_BATTERY_RESERVE", "PAUSED_SAFE"
                         event(phase, reason)
                         break
