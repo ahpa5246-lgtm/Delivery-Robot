@@ -109,6 +109,19 @@ class CampusPlannerTests(unittest.TestCase):
         self.assertGreater(completed, 0)
         self.assertGreater(blocked, 0)
 
+    def test_return_corridor_loss_stops_safely(self):
+        from unittest.mock import patch
+        from cdr_sim.campus import astar as real_astar
+        def force_return_block(campus, start, goal, closure=frozenset()):
+            if closure and start == campus.stops["library"] and goal == campus.stops["depot"]:
+                raise NoRoute("return corridor closed")
+            return real_astar(campus, start, goal, closure)
+        with patch("cdr_sim.campus.astar", side_effect=force_return_block):
+            result = replay(ReplayOptions(seed=7, scenario="construction"))
+        self.assertEqual(result["status"], "PAUSED_SAFE")
+        self.assertEqual(result["reason"], "RETURN_ROUTE_BLOCKED")
+        self.assertEqual(result["frames"][-1]["speed_mps"], 0)
+
     def test_telemetry_invariants(self):
         run = replay(ReplayOptions(seed=41, scenario="construction"))
         self.assertEqual(run["status"], "COMPLETED")
