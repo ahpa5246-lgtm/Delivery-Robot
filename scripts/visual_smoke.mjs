@@ -51,6 +51,13 @@ try {
       input.value = '75';
       input.dispatchEvent(new Event('input', { bubbles: true }));
     });
+    const distance = Number(await page.locator('#distance').innerText());
+    assert.ok(distance > 1, 'Modeled distance should update during replay');
+    const chartRendered = await page.locator('#trace').evaluate(c => {
+      const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+      return d.some((n, i) => i % 4 !== 3 && n > 70);
+    });
+    assert.ok(chartRendered, 'Telemetry chart should render actual frame values');
     await page.screenshot({ path: 'experiments/ui_visual/' + viewport.name + '.png', fullPage: true });
     await page.locator('#scenario').selectOption('estop');
     const freshRun = page.waitForResponse(r => r.url().includes('/api/run?') && r.url().includes('scenario=estop'));
