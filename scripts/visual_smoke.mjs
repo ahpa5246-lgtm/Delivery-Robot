@@ -53,8 +53,15 @@ try {
     });
     await page.screenshot({ path: 'experiments/ui_visual/' + viewport.name + '.png', fullPage: true });
     await page.locator('#scenario').selectOption('estop');
+    const freshRun = page.waitForResponse(r => r.url().includes('/api/run?') && r.url().includes('scenario=estop'));
     await page.locator('#run').click();
-    await page.waitForFunction(() => document.querySelector('#reason').textContent.includes('Running deterministic'));
+    const estopResponse = await freshRun;
+    assert.equal(estopResponse.status(), 200);
+    await page.waitForFunction(() => {
+      const parts = document.querySelector('#total').textContent.split(':').map(Number);
+      return parts.length === 2 && (parts[0] * 60 + parts[1]) > 0
+        && (parts[0] * 60 + parts[1]) < 15;
+    });
     await page.locator('#timeline').evaluate(input => {
       input.value = '100';
       input.dispatchEvent(new Event('input', { bubbles: true }));
