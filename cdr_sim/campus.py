@@ -260,6 +260,7 @@ def replay(options: ReplayOptions = ReplayOptions(), campus: Campus | None = Non
             frames.append({"time_s": round(time_s, 2), "x_m": round(position[0], 3),
                            "y_m": round(position[1], 3), "speed_mps": round(velocity, 3),
                            "soc": round(soc(), 6), "energy_estimated_wh": round(energy, 4),
+                           "distance_m": round(distance, 3),
                            "phase": phase})
 
     def plan(destination: Point) -> list[Point]:

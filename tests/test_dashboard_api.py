@@ -15,6 +15,18 @@ class DashboardAPITests(unittest.TestCase):
         self.assertEqual(data["status"], "COMPLETED")
         self.assertEqual(data["destination"], "engineering")
 
+    def test_archived_gazebo_evidence_is_real_simulator_output(self):
+        code, media_type, raw = response_for("/api/gazebo-evidence")
+        self.assertEqual(code, 200)
+        self.assertEqual(media_type, "application/json")
+        evidence = json.loads(raw)
+        self.assertEqual(
+            evidence["evidence_type"],
+            "ACTUAL_GAZEBO_HARMONIC_SIMULATION_TELEMETRY_NOT_HARDWARE")
+        self.assertGreater(evidence["samples"], 100)
+        self.assertGreater(evidence["displacement_reported_by_odometry_m"], 0)
+        self.assertIn("github_actions_run_url", evidence)
+
     def test_denied_handover(self):
         code, _, raw = response_for("/api/run?handover=denied")
         self.assertEqual(code, 200)

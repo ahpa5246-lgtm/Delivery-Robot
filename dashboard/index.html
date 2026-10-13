@@ -17,7 +17,7 @@
   </aside>
   <main>
     <header class="masthead">
-      <div class="brand"><span class="eyebrow">CDR / CAMPUS DELIVERY ROBOTICS</span><h1>Mission control<span class="period">.</span></h1><p>Autonomous campus logistics <span class="slash">/</span> Kinematic digital twin</p></div>
+      <div class="brand"><span class="eyebrow">CDR / CAMPUS DELIVERY ROBOTICS</span><h1>Mission control<span class="period">.</span></h1><p>Autonomous campus logistics <span class="slash">/</span> Offline route replay</p></div>
       <div class="mast-actions"><span class="pill"><span class="live-dot"></span> LOCAL SIMULATOR</span><span class="clock" id="clock">SIM — 00:00</span></div>
     </header>
     <section class="mission-bar" aria-label="Mission parameters">
@@ -29,16 +29,27 @@
     <div class="workspace">
       <section class="map-panel" aria-label="Campus mission replay">
         <div class="panel-top"><div><span class="panel-kicker">01 / DIGITAL TWIN</span><h2>Campus overview</h2></div><div class="legend"><span><i class="legend-path"></i> Route</span><span><i class="legend-robot"></i> CDR-01</span><span><i class="legend-zone"></i> Restricted</span></div></div>
-        <div class="map-wrap"><canvas id="map" width="1152" height="720" role="img" aria-label="Campus schematic with buildings, paths, robot, and delivery destination"></canvas><div class="map-overlay">MAP COORDINATES <strong>LOCAL XY</strong><br>32 × 20 METRES <span>·</span> NOT TO SCALE</div><div class="map-badge">SIMULATED PERCEPTION <span class="accent">●</span></div></div>
+        <div class="map-wrap"><canvas id="map" width="1152" height="720" role="img" aria-label="Campus schematic with buildings, paths, robot, and delivery destination"></canvas><div class="map-overlay">MAP COORDINATES <strong>LOCAL XY</strong><br>32 × 20 METRES <span>·</span> NOT TO SCALE</div><div class="map-badge">SCRIPTED 2D MODEL <span class="accent">●</span></div></div>
         <div class="playback">
           <button id="play" title="Pause or resume replay" aria-label="Pause or resume replay">Ⅱ</button><span class="time" id="elapsed">00:00</span><input id="timeline" aria-label="Replay position" type="range" min="0" max="100" value="0"><span class="time muted" id="total">00:00</span><select id="speed" aria-label="Playback speed"><option value="1">1×</option><option value="4" selected>4×</option><option value="12">12×</option><option value="30">30×</option></select>
         </div>
         <div class="notice"><span class="notice-symbol">ⓘ</span><span>This view replays a deterministic <strong>2D kinematic model</strong>. It is not live robot telemetry, Gazebo contact dynamics, or safety certification.</span></div>
+        <section class="trace-panel" aria-label="Two-dimensional model telemetry traces">
+          <div class="row-title"><div><span class="panel-kicker">02 / REPLAY TELEMETRY</span><h2>Motion and battery profile</h2></div><span class="evidence-tag">2D MODEL</span></div>
+          <div class="trace-legend"><span class="trace-speed">● Modeled velocity (m/s)</span><span class="trace-soc">● Modeled battery SOC (%)</span></div>
+          <canvas id="trace" width="1152" height="290" role="img" aria-label="Speed and battery state of charge over simulated mission time"></canvas>
+          <p>Derived from this deterministic kinematic replay; not motor or battery instrumentation.</p>
+        </section>
       </section>
       <aside class="insights">
         <section class="status-panel"><div class="row-title"><span class="panel-kicker">02 / MISSION STATUS</span><span class="small-id">CDR-01</span></div><div class="status-line"><span class="status-icon" id="status-dot"></span><span id="status">INITIALIZING</span></div><p id="reason">Preparing campus simulation...</p><div class="mini-line"><span>Current stage</span><strong id="phase">—</strong></div></section>
-        <section class="metrics"><div class="metric"><span>DISTANCE TRAVELLED</span><strong id="distance">—</strong><small>metres · modeled</small></div><div class="metric"><span>ENERGY CONSUMED</span><strong id="energy">—</strong><small>watt-hours · estimate</small></div><div class="metric"><span>PATH REPLANS</span><strong id="replans">—</strong><small>detected closures</small></div><div class="metric"><span>FINAL BATTERY SOC</span><strong id="battery">—</strong><small>modeled capacity</small></div></section>
-        <section class="timeline-panel"><div class="row-title"><div><span class="panel-kicker">03 / EVENT STREAM</span><h2>Activity log</h2></div><span class="event-count" id="event-count">0 EVENTS</span></div><div class="event-feed" id="events" aria-live="polite"></div></section>
+        <section class="metrics"><div class="metric"><span>DISTANCE TRAVELLED</span><strong id="distance">—</strong><small>metres · modeled</small></div><div class="metric"><span>ENERGY CONSUMED</span><strong id="energy">—</strong><small>watt-hours · estimate</small></div><div class="metric"><span>PATH REPLANS</span><strong id="replans">—</strong><small>detected closures</small></div><div class="metric"><span>BATTERY SOC</span><strong id="battery">—</strong><small>modeled capacity</small></div></section>
+        <section class="gazebo-panel" aria-label="Archived Gazebo simulator results">
+          <div class="row-title"><div><span class="panel-kicker">03 / PHYSICS EXPERIMENT</span><h2>Gazebo odometry</h2></div><span class="evidence-tag">ARCHIVED</span></div>
+          <div class="gazebo-measures"><div><span>ODOMETRY DISTANCE</span><strong id="gazebo-displacement">—</strong><small>m · reported, not independent ground truth</small></div><div><span>MAXIMUM VELOCITY</span><strong id="gazebo-speed">—</strong><small>m/s · simulated</small></div><div><span>ODOMETRY SAMPLES</span><strong id="gazebo-samples">—</strong><small>recorded messages</small></div></div>
+          <p id="gazebo-provenance">Historical Gazebo run, not live telemetry or hardware measurement. <a href="https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099667180" target="_blank" rel="noopener noreferrer">Original CI evidence ↗</a></p>
+        </section>
+        <section class="timeline-panel"><div class="row-title"><div><span class="panel-kicker">04 / EVENT STREAM</span><h2>Activity log</h2></div><span class="event-count" id="event-count">0 EVENTS</span></div><div class="event-feed" id="events" aria-live="polite"></div></section>
       </aside>
     </div>
     <footer><span>CDR-01 / UNIVERSITY CAMPUS DELIVERY RESEARCH</span><span>ENGINEERING PROTOTYPE <b>•</b> LOCAL HOST ONLY <b>•</b> NOT FOR PHYSICAL DEPLOYMENT</span></footer>

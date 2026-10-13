@@ -1,0 +1,55 @@
+name: Campus control-room browser visual checks
+on:
+  push:
+    paths:
+      - 'dashboard/**'
+      - 'cdr_sim/**'
+      - 'scripts/serve_dashboard.py'
+      - 'scripts/visual_smoke.mjs'
+      - 'experiments/gazebo_smoke/motion_summary.json'
+      - '.github/workflows/dashboard-visual.yml'
+  pull_request:
+    paths:
+      - 'dashboard/**'
+      - 'cdr_sim/**'
+      - 'scripts/serve_dashboard.py'
+      - 'scripts/visual_smoke.mjs'
+      - '.github/workflows/dashboard-visual.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  browser-visual:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser for reproducible screenshots
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start real HTTP dashboard
+        run: |
+          python3 scripts/serve_dashboard.py > /tmp/cdr-dashboard.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8765/api/map > /dev/null; then
+              echo 'Dashboard HTTP API running'
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/cdr-dashboard.log
+          exit 1
+      - name: Exercise real browser at desktop, tablet and mobile resolutions
+        run: node scripts/visual_smoke.mjs
+      - name: Preserve browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: campus-dashboard-visual-review
+          path: experiments/ui_visual/*.png
+          if-no-files-found: warn
