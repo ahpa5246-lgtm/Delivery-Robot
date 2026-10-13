@@ -77,36 +77,45 @@ function draw() {
 }
 function drawTraces() {
   if (!state.run) return;
-  const c=traceCtx, w=traceCanvas.width, h=traceCanvas.height;
-  const left=54,right=w-54,top=28,bottom=h-36;
-  const duration=Math.max(1,state.run.duration_sim_s);
+  const rect=traceCanvas.getBoundingClientRect();
+  if(rect.width<10||rect.height<10)return;
+  const dpi=Math.min(window.devicePixelRatio||1,2);
+  const width=Math.round(rect.width*dpi),height=Math.round(rect.height*dpi);
+  if(traceCanvas.width!==width||traceCanvas.height!==height){
+    traceCanvas.width=width;traceCanvas.height=height;
+  }
+  const c=traceCtx,w=rect.width,h=rect.height,compact=w<440;
+  c.setTransform(dpi,0,0,dpi,0,0);
+  const left=compact?32:41,right=w-(compact?28:40),top=14,bottom=h-25;
+  const duration=Math.max(1,state.run.duration_sim_s),speedScale=0.8;
   const x=t=>left+(right-left)*t/duration;
-  const speedScale=0.8;
-  c.clearRect(0,0,w,h);c.fillStyle='#0d1b29';c.fillRect(0,0,w,h);
-  c.lineWidth=1;c.font='20px system-ui';c.fillStyle='#8398ac';
+  c.clearRect(0,0,w,h);
+  c.fillStyle='#0d1b29';c.fillRect(0,0,w,h);
+  c.lineWidth=1;c.font=(compact?'9':'10')+'px system-ui';
+  c.textBaseline='middle';
   for(let i=0;i<=4;i++){
     const y=top+(bottom-top)*i/4;
     c.strokeStyle='#284050';c.beginPath();c.moveTo(left,y);c.lineTo(right,y);c.stroke();
-    c.textAlign='right';c.fillText(number(speedScale*(1-i/4),2),left-10,y+6);
-    c.textAlign='left';c.fillText(number(100*(1-i/4),0)+'%',right+9,y+6);
+    c.textAlign='right';c.fillStyle='#9ab0be';c.fillText(number(speedScale*(1-i/4),2),left-5,y);
+    c.textAlign='left';c.fillText(number(100*(1-i/4),0)+'%',right+5,y);
   }
-  for(let i=0;i<=4;i++){
-    const xx=left+(right-left)*i/4;
+  const tickCount=compact?2:4;
+  for(let i=0;i<=tickCount;i++){
+    const xx=left+(right-left)*i/tickCount;
     c.strokeStyle='#223344';c.beginPath();c.moveTo(xx,top);c.lineTo(xx,bottom);c.stroke();
-    c.textAlign='center';c.fillStyle='#8398ac';c.fillText(mins(duration*i/4),xx,bottom+26);
+    c.textAlign='center';c.fillStyle='#9ab0be';c.fillText(mins(duration*i/tickCount),xx,bottom+14);
   }
   const frames=state.run.frames;
   function line(color,key,convert,alpha,limit) {
-    c.beginPath();
-    let count=0;
+    c.beginPath();let count=0;
     for(const frame of frames){
       if(frame.time_s>limit)break;
       const val=convert(frame[key]);
       const y=bottom-Math.max(0,Math.min(1,val))*(bottom-top);
-      const xx=x(frame.time_s);
-      if(count++===0)c.moveTo(xx,y);else c.lineTo(xx,y);
+      if(count++===0)c.moveTo(x(frame.time_s),y);
+      else c.lineTo(x(frame.time_s),y);
     }
-    c.strokeStyle=color;c.globalAlpha=alpha;c.lineWidth=4;c.lineJoin='round';c.stroke();c.globalAlpha=1;
+    c.strokeStyle=color;c.globalAlpha=alpha;c.lineWidth=compact?1.6:2.3;c.lineJoin='round';c.stroke();c.globalAlpha=1;
   }
   for(const [color,key,fn] of [['#83f4c5','speed_mps',v=>v/speedScale],
                                  ['#f2ba76','soc',v=>v]]) {
@@ -114,7 +123,7 @@ function drawTraces() {
     line(color,key,fn,1,state.simTime);
   }
   const head=x(state.simTime);
-  c.strokeStyle='#e6f8ff77';c.lineWidth=2;c.setLineDash([8,8]);
+  c.strokeStyle='#e6f8ff77';c.lineWidth=1;c.setLineDash([4,4]);
   c.beginPath();c.moveTo(head,top);c.lineTo(head,bottom);c.stroke();c.setLineDash([]);
 }
 function updateReadout() {
