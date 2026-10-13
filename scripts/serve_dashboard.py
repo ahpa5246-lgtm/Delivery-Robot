@@ -22,6 +22,11 @@ def response_for(path: str) -> tuple[int, str, bytes]:
     if parsed.path in STATIC:
         filename, media_type = STATIC[parsed.path]
         return 200, media_type, (ROOT / filename).read_bytes()
+    if parsed.path == "/api/gazebo-evidence":
+        # Archived physics-engine odometry from an identified historical CI run.
+        # Never label these values as current, live or hardware measurements.
+        evidence = Path(__file__).resolve().parents[1] / "experiments/gazebo_smoke/motion_summary.json"
+        return 200, "application/json", evidence.read_bytes()
     if parsed.path == "/api/map":
         return 200, "application/json", json.dumps(Campus().as_dict()).encode()
     if parsed.path == "/api/run":
