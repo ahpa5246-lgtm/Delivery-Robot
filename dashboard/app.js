@@ -2,6 +2,7 @@
 'use strict';
 const $ = (id) => document.getElementById(id);
 const canvas = $('map'), ctx = canvas.getContext('2d');
+const traceCanvas = $('trace'), traceCtx = traceCanvas.getContext('2d');
 const state = { map: null, run: null, playing: true, simTime: 0, lastWallTime: 0 };
 const W = canvas.width, H = canvas.height;
 const inset = {x: 38, y: 28, w: W-76, h: H-56};
@@ -74,13 +75,55 @@ function draw() {
   const point=map.stops[$('destination').value];
   if(point){ctx.beginPath();ctx.arc(px(point[0]),py(point[1]),18,0,Math.PI*2);ctx.strokeStyle='#87f7c1';ctx.lineWidth=2;ctx.stroke();}
 }
+function drawTraces() {
+  if (!state.run) return;
+  const c=traceCtx, w=traceCanvas.width, h=traceCanvas.height;
+  const left=54,right=w-54,top=28,bottom=h-36;
+  const duration=Math.max(1,state.run.duration_sim_s);
+  const x=t=>left+(right-left)*t/duration;
+  const speedScale=0.8;
+  c.clearRect(0,0,w,h);c.fillStyle='#0d1b29';c.fillRect(0,0,w,h);
+  c.lineWidth=1;c.font='20px system-ui';c.fillStyle='#8398ac';
+  for(let i=0;i<=4;i++){
+    const y=top+(bottom-top)*i/4;
+    c.strokeStyle='#284050';c.beginPath();c.moveTo(left,y);c.lineTo(right,y);c.stroke();
+    c.textAlign='right';c.fillText(number(speedScale*(1-i/4),2),left-10,y+6);
+    c.textAlign='left';c.fillText(number(100*(1-i/4),0)+'%',right+9,y+6);
+  }
+  for(let i=0;i<=4;i++){
+    const xx=left+(right-left)*i/4;
+    c.strokeStyle='#223344';c.beginPath();c.moveTo(xx,top);c.lineTo(xx,bottom);c.stroke();
+    c.textAlign='center';c.fillStyle='#8398ac';c.fillText(mins(duration*i/4),xx,bottom+26);
+  }
+  const frames=state.run.frames;
+  function line(color,key,convert,alpha,limit) {
+    c.beginPath();
+    let count=0;
+    for(const frame of frames){
+      if(frame.time_s>limit)break;
+      const val=convert(frame[key]);
+      const y=bottom-Math.max(0,Math.min(1,val))*(bottom-top);
+      const xx=x(frame.time_s);
+      if(count++===0)c.moveTo(xx,y);else c.lineTo(xx,y);
+    }
+    c.strokeStyle=color;c.globalAlpha=alpha;c.lineWidth=4;c.lineJoin='round';c.stroke();c.globalAlpha=1;
+  }
+  for(const [color,key,fn] of [['#83f4c5','speed_mps',v=>v/speedScale],
+                                 ['#f2ba76','soc',v=>v]]) {
+    line(color,key,fn,.23,duration);
+    line(color,key,fn,1,state.simTime);
+  }
+  const head=x(state.simTime);
+  c.strokeStyle='#e6f8ff77';c.lineWidth=2;c.setLineDash([8,8]);
+  c.beginPath();c.moveTo(head,top);c.lineTo(head,bottom);c.stroke();c.setLineDash([]);
+}
 function updateReadout() {
   if(!state.run)return;
   const run=state.run, frame=run.frames.filter(f=>f.time_s<=state.simTime).at(-1)||run.frames[0];
   const done=state.simTime>=run.duration_sim_s;
   $('elapsed').textContent=mins(state.simTime);$('clock').textContent='SIM — '+mins(state.simTime);
   $('timeline').value=run.duration_sim_s?String(100*state.simTime/run.duration_sim_s):'0';
-  $('distance').textContent=done?number(run.distance_m):'—';
+  $('distance').textContent=number(frame.distance_m ?? (done ? run.distance_m : 0));
   $('energy').textContent=done?number(run.energy_estimated_wh,2):number(frame.energy_estimated_wh,2);
   $('battery').textContent=number(frame.soc*100,1)+'%';
   $('replans').textContent=String(run.events.filter(e=>e.state==='REPLANNING'&&e.time_s<=state.simTime).length);
@@ -92,6 +135,7 @@ function updateReadout() {
   const feed=$('events');feed.replaceChildren();
   const entries=run.events.filter(e=>e.time_s<=state.simTime);
   $('event-count').textContent=entries.length+' EVENTS';
+  drawTraces();
   for(const e of [...entries].reverse()){
     const item=document.createElement('div');item.className='event'+(/SAFE|REPLAN|REJECT/.test(e.state)?' warning':'');
     const title=document.createElement('strong');title.textContent=e.state.replaceAll('_',' ');
