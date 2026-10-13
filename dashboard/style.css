@@ -18,3 +18,7 @@
 #trace{display:block;width:100%;height:auto;aspect-ratio:1152 / 290;border:1px solid #2a4352;border-radius:10px;background:#0d1b29}
 .trace-panel p{margin-top:10px;color:#849bab;font-size:10px;line-height:1.5}
 @media(max-width:470px){.trace-legend{gap:10px;font-size:9px}.trace-panel .evidence-tag{display:none}}
+
+@media(max-width:470px){
+  #trace{aspect-ratio:2 / 1}
+}
