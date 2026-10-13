@@ -100,6 +100,24 @@ function updateReadout() {
     item.append(time,title,description);feed.append(item);
   }
 }
+async function loadGazeboEvidence() {
+  try {
+    const response = await fetch('/api/gazebo-evidence');
+    if (!response.ok) throw Error('Gazebo evidence unavailable');
+    const d = await response.json();
+    if (d.evidence_type !== 'ACTUAL_GAZEBO_HARMONIC_SIMULATION_TELEMETRY_NOT_HARDWARE'
+        || !Number.isFinite(d.displacement_reported_by_odometry_m)
+        || !Number.isFinite(d.max_odometry_linear_velocity_mps)
+        || !Number.isInteger(d.samples) || d.samples < 2) {
+      throw Error('Invalid evidence provenance');
+    }
+    $('gazebo-displacement').textContent = number(d.displacement_reported_by_odometry_m, 3);
+    $('gazebo-speed').textContent = number(d.max_odometry_linear_velocity_mps, 3);
+    $('gazebo-samples').textContent = String(d.samples);
+  } catch (err) {
+    $('gazebo-provenance').textContent = 'Archived Gazebo evidence unavailable: ' + err.message;
+  }
+}
 async function fetchRun() {
   $('run').disabled=true;$('run').textContent='LOADING…';
   try{
@@ -144,6 +162,6 @@ canvas.addEventListener('click',(e)=>{
 (async()=>{
   try{
     const response=await fetch('/api/map');if(!response.ok)throw Error('Map API unavailable');
-    state.map=await response.json();await fetchRun();requestAnimationFrame(tick);
+    state.map=await response.json();await loadGazeboEvidence();await fetchRun();requestAnimationFrame(tick);
   }catch(err){$('status').textContent='OFFLINE';$('reason').textContent=err.message;}
 })();
