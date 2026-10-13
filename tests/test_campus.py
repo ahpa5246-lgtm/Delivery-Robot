@@ -131,7 +131,11 @@ class CampusPlannerTests(unittest.TestCase):
         for f in run["frames"]:
             self.assertGreaterEqual(f["soc"], .20)
             self.assertLessEqual(f["speed_mps"], .65 + 1e-5)
+        self.assertAlmostEqual(run["frames"][0]["distance_m"], 0, places=3)
+        self.assertAlmostEqual(run["frames"][-1]["distance_m"], run["distance_m"], places=3)
         for a, b in zip(run["frames"], run["frames"][1:]):
+            self.assertGreaterEqual(b["distance_m"], a["distance_m"])
+            self.assertLessEqual(b["distance_m"], run["distance_m"])
             self.assertLessEqual(b["soc"], a["soc"] + 1e-6)
             self.assertLessEqual(hypot(b["x_m"]-a["x_m"],b["y_m"]-a["y_m"]),
                                  .65*(b["time_s"]-a["time_s"]) + .01)
