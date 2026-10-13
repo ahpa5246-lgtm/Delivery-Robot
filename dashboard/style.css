@@ -10,3 +10,11 @@
 .gazebo-panel p{font-size:10px;line-height:1.65;color:#a8bbc7}
 .gazebo-panel a{color:#a5dfd3;text-decoration:underline;text-underline-offset:3px}
 @media(max-width:470px){.gazebo-panel{padding:14px}.gazebo-measures{grid-template-columns:1fr 1fr}.gazebo-measures>div:last-child{grid-column:1/-1}}
+
+/* Current replay only; physically simulated historical Gazebo values remain separate. */
+.trace-panel{margin-top:18px;border-top:1px solid #293a48;padding:18px 3px 0}
+.trace-legend{display:flex;gap:24px;flex-wrap:wrap;font-size:10px;margin:13px 0 12px;color:#b3c6d1}
+.trace-speed{color:#83f4c5}.trace-soc{color:#f2ba76}
+#trace{display:block;width:100%;height:auto;aspect-ratio:1152 / 290;border:1px solid #2a4352;border-radius:10px;background:#0d1b29}
+.trace-panel p{margin-top:10px;color:#849bab;font-size:10px;line-height:1.5}
+@media(max-width:470px){.trace-legend{gap:10px;font-size:9px}.trace-panel .evidence-tag{display:none}}
