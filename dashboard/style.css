@@ -22,3 +22,7 @@
 @media(max-width:470px){
   #trace{aspect-ratio:2 / 1}
 }
+
+@media(min-width:801px) and (max-width:1230px){
+  .insights .gazebo-panel{grid-column:1 / -1}
+}
