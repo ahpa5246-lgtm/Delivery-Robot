@@ -200,6 +200,7 @@ try {
     assert.equal(await page.locator('#analytics-section').count(),1);
     assert.equal(await page.locator('#sensor-section').count(),1);
     assert.equal(await page.locator('#garden-engine').count(),1);
+    await page.frameLocator('#garden-engine').locator('#viewer').waitFor({state:'attached',timeout:45000});
     assert.equal(await page.frameLocator('#garden-engine').locator('#viewer').count(),1);
     assert.equal(await page.frameLocator('#garden-engine').locator('#ground-pick-layer').count(),1);
     assert.equal(await page.frameLocator('#garden-engine').locator('iframe').count(),0);
