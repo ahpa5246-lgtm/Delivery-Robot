@@ -25,6 +25,7 @@ STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
 # Asset paths are fixed and reviewed. Never allow arbitrary file system traversal.
 for _name in (
     "robot/rbot-wheel.stl", "robot/rbot-camera.stl", "robot/delivery-cad-part.stl",
+    "robot/rbot-chassis.stl", "robot/mecanum-chassis.stl",
     "world/warehouse-shelf.dae", "world/warehouse-lamp.dae",
     "world/warehouse-cargo.dae", "world/warehouse-roof.dae",
     "world/cafe-table.dae", "world/clearpath-office.dae",
