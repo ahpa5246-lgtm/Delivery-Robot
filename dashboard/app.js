@@ -157,6 +157,34 @@ function updateReadout() {
     item.append(time,title,description);feed.append(item);
   }
 }
+async function loadReferences() {
+  const host=$('integration-list');
+  if(!host) return;
+  try {
+    const response=await fetch('/api/references');
+    if(!response.ok)throw Error('Source registry not available');
+    const registry=await response.json();
+    if(registry.schema!=='cdr-reference-catalog-v1'
+       || !Array.isArray(registry.source_repositories)
+       || registry.source_repositories.length!==10) throw Error('Invalid source registry');
+    host.replaceChildren();
+    for(const source of registry.source_repositories){
+      const card=document.createElement('article');card.className='ref-card';
+      const top=document.createElement('div');top.className='ref-card-head';
+      const link=document.createElement('a');
+      link.href=source.url;link.target='_blank';link.rel='noopener noreferrer';
+      link.textContent=source.repo.split('/')[1]+' ↗';
+      const tag=document.createElement('span');tag.textContent=source.license;
+      top.append(link,tag);
+      const purpose=document.createElement('p');purpose.textContent=source.role;
+      const usage=document.createElement('small');
+      usage.textContent=source.active;
+      card.append(top,purpose,usage);host.append(card);
+    }
+  }catch(err){
+    host.textContent='Reference catalog unavailable: '+err.message;
+  }
+}
 async function loadGazeboEvidence() {
   try {
     const response = await fetch('/api/gazebo-evidence');
@@ -222,6 +250,6 @@ canvas.addEventListener('click',(e)=>{
   try{
     const response=await fetch('/api/map');if(!response.ok)throw Error('Map API unavailable');
     state.map=await response.json();window.__cdrReplayState={map:state.map,run:null,time:0};
-    await loadGazeboEvidence();await fetchRun();requestAnimationFrame(tick);
+    await Promise.all([loadGazeboEvidence(),loadReferences()]);await fetchRun();requestAnimationFrame(tick);
   }catch(err){$('status').textContent='OFFLINE';$('reason').textContent=err.message;}
 })();
