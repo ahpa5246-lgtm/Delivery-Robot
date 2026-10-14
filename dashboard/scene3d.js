@@ -68,7 +68,7 @@
   scene.fog = new T.Fog(0x142b3b, 26, 85);
   const camera = new T.PerspectiveCamera(48, 1, 0.1, 170);
   const target = new T.Vector3(16,0,-10);
-  let orbitAz = Math.PI*0.28, orbitElevation=0.95, orbitRadius=47;
+  let orbitAz = Math.PI*0.28, orbitElevation=0.78, orbitRadius=root.clientWidth<650?46:35;
   let cameraMode = 'orbit', dragging=false, oldX=0, oldY=0;
   function setPose() {
     const horizontal = orbitRadius*Math.cos(orbitElevation);
@@ -389,7 +389,7 @@
       if(mode==='top'){
         target.set(16,0,-10);camera.position.set(16,45,-10.01);camera.lookAt(target);
       }else if(mode==='follow'){orbitRadius=9;orbitElevation=1.14;orbitAz=.55;}
-      else{orbitRadius=47;orbitElevation=.95;orbitAz=.82;target.set(16,0,-10);}
+      else{orbitRadius=root.clientWidth<650?46:35;orbitElevation=.78;orbitAz=.82;target.set(16,0,-10);}
       for(const b of document.querySelectorAll('[data-camera]'))b.classList.toggle('active',b===btn);
     });
   }
