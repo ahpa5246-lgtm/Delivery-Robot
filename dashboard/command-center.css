@@ -117,3 +117,8 @@ footer{border-top:1px solid #263c4a;padding-top:19px}
 .export-button:hover{background:#226273;color:#fff}
 .export-button:focus-visible{outline:2px solid #8ffce3;outline-offset:2px}
 @media(max-width:650px){.operations-actions{width:100%}.operations-actions .evidence-tag{font-size:9px}.export-button{font-size:10px;padding:9px}}
+
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+.rail-icons a{width:42px;height:42px;display:grid;place-items:center;font-size:21px;border-radius:12px;text-decoration:none;color:#7896a9;border:1px solid transparent}
+.rail-icons a:hover,.rail-icons a:focus-visible{color:#d9fff2;background:#1a3946;border-color:#3c6d77;outline:none}
+.rail-icons a.rail-active{background:#1d393d;color:#70f0c4}
