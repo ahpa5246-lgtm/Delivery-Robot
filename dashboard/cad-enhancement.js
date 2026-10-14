@@ -40,10 +40,17 @@
       // licensed original geometry while substituting neutral material pixels
       // so the locally-hosted viewer does not make broken image requests.
       const xml=await response.text();
-      const pixel='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg==';
+      const pixel='Maple.jpg';
       const sanitized=xml.replace(/<library_images>[\s\S]*?<\/library_images>/,section=>
         section.replace(/<init_from>[^<]*\.(?:jpg|png)[^<]*<\/init_from>/gi,'<init_from>'+pixel+'</init_from>'));
       const collada=dae.parse(sanitized,'/assets/world/');
+      collada.scene.traverse(o=>{
+        if(o.isMesh) {
+          const label=(o.name||'').toLowerCase();
+          const tone=label.includes('glass')?0x729fb0:label.includes('floor')?0x8f9c9b:0xb3c3bf;
+          o.material=new THREE.MeshStandardMaterial({color:tone,roughness:.7,metalness:.12,side:THREE.DoubleSide});
+        }
+      });
       return {type:'dae',scene:collada.scene};
     }
     const collada=await new Promise((resolve,reject)=>
@@ -124,7 +131,7 @@
   lamp:[[7.8,0,-7.9],[17,0,-14.5]],
   roof:[[14,3.2,-10]],
   table:[[23,0,-5],[26,0,-5],[27,0,-9]],
-  office:[[21.5,0,-10]]
+  office:[[21.5,3.25,-10]]
  };
  async function onWorld(e){
    const token=++worldGeneration, {environment,theme}=e.detail;
@@ -135,7 +142,7 @@
      if(data[i].status!=='fulfilled')continue;
      const source=data[i].value;
      if(source.type!=='dae')continue;
-     const name=names[i],scale={shelf:1.65,cargo:1.1,lamp:2.2,roof:3.0,table:1.35,office:5.7}[name];
+     const name=names[i],scale={shelf:1.65,cargo:1.1,lamp:2.2,roof:3.0,table:1.35,office:2.9}[name];
      const locs=spots[name]||[];
      for(const [k,loc] of locs.entries()){
        const obj=fitObject(source.scene,scale,loc,k*.72);
@@ -143,10 +150,9 @@
          obj.name='licensed-'+name;
          environment.add(obj);
          if(name==='office') {
-           // The new architectural mesh replaces the east-wing placeholder,
-           // preserving the same obstacle footprint for planning.
-           for(const child of environment.children)
-             if(child.userData.buildingIndex===2)child.visible=false;
+           // Detailed original architectural geometry sits ABOVE the East Wing's
+           // existing building shell. Its original rectangular obstacle stays
+           // intact; nothing here changes route planning or contact geometry.
          }
        }
      }
