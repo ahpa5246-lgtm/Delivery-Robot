@@ -24,13 +24,21 @@
   view3d.setAttribute('aria-pressed','false');view2d.setAttribute('aria-pressed','false');
   frame.contentWindow?.postMessage({type:'cdr:garden-visibility',visible:true},location.origin);
  }
+ $('garden-replay-gazebo').addEventListener('click',()=>{
+  frame.contentWindow?.postMessage({type:'cdr:garden-start-gazebo-replay'},location.origin);
+ });
  gardenButton.addEventListener('click',showGarden);
  view3d.addEventListener('click',exitGarden);
  view2d.addEventListener('click',exitGarden);
  window.addEventListener('message',event=>{
   if(event.origin!==location.origin||event.source!==frame.contentWindow)return;
   const d=event.data;
-  if(!d||d.type!=='cdr:garden-pose'||!['manual','scripted','imported'].includes(d.source))return;
+  if(!d)return;
+  if(d.type==='cdr:garden-status' && typeof d.text==='string'){
+   $('garden-replay-status').textContent=d.text.slice(0,200);
+   return;
+  }
+  if(d.type!=='cdr:garden-pose'||!['manual','scripted','imported'].includes(d.source))return;
   if(![d.x,d.y,d.z,d.yaw,d.distance].every(Number.isFinite))return;
   $('garden-pose-xz').textContent=d.x.toFixed(2)+' / '+d.z.toFixed(2);
   $('garden-pose-yaw').textContent=d.yaw.toFixed(1)+'°';

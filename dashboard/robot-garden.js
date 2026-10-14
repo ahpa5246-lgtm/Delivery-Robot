@@ -82,16 +82,22 @@ floorY.addEventListener('change',()=>{
  provenance('VISUAL GROUND HEIGHT ADJUSTED TO '+floorY.value+' · NO PHYSICS');
 });
 window.addEventListener('message',e=>{
- if(e.origin!==location.origin||e.source!==window.parent||
-   e.data?.type!=='cdr:garden-visibility')return;
- if(viewer?.app)viewer.app.renderNextFrame=true;
+ if(e.origin!==location.origin||e.source!==window.parent)return;
+ if(e.data?.type==='cdr:garden-start-gazebo-replay'){
+  $('load-garden-gazebo')?.click();
+  return;
+ }
+ if(e.data?.type==='cdr:garden-visibility'&&viewer?.app)viewer.app.renderNextFrame=true;
 });
 const ORIGINAL_GARDEN_SHA256='e2c82908d3c871c47dc4e6498529944afaebd7d01cf130b65aa0bf01202086c3';
 const GARDEN_META_URL='/garden-assets/lod-meta.json';
 const GARDEN_META_NAME='lod-meta.json';
 const poseInputs=['origin-x','origin-y','origin-z','robot-scale','robot-yaw'];
 const val=id=>Number($(id).value);
-function status(msg){$('status').textContent=msg}
+function status(msg){
+ $('status').textContent=msg;
+ if(window.parent!==window)window.parent.postMessage({type:'cdr:garden-status',text:String(msg)},location.origin);
+}
 function provenance(msg){$('provenance').textContent=msg}
 function material(rgb,metalness=0){
  const m=new StandardMaterial();m.diffuse=new Color(...rgb);
