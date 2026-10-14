@@ -18,9 +18,9 @@ try {
   for (const viewport of viewports) {
     const page = await browser.newPage({ viewport, deviceScaleFactor: 1 });
     const errors = [];
-    page.on('pageerror', e => errors.push(e.message));
+    page.on('pageerror', e => { errors.push(e.message); console.error('PAGE ERROR:', e.message); });
     page.on('console', message => {
-      if (message.type() === 'error') errors.push(message.text());
+      if (message.type() === 'error') { errors.push(message.text()); console.error('CONSOLE ERROR:', message.text()); }
     });
     page.on('response', response => {
       if (response.status() >= 400)
@@ -49,6 +49,8 @@ try {
       && document.querySelector('#scene-status').textContent.includes('INTERACTIVE 3D')
     ), { timeout: 15000 });
     assert.equal(await page.locator('#view3d').getAttribute('aria-pressed'), 'true');
+    await page.screenshot({path:'experiments/ui_visual/'+viewport.name+'-initial.png',fullPage:true});
+    console.log('VISUAL ENVIRONMENT STATUS',await page.locator('#scene-detail-count').innerText());
     await page.waitForFunction(() => Number(document.querySelector('#scene-detail-count')?.textContent.replaceAll(',', '')) > 100);
     assert.match(await page.locator('#scene-detail-mode').innerText(), /Campus landscape/);
     assert.equal(await page.locator('#lighting-caption').innerText(), 'Day — visualization');
