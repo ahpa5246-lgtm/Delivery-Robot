@@ -248,6 +248,12 @@ def astar(campus: Campus, start: Point, goal: Point,
             if dx and dy and (not campus.free((cell[0]+dx, cell[1]), closure)
                               or not campus.free((cell[0], cell[1]+dy), closure)):
                 continue
+            # Cell-centre occupancy alone can miss the inflated corner of a
+            # thin fixture. Reject unsafe edges DURING search; otherwise A*
+            # may pick one shortest grid path and falsely reject a world
+            # with another genuinely traversable corridor.
+            if not campus.segment_safe(campus.center(cell), campus.center(nxt)):
+                continue
             candidate = current_cost + hypot(dx, dy)
             if candidate + 1e-8 < cost.get(nxt, float("inf")):
                 cost[nxt] = candidate
