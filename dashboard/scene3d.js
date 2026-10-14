@@ -185,7 +185,11 @@
     }
     // Subtle square parking and loading bay
     cube(environment,5,.035,3.1,road,3.5,.02,-2.5,false);
-    data.buildings.forEach((b,i)=>building(i,b,worldSelect.value));
+    data.buildings.forEach((b,i)=>{
+      const start=environment.children.length;
+      building(i,b,worldSelect.value);
+      for(const item of environment.children.slice(start))item.userData.buildingIndex=i;
+    });
     if(!warehouse){
       let idx=0;
       const sites=[[1.1,7.3],[2.0,13.9],[16.7,2.0],[17,18.2],[29.8,10],
