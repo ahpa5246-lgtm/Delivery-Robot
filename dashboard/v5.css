@@ -89,3 +89,11 @@ main{max-width:1830px}
 @media(max-width:1350px){.fleet-body{grid-template-columns:repeat(2,minmax(0,1fr))}.fleet-sensor-card{grid-column:1/-1}.fleet-sensor-card{display:grid;grid-template-columns:1fr 1fr;gap:12px}.fleet-sensor-card .fleet-subhead,.fleet-sensor-note{grid-column:1/-1}.fleet-detail{grid-template-columns:repeat(2,minmax(0,1fr));align-content:center}}
 @media(max-width:830px){.fleet-body{grid-template-columns:1fr}.fleet-sensor-card{grid-column:auto;display:block}.fleet-summary{grid-template-columns:repeat(4,minmax(0,1fr))}.fleet-deck-top{flex-direction:column}.fleet-head-right{justify-content:flex-start}}
 @media(max-width:440px){.fleet-deck{padding:12px}.fleet-card{padding:10px}.fleet-unit{gap:7px;padding:8px}.fleet-unit>b{width:35px}.fleet-summary{grid-template-columns:repeat(2,1fr)}.fleet-detail{grid-template-columns:repeat(2,1fr)}.fleet-queue .fleet-job{grid-template-columns:40px 1fr auto}}
+
+
+.fleet-transport{display:flex;align-items:center;gap:12px;margin:0 0 15px;padding:10px 12px;border-radius:8px;border:1px solid #45555f;background:#1b2b35}
+.fleet-transport button,.fleet-transport select{background:#32444e;border:1px solid #657079;color:#f0ebe0;border-radius:5px;padding:8px 11px;font-size:11px;cursor:pointer}
+.fleet-transport #fleet-scrub{flex:1;min-width:40px;accent-color:#bea788;cursor:pointer}
+.fleet-transport span{color:#d8d6c9;font-size:11px;font-variant-numeric:tabular-nums}
+.fleet-transport #fleet-end{color:#98a9af}
+@media(max-width:520px){.fleet-transport{gap:6px;flex-wrap:wrap}.fleet-transport #fleet-scrub{order:5;flex-basis:100%}.fleet-transport button{padding:7px 8px}}
