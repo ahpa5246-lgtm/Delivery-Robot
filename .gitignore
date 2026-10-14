@@ -17,3 +17,6 @@ assets/gaussian-garden-download/
 *.sog
 *.spz
 *.compressed.ply
+
+# Uploaded licensed archive consumed on demand by the lab server.
+assets/gaussian-garden.zip

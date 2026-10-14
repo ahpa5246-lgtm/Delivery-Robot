@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 import json
+import os
+import re
+import zipfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
@@ -11,7 +14,54 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from cdr_sim.campus import Campus, ReplayOptions, replay
 
-ROOT = Path(__file__).resolve().parents[1] / "dashboard"
+REPO_ROOT = Path(__file__).resolve().parents[1]
+ROOT = REPO_ROOT / "dashboard"
+# ZIP is intentionally not committed; 113 MiB exceeds ordinary GitHub per-file limit.
+# Codespaces: upload once to assets/gaussian-garden.zip, no unzip needed.
+GARDEN_ZIP = Path(os.environ.get("CDR_GARDEN_ZIP", str(REPO_ROOT / "assets" / "gaussian-garden.zip")))
+GARDEN_ENTRY = re.compile(
+    r"(?:lod-meta\.json|license\.txt|[0-9]+_[0-9]+/(?:meta\.json|"
+    r"(?:means_l|means_u|quats|scales|sh0|shN_labels|shN_centroids)\.webp))\\Z"
+)
+MAX_GARDEN_FILE_SIZE = 4 * 1024 * 1024
+
+def garden_resource(name: str) -> tuple[int, str, bytes]:
+    """Serve *only* known harmless LOD files from the uploaded archive."""
+    if not GARDEN_ENTRY.fullmatch(name):
+        return 404, "application/json", b'{"error":"invalid Garden asset"}'
+    if not GARDEN_ZIP.is_file():
+        return 404, "application/json", b'{"error":"Garden archive is not installed"}'
+    try:
+        with zipfile.ZipFile(GARDEN_ZIP) as archive:
+            info = archive.getinfo(name)
+            if info.is_dir() or info.file_size > MAX_GARDEN_FILE_SIZE:
+                return 413, "application/json", b'{"error":"Garden entry too large"}'
+            kind = ("application/json" if name.endswith(".json") else
+                    "image/webp" if name.endswith(".webp") else
+                    "text/plain; charset=utf-8")
+            return 200, kind, archive.read(info)
+    except (KeyError, zipfile.BadZipFile, OSError, RuntimeError):
+        return 404, "application/json", b'{"error":"Garden archive entry unavailable"}'
+
+def garden_status() -> dict:
+    """Public diagnostic only; never leak server filesystem or credentials."""
+    if not GARDEN_ZIP.is_file():
+        return {"installed": False, "format": "multi-file 3DGS LOD zip"}
+    try:
+        with zipfile.ZipFile(GARDEN_ZIP) as z:
+            names = set(z.namelist())
+            metadata = json.loads(z.read("lod-meta.json"))
+            valid = (metadata.get("lodLevels") == 4 and
+                     isinstance(metadata.get("filenames"), list) and
+                     bool(metadata["filenames"]) and
+                     all(n in names for n in metadata["filenames"]))
+            return {"installed": valid,
+                    "format": "multi-file 3DGS LOD zip",
+                    "entries": len(names),
+                    "lod_levels": metadata.get("lodLevels")}
+    except (ValueError, zipfile.BadZipFile, KeyError, OSError):
+        return {"installed": False, "format": "invalid Garden archive"}
+
 STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
           "/robot-garden": ("robot-garden.html", "text/html; charset=utf-8"),
           "/robot-garden.js": ("robot-garden.js", "text/javascript; charset=utf-8"),
@@ -55,6 +105,10 @@ for _name in (
 
 def response_for(path: str) -> tuple[int, str, bytes]:
     parsed = urlsplit(path)
+    if parsed.path.startswith("/garden-assets/"):
+        return garden_resource(parsed.path[len("/garden-assets/"):])
+    if parsed.path == "/api/garden-asset":
+        return 200, "application/json", json.dumps(garden_status()).encode("utf-8")
     if parsed.path in STATIC:
         filename, media_type = STATIC[parsed.path]
         return 200, media_type, (ROOT / filename).read_bytes()

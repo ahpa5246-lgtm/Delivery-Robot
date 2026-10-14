@@ -7,6 +7,8 @@ import { Entity, Color, StandardMaterial, Vec3 } from 'playcanvas';
 const $=id=>document.getElementById(id);
 let viewer=null,robot=null,sourceUrl=null,trajectory=null,timer=0,playing=false,startAt=0;
 let manualPose={x:0,z:0,yaw:0};
+const GARDEN_META_URL='/garden-assets/lod-meta.json';
+const GARDEN_META_NAME='lod-meta.json';
 const poseInputs=['origin-x','origin-y','origin-z','robot-scale','robot-yaw'];
 const val=id=>Number($(id).value);
 function status(msg){$('status').textContent=msg}
@@ -153,3 +155,21 @@ function tick(now){
 $('play').addEventListener('click',()=>{if(!trajectory)return;stop();playing=true;startAt=performance.now();$('pause').disabled=false;timer=requestAnimationFrame(tick);});
 $('pause').addEventListener('click',stop);
 $('reset').addEventListener('click',()=>{stop();if(trajectory){manualPose={x:0,z:0,yaw:0};applyPose(0,0,0);$('pose-readout').textContent=trajectory.label+' · RESET';}});
+
+/* Load the already-received original LOD ZIP from Codespaces automatically.
+   No file can be guessed from a public iframe. Serving tiles is handled by
+   the Python ZIP resource endpoint, including its strict asset allowlist. */
+async function loadInstalledGarden(){
+ try{
+  const response=await fetch('/api/garden-asset',{cache:'no-store'});
+  if(!response.ok)throw new Error('Garden manifest request failed');
+  const data=await response.json();
+  if(data.installed){
+   status('ORIGINAL GARDEN DETECTED · LOADING '+data.lod_levels+' LOD LEVELS…');
+   await load(GARDEN_META_URL,GARDEN_META_NAME);
+  }else{
+   status('UPLOAD ORIGINAL 3DGS ZIP TO CODESPACES');
+  }
+ }catch(e){status('GARDEN ARCHIVE CHECK FAILED: '+e.message);}
+}
+loadInstalledGarden();

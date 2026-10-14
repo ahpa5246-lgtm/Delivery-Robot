@@ -37,6 +37,41 @@ class GardenRobotTests(unittest.TestCase):
         self.assertIn("object-src 'none'; frame-ancestors 'none'", server)
         self.assertEqual(response_for("/assets/../../../etc/passwd")[0], 404)
 
+    def test_secure_lod_zip_streaming(self):
+        import json
+        import tempfile
+        import zipfile
+        from unittest.mock import patch
+        import scripts.serve_dashboard as app
+
+        sample = {"lodLevels":4,"filenames":["0_0/meta.json"]}
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "garden.zip"
+            with zipfile.ZipFile(p, "w") as z:
+                z.writestr("lod-meta.json", json.dumps(sample))
+                z.writestr("0_0/meta.json", '{"version":2}')
+                z.writestr("0_0/means_l.webp", b"RIFFsampleWEBP")
+                z.writestr("license.txt", "CC BY 4.0")
+            with patch.object(app, "GARDEN_ZIP", p):
+                self.assertEqual(response_for("/api/garden-asset")[0], 200)
+                self.assertTrue(json.loads(response_for("/api/garden-asset")[2])["installed"])
+                c, typ, data = response_for("/garden-assets/lod-meta.json")
+                self.assertEqual(c, 200)
+                self.assertIn("application/json", typ)
+                self.assertEqual(json.loads(data), sample)
+                self.assertEqual(response_for("/garden-assets/0_0/means_l.webp")[2], b"RIFFsampleWEBP")
+                for bad in ("/garden-assets/../../etc/passwd",
+                            "/garden-assets/0_0/unexpected.exe",
+                            "/garden-assets/__pycache__/app.py"):
+                    self.assertEqual(response_for(bad)[0], 404)
+
+    def test_missing_garden_zip_is_reported(self):
+        from unittest.mock import patch
+        import scripts.serve_dashboard as app
+        with patch.object(app, "GARDEN_ZIP", Path("/not/a/real/archive.zip")):
+            self.assertEqual(response_for("/garden-assets/lod-meta.json")[0],404)
+            self.assertFalse(__import__("json").loads(response_for("/api/garden-asset")[2])["installed"])
+
     def test_homepage_has_visible_lab_entry(self):
         data=response_for("/")[2].decode()
         self.assertIn('href="/robot-garden"', data)

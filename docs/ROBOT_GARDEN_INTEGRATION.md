@@ -23,3 +23,29 @@ Don't tell instructors that the robot's plotted path is a verified physical oper
 - Preserve credit: *Mip-NeRF 360 "Garden" – transkatgirl, CC BY 4.0. Original capture data: Mip-NeRF 360.*
 - Once acquired, keep the >100 MB Garden asset **out of ordinary Git commits**. Use an asset store (e.g. GitHub Release / object storage) after reviewing download license and CORS; locally it can be loaded through the file picker, and recordings must report their provenance.
 - Required before claiming robot motion **inside a physically simulated Garden**: known metric scale and frame rotation, surveyed registration, ground/obstacle collision representation with test cases, Gazebo loaded with the Garden collision world, and a recorded ROS2/Gazebo run with synchronized pose and independent ground truth.
+
+## Original Garden ZIP received and verified (2026-10-14)
+
+The user supplied a 113.36 MiB uncompressed/ZIP-stored original SuperSplat
+multi-file **LOD archive** with 98 entries: `license.txt`, `lod-meta.json`,
+and WebP/Gaussian metadata in 12 tile directories. Verified by `ZipFile.testzip()`
+(no errors) and `lod-meta.json` references (all present). SHA256:
+
+`e2c82908d3c871c47dc4e6498529944afaebd7d01cf130b65aa0bf01202086c3`
+
+**Place the ZIP itself** at `assets/gaussian-garden.zip` inside your
+Codespace (GitHub editor Explorer → assets folder → Upload), then run
+`python3 scripts/serve_dashboard.py` and open `/robot-garden`.
+
+The dashboard server exposes only whitelisted archive contents under
+`/garden-assets/...`; the PlayCanvas viewer loads its
+`/garden-assets/lod-meta.json` and streams child tiles as needed. The
+original file does **not** belong in ordinary Git (exceeds 100MB single-file
+limit). No second, larger source file is necessary merely to render the LOD
+capture. The physics/collision limitations documented above still apply.
+
+Confirm installation using `/api/garden-asset`, which responds with
+`{"installed": true, "entries": 98, "lod_levels": 4}` when detected.
+If the user chooses a separate Codespaces workspace, the ZIP must be
+transferred into that workspace; uploads attached in ChatGPT are not
+automatically present in GitHub or Codespaces.
