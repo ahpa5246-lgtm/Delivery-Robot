@@ -239,7 +239,7 @@ $('export-garden-calibration').addEventListener('click',()=>{
   calibration_status:'OPERATOR-ESTIMATED. NO VERIFIED GARDEN TERRAIN MESH',
   notes:'This defines an origin and orientation for a local flat Gazebo pad only.'
  };
- const b=new Blob([JSON.stringify(d,null,2)+'\\n'],{type:'application/json'});
+ const b=new Blob([JSON.stringify(d,null,2),String.fromCharCode(10)],{type:'application/json'});
  const u=URL.createObjectURL(b);
  const a=document.createElement('a');a.href=u;a.download='garden-calibration.json';
  document.body.appendChild(a);a.click();a.remove();
