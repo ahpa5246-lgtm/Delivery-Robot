@@ -112,7 +112,7 @@
   }
   function setLighting(value){
     const presets={
-      day:{sky:0x405765,hemisphere:1.23,sun:2.15,pos:[12,33,8]},
+      day:{sky:0x405765,hemisphere:1.04,sun:1.65,pos:[12,33,8]},
       golden:{sky:0x6f5d53,hemisphere:.85,sun:1.85,pos:[-17,12,-7]},
       night:{sky:0x1c2733,hemisphere:.42,sun:.55,pos:[-9,14,-14]}
     };
