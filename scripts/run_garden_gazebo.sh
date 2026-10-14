@@ -31,9 +31,9 @@ sleep 2
 # Gazebo DiffDrive retains a velocity if direct gz topic commands stop.
 # Route ALL commands through ROS 2 + watchdog at 20Hz; timeout forces zeros.
 source /opt/ros/jazzy/setup.bash
-ros2 launch ros_gz_bridge ros_gz_bridge.launch.py \\
-  bridge_name:=cdr01_garden_bridge \\
-  config_file:="$(pwd)/simulation/ros_gz_bridge.yaml" \\
+ros2 launch ros_gz_bridge ros_gz_bridge.launch.py \
+  bridge_name:=cdr01_garden_bridge \
+  config_file:="$(pwd)/simulation/ros_gz_bridge.yaml" \
   > "$OUT/ros_bridge.log" 2>&1 &
 BRIDGE_PID=$!
 python3 scripts/ros_velocity_watchdog.py > "$OUT/watchdog.log" 2>&1 &
