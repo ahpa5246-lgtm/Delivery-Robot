@@ -97,7 +97,7 @@
   let lastAnim=performance.now(), lastX=2,lastY=2;
   const cube=(parent,w,h,d,color,x,y,z,shadow=true)=>{
     const mesh=new T.Mesh(new T.BoxGeometry(w,h,d),color);
-    mesh.position.set(x,y,z);mesh.castShadow=shadow;mesh.receiveShadow=true;parent.add(mesh);return mesh;
+    mesh.position.set(x,y,z);mesh.castShadow=shadow&&(w*h*d>.10);mesh.receiveShadow=true;parent.add(mesh);return mesh;
   };
   const cyl=(parent,r1,r2,height,color,x,y,z,axis=null)=>{
     const m=new T.Mesh(new T.CylinderGeometry(r1,r2,height,12),color);
