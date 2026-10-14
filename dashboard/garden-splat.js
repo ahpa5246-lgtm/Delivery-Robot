@@ -34,6 +34,16 @@
   if(event.origin!==location.origin||event.source!==frame.contentWindow)return;
   const d=event.data;
   if(!d)return;
+  if(d.type==='cdr:garden-record-info' && d.source==='recorded_gazebo_harmonic_odometry' &&
+     Number.isInteger(d.samples) && d.samples>=2 &&
+     [d.duration_s,d.odometry_path_length_m].every(Number.isFinite) &&
+     typeof d.stopped_at_end==='boolean'){
+    $('garden-record-samples').textContent=String(d.samples);
+    $('garden-record-duration').textContent=d.duration_s.toFixed(1)+' s';
+    $('garden-record-distance').textContent=d.odometry_path_length_m.toFixed(2)+' m';
+    $('garden-record-stopped').textContent=d.stopped_at_end?'PASS · SIMULATED':'FAILED / STILL MOVING';
+    return;
+  }
   if(d.type==='cdr:garden-status' && typeof d.text==='string'){
    $('garden-replay-status').textContent=d.text.slice(0,200);
    return;

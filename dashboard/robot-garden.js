@@ -230,6 +230,13 @@ $('load-garden-gazebo').addEventListener('click',async()=>{
      record.garden_source_sha256!==ORIGINAL_GARDEN_SHA256)
      throw Error('Invalid or misattributed Gazebo recording');
   importFrames(record.frames,'RECORDED GAZEBO FLAT CONTACT PROXY (NOT GARDEN COLLISIONS)');
+  if(window.parent!==window && [record.duration_s,record.odometry_path_length_m].every(Number.isFinite))
+   window.parent.postMessage({
+    type:'cdr:garden-record-info',source:'recorded_gazebo_harmonic_odometry',
+    samples:record.samples,duration_s:record.duration_s,
+    odometry_path_length_m:record.odometry_path_length_m,
+    stopped_at_end:record.stopped_at_end===true
+   },location.origin);
   status(record.samples+' GAZEBO ODOMETRY SAMPLES · FLAT PROXY ONLY');
  }catch(e){status(e.message);}
 });
