@@ -31,6 +31,9 @@ for _name in (
 ):
     STATIC["/assets/" + _name] = ("assets/" + _name,
         "model/stl" if _name.endswith(".stl") else "model/vnd.collada+xml")
+for _name in ("Maple.jpg", "Wood_Floor_Dark.jpg"):
+    _asset = "assets/world/" + _name
+    STATIC["/" + _asset] = (_asset,"image/jpeg")
 for _name in (
     "ShelfD_01","ShelfD_02","ShelfD_03","ShelfD_04",
     "Lamp_01","RoofB_01","ClutteringA_01","ClutteringA_02","ClutteringA_03"
