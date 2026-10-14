@@ -11,10 +11,11 @@ import json
 import math
 from pathlib import Path
 from xml.etree import ElementTree as ET
-
-from scripts.generate_gazebo_world import generate
+import sys
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from scripts.generate_gazebo_world import generate
 DEFAULT_OUTPUT = ROOT / "simulation" / "garden_physics_proxy.sdf"
 EXPECTED_SOURCE = "e2c82908d3c871c47dc4e6498529944afaebd7d01cf130b65aa0bf01202086c3"
 
