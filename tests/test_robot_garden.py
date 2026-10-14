@@ -33,7 +33,9 @@ class GardenRobotTests(unittest.TestCase):
         self.assertIn("robot.enabled=false", s)
         self.assertIn("publishPose()", s)
         self.assertIn("app.root.addChild(base)", s)
-        self.assertNotIn("frame.setAttribute", (ROOT/"dashboard/garden-splat.js").read_text())
+        navigator = (ROOT/"dashboard/garden-splat.js").read_text()
+        self.assertIn("frame.dataset.src", navigator)
+        self.assertNotIn("https://superspl.at", navigator)
         self.assertIn("SPATIAL REGISTRATION / GARDEN COLLISION NOT VERIFIED", s)
         self.assertIn("SCRIPTED PYTHON CAMPUS REPLAY (NOT GAZEBO)", s)
 
