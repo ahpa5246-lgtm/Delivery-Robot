@@ -22,6 +22,10 @@ try {
     page.on('console', message => {
       if (message.type() === 'error') errors.push(message.text());
     });
+    page.on('response', response => {
+      if (response.status() >= 400)
+        errors.push('HTTP '+response.status()+' '+response.url());
+    });
     const response = await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 30000 });
     assert.equal(response.status(), 200);
     await page.waitForFunction(() => (
