@@ -67,7 +67,7 @@ class Campus:
     width: float = 32.0
     height: float = 20.0
     resolution: float = 0.5
-    robot_radius: float = 0.35
+    robot_radius: float = field(default_factory=lambda: float(shared_world()["map"]["robot_radius_m"]))
     theme: str = "campus"
     safety_margin: float = 0.10
     buildings: tuple[Box, ...] = field(default_factory=lambda: tuple(
