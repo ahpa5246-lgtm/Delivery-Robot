@@ -76,22 +76,31 @@ class Campus:
         k: tuple(v) for k, v in shared_world()["stops"].items()})
 
     def __post_init__(self):
-        if self.theme not in shared_world()["worlds"]:
+        spec = shared_world()
+        if self.theme not in spec["worlds"]:
             raise ValueError("unsupported world theme")
         if not (isfinite(self.safety_margin) and self.safety_margin >= 0):
             raise ValueError("invalid clearance margin")
+        # Freeze precomputed collision rectangles once for this exact world.
+        # A* invokes free()/visible() millions of times in the seed stress trial;
+        # rebuilding obstacle tuples at every call is unnecessary allocation.
+        m=spec["map"]
+        if (abs(self.width-m["width_m"]) <= 1e-7 and
+                abs(self.height-m["height_m"]) <= 1e-7):
+            fixtures=tuple(spec["worlds"][self.theme]["fixtures"])
+        else:
+            fixtures=()  # Custom miniature test maps do not inherit campus props.
+        object.__setattr__(self, "_fixtures", fixtures)
+        object.__setattr__(self, "_obstacles", self.buildings + tuple(
+            tuple(f["footprint_m"]) for f in fixtures))
 
     @property
     def fixtures(self) -> tuple[dict, ...]:
-        # Synthetic miniature worlds in unit tests must not inherit 32x20 m fixtures.
-        m = shared_world()["map"]
-        if abs(self.width-m["width_m"]) > 1e-7 or abs(self.height-m["height_m"]) > 1e-7:
-            return ()
-        return tuple(shared_world()["worlds"][self.theme]["fixtures"])
+        return self._fixtures
 
     @property
     def obstacles(self) -> tuple[Box, ...]:
-        return self.buildings + tuple(tuple(f["footprint_m"]) for f in self.fixtures)
+        return self._obstacles
 
     def clearance(self, point: Point) -> float:
         return min((distance_to_box(point, b) for b in self.obstacles),
