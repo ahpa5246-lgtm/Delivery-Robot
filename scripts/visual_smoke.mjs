@@ -54,6 +54,13 @@ try {
       document.querySelector('#mesh-provenance')?.textContent.includes('ORIGINAL CAD')
     ), { timeout: 30000 });
     assert.ok((await page.locator('#mesh-provenance').innerText()).includes('CAD'));
+    await page.waitForFunction(() => {
+      const robot=window.CDR3D?.getRobot();
+      const original=robot?.getObjectByName('primitive-chassis-body');
+      return original?.visible===false && robot.children.some(m =>
+        m.isMesh && m.geometry?.getAttribute('position')?.count > 45000);
+    }, {timeout: 30000});
+    assert.equal(await page.locator('#mesh-provenance').count(),1);
     await page.waitForFunction(() => (
       !!window.CDR3D?.environment?.getObjectByName('licensed-office')
     ), { timeout: 30000 });
