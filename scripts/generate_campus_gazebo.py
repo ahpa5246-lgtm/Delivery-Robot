@@ -18,8 +18,9 @@ from scripts.generate_gazebo_world import generate, child
 OUTPUT = ROOT / "simulation" / "campus_delivery.sdf"
 
 
-def construct():
-    campus = Campus()
+def construct(theme: str = "campus"):
+    # Gazebo's collision and the offline A* planner share the SAME rectangles.
+    campus = Campus(theme=theme)
     source = generate()
     sdf = ET.parse(source).getroot()
     world = sdf.find("world")
@@ -50,6 +51,23 @@ def construct():
         child(material,"ambient","0.19 0.29 0.34 1")
         child(material,"diffuse","0.25 0.42 0.48 1")
 
+    heights={"tree":1.50,"bench":.74,"table":.85,"light":2.8,
+             "bike_rack":.70,"shelf":2.15,"cargo":.93}
+    for fixture in campus.fixtures:
+        x0,y0,x1,y1=fixture["footprint_m"]
+        height=heights[fixture["kind"]]
+        model=child(world,"model",name="fixture_"+fixture["id"])
+        child(model,"static","true")
+        child(model,"pose",f"{(x0+x1)/2} {(y0+y1)/2} {height/2} 0 0 0")
+        link=child(model,"link",name="solid")
+        for section in ("collision","visual"):
+            geometry=child(child(link,section,name=fixture["id"]+"_"+section),
+                           "geometry")
+            child(child(geometry,"box"),"size",f"{x1-x0} {y1-y0} {height}")
+        material=child(link.find("visual"),"material")
+        child(material,"ambient","0.37 0.46 0.44 1")
+        child(material,"diffuse","0.43 0.52 0.50 1")
+
     for name,(x,y) in campus.stops.items():
         m=child(world,"model",name="stop_"+name)
         child(m,"static","true")
@@ -63,10 +81,12 @@ def construct():
         child(material,"ambient","0.14 0.75 0.57 1")
         child(material,"diffuse","0.24 0.81 0.67 1")
     ET.indent(sdf,space="  ")
-    OUTPUT.parent.mkdir(parents=True,exist_ok=True)
-    ET.ElementTree(sdf).write(OUTPUT,encoding="utf-8",xml_declaration=True)
-    return OUTPUT
+    output=OUTPUT if theme=="campus" else ROOT/"simulation"/"warehouse_delivery.sdf"
+    output.parent.mkdir(parents=True,exist_ok=True)
+    ET.ElementTree(sdf).write(output,encoding="utf-8",xml_declaration=True)
+    return output
 
 
 if __name__ == "__main__":
-    print("Wrote campus Gazebo candidate:",construct())
+    for theme in ("campus","warehouse"):
+        print("Wrote Gazebo world with authoritative collision fixtures:",construct(theme))
