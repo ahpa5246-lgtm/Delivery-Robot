@@ -44,7 +44,7 @@
     root.hidden = true;
     return;
   }
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.65));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
   renderer.setSize(Math.max(300, root.clientWidth), Math.max(240, root.clientHeight), false);
   renderer.setClearColor(0x132c3c);
   renderer.shadowMap.enabled = true;
@@ -81,7 +81,7 @@
   const hemi = new T.HemisphereLight(0xcdeafa,0x243b45,0.90);scene.add(hemi);
   const sun = new T.DirectionalLight(0xffe6bb,1.55);
   sun.position.set(12,33,8);sun.castShadow=true;
-  sun.shadow.mapSize.set(2048,2048);
+  sun.shadow.mapSize.set(1024,1024);
   sun.shadow.camera.left=-30;sun.shadow.camera.right=30;
   sun.shadow.camera.top=30;sun.shadow.camera.bottom=-30;
   sun.shadow.bias=-0.0007;scene.add(sun);
@@ -334,9 +334,14 @@
     }
     renderer.setSize(w,h,false);
   }
+  let lastGpuFrame=0;
   function render(timestamp) {
     requestAnimationFrame(render);
     if(!sceneReady||root.hidden)return;
+    // Cap GPU work to ~30 fps. Browser screenshots and low-end devices must not
+    // burn CPU on unlimited shadowed render passes.
+    if(timestamp-lastGpuFrame<32)return;
+    lastGpuFrame=timestamp;
     refreshSize();
     if(cameraMode==='follow'&&robot)target.lerp(new T.Vector3(robot.position.x,.45,robot.position.z),.08);
     else if(cameraMode==='orbit')target.lerp(new T.Vector3(16,0,-10),.02);
