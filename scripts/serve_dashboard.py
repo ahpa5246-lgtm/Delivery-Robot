@@ -21,7 +21,10 @@ STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
           "/vendor/ColladaLoader.js": ("vendor/ColladaLoader.js", "text/javascript; charset=utf-8"),
           "/command-center.css": ("command-center.css", "text/css; charset=utf-8"),
           "/cad-enhancement.js": ("cad-enhancement.js", "text/javascript; charset=utf-8"),
-          "/analytics.js": ("analytics.js", "text/javascript; charset=utf-8")}
+          "/analytics.js": ("analytics.js", "text/javascript; charset=utf-8"),
+          "/environment-detail.js": ("environment-detail.js", "text/javascript; charset=utf-8"),
+          "/engineering-audit.js": ("engineering-audit.js", "text/javascript; charset=utf-8"),
+          "/v3.css": ("v3.css", "text/css; charset=utf-8")}
 # Asset paths are fixed and reviewed. Never allow arbitrary file system traversal.
 for _name in (
     "robot/rbot-wheel.stl", "robot/rbot-camera.stl", "robot/delivery-cad-part.stl",

@@ -74,6 +74,14 @@ Run `python3 scripts/serve_dashboard.py` and open http://127.0.0.1:8765. See **[
 
 **Do not confuse the 3D replay with Nav2 or real-time Gazebo physics.** Motion, energy, SOC, and heading still derive from the deterministic Python mission simulator; historical Gazebo odometry is a separate measured experiment.
 
+## V3 campus world and engineering instrumentation
+
+The dashboard has a new visual-only campus scenery layer (paving detail, landscape planting, boundary fixtures, crosswalks, logistics items), **Day / Sunset / Night** lighting profiles, a street-level camera, and click-to-route station markers within its interactive WebGL scene. It retains the existing source-licensed CAD/Collada geometry and proven 2D fallback.
+
+Below the 3D viewer, **Movement and mission integrity** adds eight actual frame-derived modeled quantities (position, acceleration, turn rate, power estimate, direct target distance, Wh/km, moving duty cycle and planned polyline length). A frame consistency check explicitly distinguishes internally consistent scripted data from real-world validation. These numbers are not LiDAR, IMU or motor telemetry.
+
+See [technical measurements, limits and acceptance notes](docs/V3_VISUAL_AND_INSTRUMENTATION.md).
+
 ## Interactive 3D mission studio (source-guided upgrade)
 
 The local dashboard now includes a **WebGL 3D campus scene** using a locally bundled MIT-licensed Three.js engine. It provides orbit, overhead and follow cameras, a robot model inspector, a 3D/2D view switch, outdoor campus and logistics scene variants, and nine selectable **visual robot designs**. The browser scene follows the existing deterministic **2D replay**, not ROS2/Gazebo physics. Simulated values remain clearly labeled separately from historical Gazebo odometry.

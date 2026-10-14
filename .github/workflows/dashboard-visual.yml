@@ -16,6 +16,9 @@ on:
       - 'scripts/visual_smoke.mjs'
       - '.github/workflows/dashboard-visual.yml'
   workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
 permissions:
   contents: read
 

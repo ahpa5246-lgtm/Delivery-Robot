@@ -7,6 +7,7 @@
   <title>CDR-01 — Engineering Mission Intelligence</title>
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/command-center.css">
+  <link rel="stylesheet" href="/v3.css">
   <script src="/vendor/three.min.js" defer></script>
   <script src="/vendor/STLLoader.js" defer></script>
   <script src="/vendor/ColladaLoader.js" defer></script>
@@ -14,6 +15,8 @@
   <script src="/scene3d.js" defer></script>
   <script src="/cad-enhancement.js" defer></script>
   <script src="/analytics.js" defer></script>
+  <script src="/environment-detail.js" defer></script>
+  <script src="/engineering-audit.js" defer></script>
 </head>
 <body>
 <div class="shell">
@@ -52,15 +55,19 @@
               <option value="tb3">TurtleBot3 Concept</option>
             </select>
             <label for="world-preset">Scene</label><select id="world-preset"><option value="campus">Campus</option><option value="warehouse">Logistics</option></select>
+            <label for="lighting-preset">Lighting</label><select id="lighting-preset"><option value="day">Daylight</option><option value="golden">Sunset</option><option value="night">Night</option></select>
           </div>
         </div>
         <div class="map-wrap" id="stage-viewport">
           <div id="scene3d" role="img" aria-label="Interactive three dimensional university campus and robot"></div>
+          <div class="world-inspector" aria-label="Visual environment status"><span class="world-eyebrow">CAMPUS DIGITAL MODEL</span><strong id="scene-detail-mode">Campus landscape</strong><span><b id="scene-detail-count">—</b> decorative elements · not collision geometry</span><span id="lighting-caption">Day — visualization</span></div>
+
           <canvas id="map" width="1152" height="720" role="img" aria-label="2D campus map with buildings, paths, robot, and delivery destination"></canvas>
           <div class="robot-inspector-label">3D MODEL PREVIEW<strong id="inspector-model">CDR-01 delivery concept</strong></div>
-          <div class="scene-3d-bar"><span id="scene-status">LOADING 3D SCENE</span><div class="camera-buttons"><button data-camera="orbit" class="active" type="button">Orbit</button><button data-camera="follow" type="button">Follow</button><button data-camera="top" type="button">Top</button></div></div>
+          <div class="scene-3d-bar"><span id="scene-status">LOADING 3D SCENE</span><div class="camera-buttons"><button data-camera="orbit" class="active" type="button">Orbit</button><button data-camera="street" type="button">Street</button><button data-camera="follow" type="button">Follow</button><button data-camera="top" type="button">Top</button></div></div>
           <div class="map-overlay">MAP COORDINATES <strong>LOCAL XY</strong><br>32 × 20 METRES <span>·</span> NOT TO SCALE</div><div class="map-badge">SCRIPTED NAVIGATION <span class="accent">●</span></div></div>
         <div class="cad-status-bar"><span class="cad-source-dot"></span><strong id="mesh-provenance" aria-live="polite">Loading original CAD models…</strong><span class="cad-source-caption">Source-licensed CAD + deterministic path overlay</span></div>
+        <div class="scene-tip">Rotate: drag · Zoom: scroll · Click a labeled destination marker to run a simulated route. Scene props do not alter path collisions.</div>
         <div class="asset-note">Robot variants are original <strong>illustrative 3D concepts</strong> with licensed real CAD components from open-source robotics projects; all share the existing CDR-01 <strong>2D kinematic playback</strong>, not Nav2 or live Gazebo physics. <a id="profile-source" href="https://github.com/ahpa5246-lgtm/Delivery-Robot" target="_blank" rel="noopener noreferrer">Source reference ↗</a></div>
         <div class="playback">
           <button id="play" title="Pause or resume replay" aria-label="Pause or resume replay">Ⅱ</button><span class="time" id="elapsed">00:00</span><input id="timeline" aria-label="Replay position" type="range" min="0" max="100" value="0"><span class="time muted" id="total">00:00</span><select id="speed" aria-label="Playback speed"><option value="1">1×</option><option value="4" selected>4×</option><option value="12">12×</option><option value="30">30×</option></select>
@@ -78,6 +85,26 @@
           <div><span class="panel-kicker">02 / OPERATIONS INTELLIGENCE</span><h2>Mission analytics</h2><p>Timeline-linked readings from the executed offline simulator. Gazebo experiments appear separately.</p></div>
           <div class="operations-actions"><span class="evidence-tag">MODELED · NOT HARDWARE</span><button id="export-csv" type="button" class="export-button">↓ EXPORT TELEMETRY CSV</button></div>
         </div>
+        <section class="engineering-audit" id="engineering-audit" aria-label="Derived diagnostics and validation integrity">
+          <div class="audit-head">
+            <div><span class="panel-kicker">03 / ENGINEERING INSTRUMENTATION</span><h2>Movement and mission integrity</h2><p>Measured from deterministic replay frames. No values are claimed to be physical sensors.</p></div>
+            <span class="audit-provenance">REPLAY DATA · NOT LIVE ROS</span>
+          </div>
+          <div class="audit-metrics">
+            <div><span>LOCAL POSITION</span><strong id="audit-position">—</strong><small>x, y · m (modeled)</small></div>
+            <div><span>LINEAR ACCELERATION</span><strong id="audit-accel">—</strong><small>m/s² · frame-derived</small></div>
+            <div><span>TURN RATE</span><strong id="audit-turnrate">—</strong><small>°/s · frame-derived</small></div>
+            <div><span>MODELED POWER</span><strong id="audit-power">—</strong><small>W · estimated Wh delta</small></div>
+            <div><span>STRAIGHT-LINE TO TARGET</span><strong id="audit-goal">—</strong><small>m · not route ETA</small></div>
+            <div><span>ENERGY PER DISTANCE</span><strong id="audit-efficiency">—</strong><small>Wh/km · modeled estimate</small></div>
+            <div><span>MOTION DUTY CYCLE</span><strong id="audit-duty">—</strong><small>% of elapsed sim time</small></div>
+            <div><span>LAST PLANNED ROUTE</span><strong id="audit-route">—</strong><small>m · XY polyline length</small></div>
+          </div>
+          <div class="audit-bottom">
+            <div class="phase-map"><span>MISSION PHASE TIMELINE</span><div class="phase-ribbon" id="phase-ribbon" aria-label="Modeled phase duration visualization"></div><div id="phase-legend" class="phase-legend"></div></div>
+            <div class="audit-status"><span>DATA INTEGRITY</span><strong id="audit-integrity">—</strong><p id="audit-integrity-note">Waiting for trajectory data.</p></div>
+          </div>
+        </section>
         <section class="status-panel"><div class="row-title"><span class="panel-kicker">02 / MISSION STATUS</span><span class="small-id">CDR-01</span></div><div class="status-line"><span class="status-icon" id="status-dot"></span><span id="status">INITIALIZING</span></div><p id="reason">Preparing campus simulation...</p><div class="mini-line"><span>Current stage</span><strong id="phase">—</strong></div></section>
         <section class="metrics"><div class="metric"><span>DISTANCE TRAVELLED</span><strong id="distance">—</strong><small>metres · modeled</small></div><div class="metric"><span>ENERGY CONSUMED</span><strong id="energy">—</strong><small>watt-hours · estimate</small></div><div class="metric"><span>PATH REPLANS</span><strong id="replans">—</strong><small>detected closures</small></div><div class="metric"><span>BATTERY SOC</span><strong id="battery">—</strong><small>modeled capacity</small></div></section>
         <section class="flight-panel">
