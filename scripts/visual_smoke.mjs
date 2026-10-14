@@ -52,7 +52,7 @@ try {
     await page.screenshot({path:'experiments/ui_visual/'+viewport.name+'-initial.png',fullPage:true});
     console.log('VISUAL ENVIRONMENT STATUS',await page.locator('#scene-detail-count').innerText());
     await page.waitForFunction(() => Number(document.querySelector('#scene-detail-count')?.textContent.replaceAll(',', '')) > 100);
-    assert.match(await page.locator('#scene-detail-mode').innerText(), /Campus landscape/);
+    assert.match(await page.locator('#scene-detail-mode').innerText(), /Campus collision world/);
     assert.equal(await page.locator('#lighting-caption').innerText(), 'Day — visualization');
     await page.locator('#lighting-preset').selectOption('golden');
     assert.equal(await page.locator('#lighting-caption').innerText(), 'Evening — visualization');
@@ -60,10 +60,30 @@ try {
     assert.equal(await page.locator('#lighting-caption').innerText(), 'Night — visualization');
     await page.locator('#lighting-preset').selectOption('day');
     await page.locator('#world-preset').selectOption('warehouse');
-    await page.waitForFunction(() => document.querySelector('#scene-detail-mode').textContent === 'Logistics detail');
+    await page.waitForFunction(() => window.__cdrReplayState?.map?.world==='warehouse'
+      && window.__cdrReplayState?.run?.world==='warehouse');
+    assert.ok((await page.locator('#debug-world').innerText()).includes('Logistics'));
+    await page.waitForFunction(() => document.querySelector('#scene-detail-mode').textContent === 'Logistics collisions');
     await page.locator('#world-preset').selectOption('campus');
-    await page.waitForFunction(() => document.querySelector('#scene-detail-mode').textContent === 'Campus landscape');
+    await page.waitForFunction(() => window.__cdrReplayState?.map?.world==='campus'
+      && window.__cdrReplayState?.run?.world==='campus');
+    await page.waitForFunction(() => document.querySelector('#scene-detail-mode').textContent === 'Campus collision world');
     assert.equal(await page.locator('#robot-profile option').count(), 9);
+    await page.waitForFunction(() => document.querySelector('#debug-path-valid').textContent.includes('PASS'));
+    assert.equal(await page.locator('#debug-violations').innerText(),'0');
+    assert.ok(Number(await page.locator('#debug-obstacles').innerText()) > 10);
+    await page.waitForFunction(() => document.querySelector('#debug-blocked').textContent.includes(' / '));
+    const occupancyResponse=await page.request.get(base+'/api/occupancy?world=campus');
+    assert.equal(occupancyResponse.status(),200);
+    const occupancy=await occupancyResponse.json();
+    assert.equal(occupancy.geometry_schema,'cdr-shared-collision-world-v4');
+    assert.ok(occupancy.blocked_cells.length>100);
+    await page.locator('#debug-collision').check();
+    await page.waitForFunction(()=>window.CDR3D.scene.getObjectByName('AUTHORITATIVE_COLLISION_PROXIES')?.visible===true);
+    await page.locator('#debug-occupancy').check();
+    await page.waitForFunction(()=>window.CDR3D.scene.getObjectByName('ROBOT_INFLATED_OCCUPANCY')?.visible===true);
+    await page.locator('#debug-occupancy').uncheck();
+    await page.locator('#debug-collision').uncheck();
     await page.waitForFunction(() => (
       document.querySelector('#mesh-provenance')?.textContent.includes('ORIGINAL CAD')
     ), { timeout: 30000 });

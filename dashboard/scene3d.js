@@ -235,25 +235,9 @@
       building(i,b,worldSelect.value);
       for(const item of environment.children.slice(start))item.userData.buildingIndex=i;
     });
-    if(!warehouse){
-      let idx=0;
-      const sites=[[1.1,7.3],[2.0,13.9],[16.7,2.0],[17,18.2],[29.8,10],
-                   [23.6,2.1],[30,18.7],[1.5,17.6],[14,4.3],[13.9,17.9],
-                   [7.1,2.2],[25.2,19.1]];
-      for(const [x,y] of sites)treeAt(x,-y,idx++);
-      [[6.5,7],[16,7],[26,7],[16,14],[26,14]].forEach(p=>lampAt(p[0],-p[1]));
-      [[17.6,5.3],[25.6,16.6],[4.6,12.2]].forEach((p,i)=>benchAt(p[0],-p[1],i%2===0));
-      for(const [x,y] of [[19,2],[21,2],[24,2]])sphere(environment,.35,mat(0x6ba874),x,.22,-y);
-    }else {
-      for(const x of [5,10,18,25,29]){
-        for(const y of [5,17]){
-          const xx=x+.1,zz=-y;
-          cube(environment,1.15,1.1,.75,mat(0xb79b6f),xx,.55,zz);
-          cube(environment,1.1,.08,.7,mat(0x685647),xx,1.13,zz);
-        }
-      }
-      for(const x of [3,28])lampAt(x,-10);
-    }
+    // V4: No independent solid scenery here. Collision-enabled furnishings and
+    // CAD props are drawn exclusively from map.fixtures in environment-detail.js
+    // and cad-enhancement.js. This prevents phantom collisions in the 3D replay.
     Object.entries(data.stops).forEach(([name,p])=>addStop(name,p));
     status.textContent='INTERACTIVE 3D — KINEMATIC REPLAY / NOT GAZEBO';
     window.dispatchEvent(new CustomEvent('cdr:environment',{detail:{environment,theme:worldSelect.value,map:data}}));
@@ -484,8 +468,12 @@
   modelSelect.addEventListener('change',()=>{
     updateProfileLink();makeRobot(modelSelect.value);syncReplay();
   });
-  worldSelect.addEventListener('change',()=>{
-    if(map)constructEnvironment(map);syncReplay();
+  // The map and its selected world are always supplied by the Python planner
+  // through /api/map?world=...; never rebuild a different visual theme on stale data.
+  window.addEventListener('cdr:world-map',event=>{
+    constructEnvironment(event.detail.map);
+    lastRun=null;playbackTime=0;lastPathRun=null;
+    pathGroup.clear();syncReplay({detail:{time:0}});
   });
   window.addEventListener('cdr:replay',syncReplay);
   window.addEventListener('cdr:frame',syncReplay);

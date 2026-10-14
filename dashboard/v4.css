@@ -1,0 +1,29 @@
+/* V4 route integrity instrumentation; scaled below the 3D viewport. */
+.collision-panel{border:1px solid #487576;border-radius:12px;background:linear-gradient(140deg,#12313b,#101e2e);
+  padding:19px;margin-top:14px;box-shadow:0 8px 30px #030b1038}
+.collision-panel-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.collision-panel-heading h2{color:#edf8f6;font-size:20px;letter-spacing:-.03em;margin:4px 0}
+.collision-panel-heading p{color:#9db8c1;font-size:11px;line-height:1.5}
+.collision-dashboard{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:17px}
+.collision-dashboard>div{background:#0c2532;border:1px solid #305765;border-radius:9px;padding:13px;min-width:0}
+.collision-dashboard span{display:block;font-size:9px;font-weight:790;letter-spacing:.085em;color:#9db8c5;line-height:1.4}
+.collision-dashboard strong{display:block;margin:8px 0 4px;color:#8eecd0;font-size:clamp(17px,1.5vw,23px);
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em;overflow-wrap:anywhere}
+.collision-dashboard strong.invalid{color:#ffa68a}
+.collision-dashboard small{font-size:10px;color:#94aab5;line-height:1.4}
+.debug-controls{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;padding:12px;
+  border:1px solid #355967;border-radius:7px;background:#0e2532}
+.debug-controls label{color:#d2eae8;font-size:11px;font-weight:690;cursor:pointer;display:flex;align-items:center;gap:8px}
+.debug-controls input{accent-color:#68e8bc;width:14px;height:14px;cursor:pointer}
+.debug-source{color:#92acb9;font-size:10px;margin:10px 1px 0;line-height:1.55}
+@media(max-width:1050px){.collision-dashboard{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){
+ .collision-panel{padding:13px}
+ .collision-panel-heading{flex-direction:column;gap:7px}
+ .collision-dashboard{gap:7px}
+ .collision-dashboard>div{padding:10px}
+ .collision-dashboard strong{font-size:17px}
+ .collision-dashboard span{font-size:8px}
+ .collision-dashboard small{font-size:9px}
+ .debug-controls{gap:10px}
+}

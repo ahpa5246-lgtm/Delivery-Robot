@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/command-center.css">
   <link rel="stylesheet" href="/v3.css">
+  <link rel="stylesheet" href="/v4.css">
   <script src="/vendor/three.min.js" defer></script>
   <script src="/vendor/STLLoader.js" defer></script>
   <script src="/vendor/ColladaLoader.js" defer></script>
@@ -17,6 +18,7 @@
   <script src="/analytics.js" defer></script>
   <script src="/environment-detail.js" defer></script>
   <script src="/engineering-audit.js" defer></script>
+  <script src="/collision-debug.js" defer></script>
 </head>
 <body>
 <div class="shell">
@@ -60,15 +62,35 @@
         </div>
         <div class="map-wrap" id="stage-viewport">
           <div id="scene3d" role="img" aria-label="Interactive three dimensional university campus and robot"></div>
-          <div class="world-inspector" aria-label="Visual environment status"><span class="world-eyebrow">CAMPUS DIGITAL MODEL</span><strong id="scene-detail-mode">Campus landscape</strong><span><b id="scene-detail-count">—</b> decorative elements · not collision geometry</span><span id="lighting-caption">Day — visualization</span></div>
+          <div class="world-inspector" aria-label="Visual environment status"><span class="world-eyebrow">CAMPUS DIGITAL MODEL</span><strong id="scene-detail-mode">Campus landscape</strong><span><b id="scene-detail-count">—</b> fixture details · registered collision proxies</span><span id="lighting-caption">Day — visualization</span></div>
 
           <canvas id="map" width="1152" height="720" role="img" aria-label="2D campus map with buildings, paths, robot, and delivery destination"></canvas>
           <div class="robot-inspector-label">3D MODEL PREVIEW<strong id="inspector-model">CDR-01 delivery concept</strong></div>
           <div class="scene-3d-bar"><span id="scene-status">LOADING 3D SCENE</span><div class="camera-buttons"><button data-camera="orbit" class="active" type="button">Orbit</button><button data-camera="street" type="button">Street</button><button data-camera="follow" type="button">Follow</button><button data-camera="top" type="button">Top</button></div></div>
           <div class="map-overlay">MAP COORDINATES <strong>LOCAL XY</strong><br>32 × 20 METRES <span>·</span> NOT TO SCALE</div><div class="map-badge">SCRIPTED NAVIGATION <span class="accent">●</span></div></div>
         <div class="cad-status-bar"><span class="cad-source-dot"></span><strong id="mesh-provenance" aria-live="polite">Loading original CAD models…</strong><span class="cad-source-caption">Source-licensed CAD + deterministic path overlay</span></div>
-        <div class="scene-tip">Rotate: drag · Zoom: scroll · Click a labeled destination marker to run a simulated route. Scene props do not alter path collisions.</div>
+        <div class="scene-tip">Rotate: drag · Zoom: scroll · Click a labeled destination marker to run a simulated route. Solid fixtures use the planner collision map. Facade ornament and ground markings remain decorative.</div>
         <div class="asset-note">Robot variants are original <strong>illustrative 3D concepts</strong> with licensed real CAD components from open-source robotics projects; all share the existing CDR-01 <strong>2D kinematic playback</strong>, not Nav2 or live Gazebo physics. <a id="profile-source" href="https://github.com/ahpa5246-lgtm/Delivery-Robot" target="_blank" rel="noopener noreferrer">Source reference ↗</a></div>
+        <section class="collision-panel" aria-label="V4 navigation integrity and collision diagnostics" id="collision-panel">
+          <div class="collision-panel-heading">
+            <div><span class="panel-kicker">V4 / COMMON COLLISION WORLD</span><h2>Navigation integrity</h2><p>Offline inflated occupancy and continuous XY robot-footprint validation. Not Gazebo contact physics.</p></div>
+            <span class="evidence-tag">WORLD MANIFEST V4</span>
+          </div>
+          <div class="collision-dashboard">
+            <div><span>SELECTED WORLD</span><strong id="debug-world">—</strong><small>Planner and 3D share fixture locations</small></div>
+            <div><span>PATH GEOMETRY CHECK</span><strong id="debug-path-valid">—</strong><small>Continuous AABB / robot inflation</small></div>
+            <div><span>NEAREST CLEARANCE</span><strong id="debug-clearance">—</strong><small>Footprint edge to nearest solid</small></div>
+            <div><span>ROUTE INTERSECTIONS</span><strong id="debug-violations">—</strong><small>Observed replay segments crossing proxies</small></div>
+            <div><span>REGISTERED SOLIDS</span><strong id="debug-obstacles">—</strong><small>Buildings + CAD fixture collision proxies</small></div>
+            <div><span>INFLATED OCCUPANCY</span><strong id="debug-blocked">—</strong><small>Blocked / total grid cells</small></div>
+          </div>
+          <div class="debug-controls">
+            <label><input id="debug-collision" type="checkbox"> Collision bounds</label>
+            <label><input id="debug-occupancy" type="checkbox"> Inflated grid</label>
+            <label><input id="debug-footprint" type="checkbox" checked> Robot safety radius</label>
+          </div>
+          <p id="debug-clearance-source" class="debug-source">Loading model provenance…</p>
+        </section>
         <div class="playback">
           <button id="play" title="Pause or resume replay" aria-label="Pause or resume replay">Ⅱ</button><span class="time" id="elapsed">00:00</span><input id="timeline" aria-label="Replay position" type="range" min="0" max="100" value="0"><span class="time muted" id="total">00:00</span><select id="speed" aria-label="Playback speed"><option value="1">1×</option><option value="4" selected>4×</option><option value="12">12×</option><option value="30">30×</option></select>
         </div>

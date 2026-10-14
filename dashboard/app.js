@@ -45,6 +45,13 @@ function draw() {
     ctx.strokeStyle='#507388';ctx.lineWidth=2;ctx.strokeRect(sx+4,sy+4,sw-8,sh-8);
     ctx.fillStyle='#8caabd';ctx.font='700 12px system-ui';ctx.textAlign='center';ctx.fillText(['WEST WING','NORTH WING','EAST WING','GARDEN'][i]||'BUILDING',sx+sw/2,sy+sh/2+4);
   }
+  // The same obstacle footprint rectangles are rendered here and checked by A*.
+  for(const fixture of (map.fixtures||[])){
+    const [x0,y0,x1,y1]=fixture.footprint_m;
+    const sx=px(x0),sy=py(y1),sw=px(x1)-sx,sh=py(y0)-sy;
+    ctx.fillStyle='#e49e6070';ctx.fillRect(sx,sy,sw,sh);
+    ctx.strokeStyle='#ffd49d';ctx.lineWidth=1;ctx.strokeRect(sx,sy,sw,sh);
+  }
   if(state.run){
     // Previously issued plans stay visible as low-opacity dashed paths.
     const activeRouteIndex = state.run.routes.reduce((active, route, index) => route.time_s <= state.simTime ? index : active, -1);
@@ -206,7 +213,8 @@ async function loadGazeboEvidence() {
 async function fetchRun() {
   $('run').disabled=true;$('run').textContent='LOADING…';
   try{
-    const params=new URLSearchParams({destination:$('destination').value,scenario:$('scenario').value,seed:$('seed').value});
+    const params=new URLSearchParams({destination:$('destination').value,scenario:$('scenario').value,seed:$('seed').value,
+      world:$('world-preset').value});
     const response=await fetch('/api/run?'+params);
     const run=await response.json();
     if(!response.ok)throw new Error(run.error||'Simulation failed');
@@ -228,6 +236,21 @@ function tick(wallTime){
   }
   state.lastWallTime=wallTime;requestAnimationFrame(tick);
 }
+async function changeWorld(){
+  $('run').disabled=true;
+  const theme=$('world-preset').value;
+  try{
+    const response=await fetch('/api/map?'+new URLSearchParams({world:theme}));
+    if(!response.ok)throw Error('Collision map unavailable');
+    state.map=await response.json();
+    state.run=null;state.simTime=0;
+    window.__cdrReplayState={map:state.map,run:null,time:0};
+    window.dispatchEvent(new CustomEvent('cdr:world-map',{detail:{map:state.map,world:theme}}));
+    await fetchRun();
+  }catch(err){$('status').textContent='MAP ERROR';$('reason').textContent=err.message;}
+  finally{$('run').disabled=false;}
+}
+$('world-preset').addEventListener('change',changeWorld);
 $('run').addEventListener('click',fetchRun);
 $('play').addEventListener('click',()=>{
   if(!state.run)return;

@@ -5,6 +5,7 @@ on:
       - 'scripts/generate_gazebo_world.py'
       - 'scripts/generate_campus_gazebo.py'
       - 'cdr_sim/campus.py'
+      - 'world/campus_layout.json'
       - 'tests/test_campus_world.py'
       - 'tests/test_gazebo_geometry.py'
       - '.github/workflows/gazebo-headless.yml'
@@ -34,6 +35,7 @@ jobs:
             gz sim --versions | tee /work/experiments/gazebo_smoke/gz_version.txt
             gz sdf -k /work/simulation/campus_v0.sdf > /work/experiments/gazebo_smoke/sdf_validation.txt 2>&1
             gz sdf -k /work/simulation/campus_delivery.sdf > /work/experiments/gazebo_smoke/campus_sdf_validation.txt 2>&1
+            gz sdf -k /work/simulation/warehouse_delivery.sdf > /work/experiments/gazebo_smoke/warehouse_sdf_validation.txt 2>&1
             gz sim -s -r -v 3 /work/simulation/campus_v0.sdf > /work/experiments/gazebo_smoke/server.log 2>&1 &
             server_pid=$!
             trap "kill $server_pid 2>/dev/null || true" EXIT

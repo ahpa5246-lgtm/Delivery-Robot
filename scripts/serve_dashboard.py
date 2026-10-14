@@ -24,7 +24,9 @@ STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
           "/analytics.js": ("analytics.js", "text/javascript; charset=utf-8"),
           "/environment-detail.js": ("environment-detail.js", "text/javascript; charset=utf-8"),
           "/engineering-audit.js": ("engineering-audit.js", "text/javascript; charset=utf-8"),
-          "/v3.css": ("v3.css", "text/css; charset=utf-8")}
+          "/v3.css": ("v3.css", "text/css; charset=utf-8"),
+          "/v4.css": ("v4.css", "text/css; charset=utf-8"),
+          "/collision-debug.js": ("collision-debug.js", "text/javascript; charset=utf-8")}
 # Asset paths are fixed and reviewed. Never allow arbitrary file system traversal.
 for _name in (
     "robot/rbot-wheel.stl", "robot/rbot-camera.stl", "robot/delivery-cad-part.stl",
@@ -59,14 +61,33 @@ def response_for(path: str) -> tuple[int, str, bytes]:
         # Never label these values as current, live or hardware measurements.
         evidence = Path(__file__).resolve().parents[1] / "experiments/gazebo_smoke/motion_summary.json"
         return 200, "application/json", evidence.read_bytes()
-    if parsed.path == "/api/map":
-        return 200, "application/json", json.dumps(Campus().as_dict()).encode()
+    if parsed.path in ("/api/map", "/api/occupancy"):
+        try:
+            query = parse_qs(parsed.query, strict_parsing=True)
+            if set(query) - {"world"} or any(len(v) != 1 for v in query.values()):
+                raise ValueError("unknown or duplicate map option")
+            theme = query.get("world", ["campus"])[0]
+            world = Campus(theme=theme)
+            if parsed.path == "/api/map":
+                return 200, "application/json", json.dumps(world.as_dict()).encode()
+            nx, ny = world.shape
+            cells = [[i, j] for i in range(nx) for j in range(ny) if not world.free((i, j))]
+            return 200, "application/json", json.dumps({
+                "geometry_schema": "cdr-shared-collision-world-v4",
+                "world": theme, "width": nx, "height": ny,
+                "resolution_m": world.resolution,
+                "blocked_cells": cells,
+                "robot_radius_m": world.robot_radius,
+                "safety_margin_m": world.safety_margin
+            }).encode()
+        except ValueError as exc:
+            return 400, "application/json", json.dumps({"error": str(exc)}).encode()
     if parsed.path == "/api/run":
         try:
             query = parse_qs(parsed.query, strict_parsing=True)
             if any(len(v) != 1 for v in query.values()):
                 raise ValueError("duplicate options not allowed")
-            unknown = set(query)-{"destination", "scenario", "seed", "handover"}
+            unknown = set(query)-{"destination", "scenario", "seed", "handover", "world"}
             if unknown:
                 raise ValueError("unknown option")
             seed = int(query.get("seed", ["7"])[0])
@@ -79,7 +100,8 @@ def response_for(path: str) -> tuple[int, str, bytes]:
                 seed=seed, destination=query.get("destination", ["library"])[0],
                 scenario=query.get("scenario", ["construction"])[0],
                 authorized_handover=(handover == "authorized"))
-            return 200, "application/json", json.dumps(replay(options)).encode()
+            world = Campus(theme=query.get("world", ["campus"])[0])
+            return 200, "application/json", json.dumps(replay(options, campus=world)).encode()
         except (TypeError, ValueError) as exc:
             return 400, "application/json", json.dumps({"error": str(exc)}).encode()
     return 404, "application/json", b'{"error":"not found"}'

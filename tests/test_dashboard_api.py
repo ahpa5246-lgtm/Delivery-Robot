@@ -27,6 +27,36 @@ class DashboardAPITests(unittest.TestCase):
         self.assertGreater(evidence["displacement_reported_by_odometry_m"], 0)
         self.assertIn("github_actions_run_url", evidence)
 
+    def test_selected_world_affects_geometry_replay_and_occupancy(self):
+        for theme in ("campus","warehouse"):
+            with self.subTest(theme=theme):
+                code,_,body=response_for("/api/map?world="+theme)
+                self.assertEqual(code,200)
+                layout=json.loads(body)
+                self.assertEqual(layout["world"],theme)
+                self.assertEqual(layout["geometry_schema"],"cdr-shared-collision-world-v4")
+                self.assertEqual(layout["collision_objects"],
+                                 len(layout["buildings"])+len(layout["fixtures"]))
+                code,_,body=response_for("/api/occupancy?world="+theme)
+                self.assertEqual(code,200)
+                grid=json.loads(body)
+                self.assertEqual(grid["world"],theme)
+                self.assertTrue(grid["blocked_cells"])
+                code,_,body=response_for("/api/run?world="+theme+"&scenario=clear")
+                self.assertEqual(code,200)
+                result=json.loads(body)
+                self.assertEqual(result["world"],theme)
+                self.assertTrue(result["collision_checked"])
+        for bad in (
+            "/api/map?world=invalid",
+            "/api/map?world=campus&world=warehouse",
+            "/api/occupancy?world=invalid",
+            "/api/occupancy?unused=1",
+            "/api/run?world=invalid",
+        ):
+            with self.subTest(bad=bad):
+                self.assertEqual(response_for(bad)[0],400)
+
     def test_denied_handover(self):
         code, _, raw = response_for("/api/run?handover=denied")
         self.assertEqual(code, 200)

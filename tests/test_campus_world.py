@@ -34,6 +34,27 @@ class CampusSDFTests(unittest.TestCase):
             self.assertAlmostEqual(dims[1],y1-y0)
             self.assertAlmostEqual(zz,dims[2]/2)
 
+    def test_every_visible_solid_fixture_has_gazebo_collision_from_manifest(self):
+        for theme in ("campus","warehouse"):
+            campus=Campus(theme=theme)
+            scene=ET.parse(construct(theme)).getroot().find("world")
+            names={m.get("name") for m in scene.findall("model")}
+            for item in campus.fixtures:
+                with self.subTest(theme=theme,id=item["id"]):
+                    key="fixture_"+item["id"]
+                    self.assertIn(key,names)
+                    model=scene.find("./model[@name='"+key+"']")
+                    self.assertEqual(model.findtext("static"),"true")
+                    self.assertIsNotNone(model.find("link/collision/geometry/box"))
+                    x0,y0,x1,y1=item["footprint_m"]
+                    width,depth,height=(float(x) for x in
+                        model.findtext("link/collision/geometry/box/size").split())
+                    self.assertAlmostEqual(width,x1-x0,places=4)
+                    self.assertAlmostEqual(depth,y1-y0,places=4)
+                    self.assertGreater(height,0)
+                    self.assertAlmostEqual(float(model.findtext("pose").split()[0]),
+                                           (x0+x1)/2,places=4)
+
     def test_destination_markers_are_visual_only(self):
         for name in self.campus.stops:
             marker=self.world.find(f"./model[@name='stop_{name}']")

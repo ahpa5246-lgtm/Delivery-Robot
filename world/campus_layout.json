@@ -1,0 +1,528 @@
+{
+  "schema": "cdr-shared-collision-world-v4",
+  "frame": "local_enu_xy_m_visual_z_negates_y",
+  "map": {
+    "width_m": 32,
+    "height_m": 20,
+    "resolution_m": 0.5,
+    "robot_radius_m": 0.65,
+    "clearance_m": 0.1
+  },
+  "buildings": [
+    {
+      "id": "north_wing",
+      "footprint_m": [
+        8,
+        0,
+        13,
+        6
+      ]
+    },
+    {
+      "id": "west_wing",
+      "footprint_m": [
+        8,
+        11,
+        13,
+        20
+      ]
+    },
+    {
+      "id": "east_wing",
+      "footprint_m": [
+        19,
+        7,
+        24,
+        13
+      ]
+    },
+    {
+      "id": "garden",
+      "footprint_m": [
+        2,
+        8,
+        5,
+        11
+      ]
+    }
+  ],
+  "stops": {
+    "depot": [
+      2,
+      2
+    ],
+    "engineering": [
+      5.5,
+      16
+    ],
+    "library": [
+      28,
+      16
+    ],
+    "student_center": [
+      28,
+      3
+    ]
+  },
+  "worlds": {
+    "campus": {
+      "fixtures": [
+        {
+          "id": "cafe_table_1",
+          "kind": "table",
+          "footprint_m": [
+            22.45,
+            4.45,
+            23.55,
+            5.55
+          ],
+          "cad_asset": "table"
+        },
+        {
+          "id": "cafe_table_2",
+          "kind": "table",
+          "footprint_m": [
+            25.45,
+            4.45,
+            26.55,
+            5.55
+          ],
+          "cad_asset": "table"
+        },
+        {
+          "id": "cafe_table_3",
+          "kind": "table",
+          "footprint_m": [
+            26.45,
+            8.45,
+            27.55,
+            9.55
+          ],
+          "cad_asset": "table"
+        },
+        {
+          "id": "bench_1",
+          "kind": "bench",
+          "footprint_m": [
+            3.125,
+            4.83,
+            4.475,
+            5.37
+          ]
+        },
+        {
+          "id": "bench_2",
+          "kind": "bench",
+          "footprint_m": [
+            19.525,
+            15.23,
+            20.875,
+            15.77
+          ]
+        },
+        {
+          "id": "bench_3",
+          "kind": "bench",
+          "footprint_m": [
+            28.225,
+            12.13,
+            29.575,
+            12.67
+          ]
+        },
+        {
+          "id": "bench_4",
+          "kind": "bench",
+          "footprint_m": [
+            16.925,
+            5.03,
+            18.275,
+            5.57
+          ]
+        },
+        {
+          "id": "bench_5",
+          "kind": "bench",
+          "footprint_m": [
+            24.925,
+            16.33,
+            26.275,
+            16.87
+          ]
+        },
+        {
+          "id": "bench_6",
+          "kind": "bench",
+          "footprint_m": [
+            3.925,
+            11.93,
+            5.275,
+            12.47
+          ]
+        },
+        {
+          "id": "tree_1",
+          "kind": "tree",
+          "footprint_m": [
+            4.31,
+            17.51,
+            4.89,
+            18.09
+          ]
+        },
+        {
+          "id": "tree_2",
+          "kind": "tree",
+          "footprint_m": [
+            12.81,
+            0.91,
+            13.39,
+            1.49
+          ]
+        },
+        {
+          "id": "tree_3",
+          "kind": "tree",
+          "footprint_m": [
+            18.81,
+            18.21,
+            19.39,
+            18.79
+          ]
+        },
+        {
+          "id": "tree_4",
+          "kind": "tree",
+          "footprint_m": [
+            23.11,
+            1.01,
+            23.69,
+            1.59
+          ]
+        },
+        {
+          "id": "tree_5",
+          "kind": "tree",
+          "footprint_m": [
+            29.51,
+            2.51,
+            30.09,
+            3.09
+          ]
+        },
+        {
+          "id": "tree_6",
+          "kind": "tree",
+          "footprint_m": [
+            29.11,
+            17.51,
+            29.69,
+            18.09
+          ]
+        },
+        {
+          "id": "tree_7",
+          "kind": "tree",
+          "footprint_m": [
+            2.01,
+            11.51,
+            2.59,
+            12.09
+          ]
+        },
+        {
+          "id": "tree_8",
+          "kind": "tree",
+          "footprint_m": [
+            18.31,
+            4.11,
+            18.89,
+            4.69
+          ]
+        },
+        {
+          "id": "tree_9",
+          "kind": "tree",
+          "footprint_m": [
+            0.91,
+            16.21,
+            1.49,
+            16.79
+          ]
+        },
+        {
+          "id": "tree_10",
+          "kind": "tree",
+          "footprint_m": [
+            1.71,
+            13.61,
+            2.29,
+            14.19
+          ]
+        },
+        {
+          "id": "street_light_1",
+          "kind": "light",
+          "footprint_m": [
+            7.72,
+            7.82,
+            7.88,
+            7.98
+          ],
+          "cad_asset": "lamp"
+        },
+        {
+          "id": "street_light_2",
+          "kind": "light",
+          "footprint_m": [
+            16.92,
+            14.42,
+            17.08,
+            14.58
+          ],
+          "cad_asset": "lamp"
+        },
+        {
+          "id": "street_light_3",
+          "kind": "light",
+          "footprint_m": [
+            6.42,
+            6.92,
+            6.58,
+            7.08
+          ]
+        },
+        {
+          "id": "street_light_4",
+          "kind": "light",
+          "footprint_m": [
+            15.92,
+            6.92,
+            16.08,
+            7.08
+          ]
+        },
+        {
+          "id": "street_light_5",
+          "kind": "light",
+          "footprint_m": [
+            25.92,
+            6.92,
+            26.08,
+            7.08
+          ]
+        },
+        {
+          "id": "street_light_6",
+          "kind": "light",
+          "footprint_m": [
+            15.92,
+            13.92,
+            16.08,
+            14.08
+          ]
+        },
+        {
+          "id": "street_light_7",
+          "kind": "light",
+          "footprint_m": [
+            25.92,
+            13.92,
+            26.08,
+            14.08
+          ]
+        },
+        {
+          "id": "bike_rack",
+          "kind": "bike_rack",
+          "footprint_m": [
+            17.4,
+            1.675,
+            19.4,
+            2.325
+          ]
+        }
+      ]
+    },
+    "warehouse": {
+      "fixtures": [
+        {
+          "id": "warehouse_shelf_1",
+          "kind": "shelf",
+          "footprint_m": [
+            19.25,
+            16.575,
+            20.75,
+            17.425
+          ],
+          "cad_asset": "shelf"
+        },
+        {
+          "id": "warehouse_shelf_2",
+          "kind": "shelf",
+          "footprint_m": [
+            27.25,
+            17.875,
+            28.75,
+            18.725
+          ],
+          "cad_asset": "shelf"
+        },
+        {
+          "id": "warehouse_shelf_3",
+          "kind": "shelf",
+          "footprint_m": [
+            2.95,
+            17.575,
+            4.45,
+            18.425
+          ],
+          "cad_asset": "shelf"
+        },
+        {
+          "id": "warehouse_shelf_4",
+          "kind": "shelf",
+          "footprint_m": [
+            16.25,
+            17.575,
+            17.75,
+            18.425
+          ],
+          "cad_asset": "shelf"
+        },
+        {
+          "id": "cargo_1",
+          "kind": "cargo",
+          "footprint_m": [
+            4.475,
+            3.55,
+            5.525,
+            4.45
+          ],
+          "cad_asset": "cargo"
+        },
+        {
+          "id": "cargo_2",
+          "kind": "cargo",
+          "footprint_m": [
+            20.475,
+            13.55,
+            21.525,
+            14.45
+          ],
+          "cad_asset": "cargo"
+        },
+        {
+          "id": "cargo_3",
+          "kind": "cargo",
+          "footprint_m": [
+            27.475,
+            4.55,
+            28.525,
+            5.45
+          ],
+          "cad_asset": "cargo"
+        },
+        {
+          "id": "cargo_4",
+          "kind": "cargo",
+          "footprint_m": [
+            2.475,
+            16.55,
+            3.525,
+            17.45
+          ],
+          "cad_asset": "cargo"
+        },
+        {
+          "id": "cargo_5",
+          "kind": "cargo",
+          "footprint_m": [
+            24.475,
+            17.55,
+            25.525,
+            18.45
+          ],
+          "cad_asset": "cargo"
+        },
+        {
+          "id": "street_light_1",
+          "kind": "light",
+          "footprint_m": [
+            7.72,
+            7.82,
+            7.88,
+            7.98
+          ],
+          "cad_asset": "lamp"
+        },
+        {
+          "id": "street_light_2",
+          "kind": "light",
+          "footprint_m": [
+            16.92,
+            14.42,
+            17.08,
+            14.58
+          ],
+          "cad_asset": "lamp"
+        },
+        {
+          "id": "street_light_3",
+          "kind": "light",
+          "footprint_m": [
+            6.42,
+            6.92,
+            6.58,
+            7.08
+          ]
+        },
+        {
+          "id": "street_light_4",
+          "kind": "light",
+          "footprint_m": [
+            15.92,
+            6.92,
+            16.08,
+            7.08
+          ]
+        },
+        {
+          "id": "street_light_5",
+          "kind": "light",
+          "footprint_m": [
+            25.92,
+            6.92,
+            26.08,
+            7.08
+          ]
+        },
+        {
+          "id": "street_light_6",
+          "kind": "light",
+          "footprint_m": [
+            15.92,
+            13.92,
+            16.08,
+            14.08
+          ]
+        },
+        {
+          "id": "street_light_7",
+          "kind": "light",
+          "footprint_m": [
+            25.92,
+            13.92,
+            26.08,
+            14.08
+          ]
+        }
+      ]
+    }
+  },
+  "labels": {
+    "campus": "University campus",
+    "warehouse": "Logistics training area"
+  },
+  "notes": "All solid scene fixtures and buildings are collision-enabled in the offline 2D planner. Flat markings/ground are visual-only. Gazebo live physics and Nav2 are not supplied by this JSON."
+}
