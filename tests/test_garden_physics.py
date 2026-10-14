@@ -80,7 +80,7 @@ class GardenPhysicsTests(unittest.TestCase):
             ["bash", str(launch), "--help"], capture_output=True, text=True,
             check=True,
         ).stdout
-        self.assertIn("original 113 MB", help_output.lower())
+        self.assertIn("original 113 mb", help_output.lower())
         self.assertIn("8765", help_output)
         content = launch.read_text(encoding="utf-8")
         self.assertIn("EXPECTED_SOURCE", content)
