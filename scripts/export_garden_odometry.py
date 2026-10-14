@@ -66,6 +66,15 @@ def export(raw_path: Path, output: Path, provenance_path: Path) -> dict:
     frames=decode_odometry(raw_path.read_text(encoding="utf-8",errors="replace"))
     total=sum(math.hypot(b["x_m"]-a["x_m"],b["y_m"]-a["y_m"]) for a,b in zip(frames,frames[1:]))
     displacement=math.hypot(frames[-1]["x_m"]-frames[0]["x_m"],frames[-1]["y_m"]-frames[0]["y_m"])
+    # The final two simulated seconds must show an actual stop, rather than
+    # trusting a zero-velocity *command* that the simulator may ignore.
+    end=frames[-1]["time_s"]
+    tail=[p for p in frames if p["time_s"]>=max(0,end-2.0)]
+    if len(tail)<2:
+        raise ValueError("insufficient samples to verify post-command Gazebo stop")
+    tail_motion=sum(math.hypot(b["x_m"]-a["x_m"],b["y_m"]-a["y_m"])
+                    for a,b in zip(tail,tail[1:]))
+    tail_speed=tail_motion/(tail[-1]["time_s"]-tail[0]["time_s"])
     result={
       "schema":"cdr-garden-gazebo-replay-v1",
       "source":"recorded_gazebo_harmonic_odometry",
@@ -79,6 +88,8 @@ def export(raw_path: Path, output: Path, provenance_path: Path) -> dict:
       "duration_s":frames[-1]["time_s"],
       "odometry_path_length_m":round(total,4),
       "odometry_displacement_m":round(displacement,4),
+      "final_2s_mean_odometry_speed_mps":round(tail_speed,4),
+      "stopped_at_end":tail_speed<=0.08,
       "frames":frames
     }
     output.parent.mkdir(parents=True,exist_ok=True)
@@ -95,6 +106,8 @@ def main():
     r=export(args.raw_odometry,args.output,args.provenance)
     print("REAL Gazebo messages:",r["samples"],"simulated s:",r["duration_s"],
           "odometry travel m:",r["odometry_path_length_m"])
+    print("Last 2s average speed m/s:",r["final_2s_mean_odometry_speed_mps"],
+          "stopped:",r["stopped_at_end"])
     print("WARNING: flat Gazebo proxy, NOT Garden surface collision physics")
 
 

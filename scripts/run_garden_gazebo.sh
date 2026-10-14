@@ -45,5 +45,8 @@ import json
 r=json.load(open('experiments/garden_gazebo/latest_run.json'))
 if r['samples']<5 or r['odometry_displacement_m']<0.10:
     raise SystemExit('FAIL: insufficient measured odometry displacement from Gazebo')
-print('PASS: authentic Gazebo odometry observed. NOT validated Garden surface collision.')
+if not r['stopped_at_end']:
+    raise SystemExit('FAIL: robot did NOT stop in recorded Gazebo last 2s: '+
+                     str(r['final_2s_mean_odometry_speed_mps'])+' m/s')
+print('PASS: real Gazebo movement and subsequent measured stop on flat proxy pad.')
 PY

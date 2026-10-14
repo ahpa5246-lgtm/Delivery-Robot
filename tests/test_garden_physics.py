@@ -97,6 +97,8 @@ class GardenPhysicsTests(unittest.TestCase):
             self.assertEqual(result["samples"],3)
             self.assertFalse(result["contact_mesh_validated"])
             self.assertAlmostEqual(result["odometry_displacement_m"],.5099,places=3)
+            self.assertIn("stopped_at_end",result)
+            self.assertGreater(result["final_2s_mean_odometry_speed_mps"],0.01)
             with patch.object(webserver,"GARDEN_REPLAY",base/"latest_run.json"):
                 status,typ,data=webserver.response_for("/api/garden-gazebo-run")
                 self.assertEqual(status,200)
