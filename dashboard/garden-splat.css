@@ -26,3 +26,73 @@
   .garden-credit { font-size: 9px; }
   #stage-viewport.garden-active { min-height: 360px; }
 }
+
+/* Photoreal garden is now the default visual experience. */
+body.garden-mode { background: #080d13; }
+body.garden-mode main { max-width: 1900px; padding-top: 24px; }
+body.garden-mode .mission-bar,
+body.garden-mode .workspace > aside,
+body.garden-mode .reference-library,
+body.garden-mode footer,
+body.garden-mode .legend,
+body.garden-mode .scene-options,
+body.garden-mode .playback,
+body.garden-mode .collision-panel,
+body.garden-mode .cad-status-bar,
+body.garden-mode .scene-tip,
+body.garden-mode .asset-note { display: none; }
+body.garden-mode .map-panel { padding: 20px; background: #0c151e;
+  border-color: #3d5058; box-shadow: 0 22px 90px #0008; }
+body.garden-mode .map-panel>.panel-top { padding: 0 4px 16px; }
+body.garden-mode #stage-viewport { min-height: 530px; height: min(78vh,950px);
+  aspect-ratio: auto; border: 1px solid #536770; border-radius: 14px; }
+body.garden-mode .garden-disclosure { margin: 14px 2px 0; background: #101d25; }
+#view-garden[aria-pressed=true] {
+  background: linear-gradient(120deg,#d7f0e2,#8ad9b7); color: #0a291d;
+}
+.garden-scene-heading { pointer-events: none; position: absolute; z-index: 3;
+  top: clamp(24px,3vw,48px); left: clamp(20px,3vw,48px); color: #fff;
+  text-shadow: 0 2px 18px #000d; display: flex; flex-direction: column; gap: 8px; }
+.garden-overline { color: #d9f1e5; font-size: 10px; font-weight: 800; letter-spacing: .20em; }
+.garden-scene-heading strong { line-height: .97; font-weight: 800; letter-spacing: -.075em;
+  font-size: clamp(52px,8vw,118px); }
+.garden-accent { color: #a0edc7; }
+.garden-scene-subtitle { max-width: 340px; font-size: 12px; line-height: 1.5; }
+#stage-viewport.garden-active .garden-credit { z-index: 4; bottom: 18px;
+  left: clamp(12px,2vw,26px); right: clamp(12px,2vw,26px); }
+#stage-viewport.garden-active .garden-credit span,
+#stage-viewport.garden-active .garden-credit a { background: #06131be8;
+  border: 1px solid #64887f80; padding: 10px 13px; border-radius: 9px; backdrop-filter: blur(9px); }
+@media(max-width:700px) {
+ body.garden-mode .map-panel { padding: 11px; }
+ body.garden-mode #stage-viewport { min-height: 420px; height: 65vh; }
+ .garden-scene-heading { top: 22px; left: 18px; }
+ .garden-scene-heading strong { font-size: 56px; }
+ .garden-scene-subtitle { max-width: 200px; font-size: 10px; }
+ .garden-overline { font-size: 8px; }
+}
+
+/* Keep all three scene modes within small phone viewports. */
+@media(max-width:700px) {
+  .scene-toolbar, .view-switch, .scene-options {
+    box-sizing: border-box; max-width: 100%; width: 100%; min-width: 0;
+  }
+  .view-switch { display: flex; flex-wrap: wrap; gap: 4px; }
+  .view-switch button { flex: 1 1 110px; min-width: 0; white-space: normal;
+    overflow-wrap: anywhere; padding: 9px 8px; line-height: 1.2; }
+  .scene-options label, .scene-options select { min-width: 0; max-width: 100%; }
+}
+@media(max-width:470px) {
+  .scene-options { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+
+/* Compact masthead: long project title and simulation status need separate
+   rows on narrow screens rather than contributing to page min-content width. */
+@media(max-width:800px) {
+  .masthead { display: flex; flex-wrap: wrap; min-width: 0; }
+  .masthead .brand { flex: 1 1 100%; width: 100%; min-width: 0; overflow-wrap: anywhere; }
+  .masthead .mast-actions { flex: 1 1 100%; width: 100%;
+    align-items: center; flex-direction: row; justify-content: flex-start;
+    gap: 10px; min-width: 0; }
+  .masthead .brand h1 { overflow-wrap: anywhere; }
+}

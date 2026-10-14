@@ -13,11 +13,16 @@
   const panel = byId('mission-studio');
   const view3d = byId('view3d');
   const view2d = byId('view2d');
+  const title = panel?.querySelector('.panel-top h2');
+  const kicker = panel?.querySelector('.panel-kicker');
   if (![gardenButton, garden, frame, disclosure, campus3d, map2d, stage, panel, view3d, view2d].every(Boolean)) return;
 
   function exitGarden() {
     stage.classList.remove('garden-active');
     panel.classList.remove('garden-selected');
+    document.body.classList.remove('garden-mode');
+    if (title) title.textContent = 'Campus mission simulation';
+    if (kicker) kicker.textContent = '01 / IMMERSIVE MISSION STUDIO';
     gardenButton.setAttribute('aria-pressed', 'false');
     disclosure.hidden = true;
     // The existing scene3d.js handlers remain authoritative for 3D/2D switching.
@@ -31,6 +36,9 @@
     }
     stage.classList.add('garden-active', 'show3d');
     panel.classList.add('garden-selected');
+    document.body.classList.add('garden-mode');
+    if (title) title.textContent = 'The real Garden, reconstructed in 3D';
+    if (kicker) kicker.textContent = '01 / PHOTOREAL FIELD ENVIRONMENT · VISUAL PREVIEW';
     campus3d.hidden = true;
     map2d.hidden = true;
     gardenButton.setAttribute('aria-pressed', 'true');
@@ -40,4 +48,8 @@
   });
   view3d.addEventListener('click', exitGarden);
   view2d.addEventListener('click', exitGarden);
+  // Use ?view=campus for the original engineering dashboard, ?view=map for 2D.
+  const requestedView = new URLSearchParams(window.location.search).get('view');
+  if (requestedView === 'map') view2d.click();
+  else if (requestedView !== 'campus') gardenButton.click();
 })();

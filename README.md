@@ -148,3 +148,11 @@ CC BY 4.0). The remote scene is rendered interactively in the browser, without
 changing any robotics planner, Gazebo model or claimed experiment results.
 **Robot physics and telemetry are not registered to this real garden yet.**
 See [precise integration scope and next steps](docs/GAUSSIAN_GARDEN.md).
+
+### Garden-first presentation
+
+The dashboard now opens **REAL GARDEN · 3DGS** as its default experience.
+The captured garden is a real-world photographic scene rendered in the browser,
+but is a **visual preview only**: robot trajectories and Gazebo physics remain
+in independent synthetic environments. Use `/?view=campus` to start in the
+original engineering simulator or `/?view=map` to start in the 2D map.

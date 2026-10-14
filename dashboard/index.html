@@ -31,7 +31,7 @@
   </aside>
   <main>
     <header class="masthead">
-      <div class="brand"><span class="eyebrow">CDR / CAMPUS DELIVERY ROBOTICS</span><h1>Robotics command center<span class="period">.</span></h1><p>Campus delivery research <span class="slash">/</span> Interactive visualization &amp; measured evidence</p></div>
+      <div class="brand"><span class="eyebrow">CDR / CAMPUS DELIVERY ROBOTICS</span><h1>Autonomous delivery studio<span class="period">.</span></h1><p>Photoreal environment study <span class="slash">/</span> Robotics engineering &amp; verified simulation evidence</p></div>
       <div class="mast-actions"><span class="pill"><span class="live-dot"></span> LOCAL SIMULATOR</span><span class="clock" id="clock">SIM — 00:00</span></div>
     </header>
     <section class="mission-bar" aria-label="Mission parameters">
@@ -44,7 +44,7 @@
       <section class="map-panel" id="mission-studio" aria-label="Campus mission replay">
         <div class="panel-top"><div><span class="panel-kicker">01 / IMMERSIVE MISSION STUDIO</span><h2>Campus mission simulation</h2></div><div class="legend"><span><i class="legend-path"></i> Route</span><span><i class="legend-robot"></i> CDR-01</span><span><i class="legend-zone"></i> Restricted</span></div></div>
         <div class="scene-toolbar" aria-label="Mission scene settings">
-          <div class="view-switch"><button id="view3d" type="button" aria-pressed="true">3D WORLD</button><button id="view2d" type="button" aria-pressed="false">2D MAP</button><button id="view-garden" type="button" aria-pressed="false">REAL GARDEN · 3DGS</button></div>
+          <div class="view-switch"><button id="view-garden" type="button" aria-pressed="false">REAL GARDEN · 3DGS</button><button id="view3d" type="button" aria-pressed="true">ROBOT SIMULATION</button><button id="view2d" type="button" aria-pressed="false">2D MAP</button></div>
           <div class="scene-options">
             <label for="robot-profile">Visual robot</label>
             <select id="robot-profile" aria-label="Visual robot design; does not change simulated kinematics">
@@ -65,8 +65,9 @@
         <div class="map-wrap" id="stage-viewport">
           <div id="scene3d" role="img" aria-label="Interactive three dimensional university campus and robot"></div>
           <div id="garden-splat" class="garden-splat" role="region" aria-label="Real Mip-NeRF 360 Garden Gaussian Splatting scene">
+            <div class="garden-scene-heading" aria-hidden="true"><span class="garden-overline">REAL-WORLD 3D CAPTURE</span><strong>GARDEN<span class="garden-accent">.</span></strong><span class="garden-scene-subtitle">Explore a real place reconstructed with 3.3 million Gaussian splats.</span></div>
             <iframe id="garden-frame" title="Interactive Gaussian Splatting of the real Mip-NeRF 360 Garden" data-src="https://superspl.at/scene/bc0906cd?aa" loading="lazy" allow="fullscreen; xr-spatial-tracking" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
-            <div class="garden-credit"><span>REAL CAPTURE / GAUSSIAN SPLATTING</span><a href="https://superspl.at/scene/bc0906cd" target="_blank" rel="noopener noreferrer">Source: transkatgirl · CC BY 4.0 ↗</a></div>
+            <div class="garden-credit"><span>Drag to explore · Scroll to zoom · Visual preview only</span><a href="https://superspl.at/scene/bc0906cd?aa" target="_blank" rel="noopener noreferrer">Original capture · transkatgirl · CC BY 4.0 ↗</a></div>
           </div>
           <div class="world-inspector" aria-label="Visual environment status"><span class="world-eyebrow">CAMPUS DIGITAL MODEL</span><strong id="scene-detail-mode">Campus landscape</strong><span><b id="scene-detail-count">—</b> fixture details · registered collision proxies</span><span id="lighting-caption">Day — visualization</span></div>
 
@@ -74,7 +75,7 @@
           <div class="robot-inspector-label">3D MODEL PREVIEW<strong id="inspector-model">CDR-01 delivery concept</strong></div>
           <div class="scene-3d-bar"><span id="scene-status">LOADING 3D SCENE</span><div class="camera-buttons"><button data-camera="orbit" class="active" type="button">Orbit</button><button data-camera="street" type="button">Street</button><button data-camera="follow" type="button">Follow</button><button data-camera="top" type="button">Top</button></div></div>
           <div class="map-overlay">MAP COORDINATES <strong>LOCAL XY</strong><br>32 × 20 METRES <span>·</span> NOT TO SCALE</div><div class="map-badge">SCRIPTED NAVIGATION <span class="accent">●</span></div></div>
-        <p class="garden-disclosure" id="garden-disclosure" hidden><strong>Real-world 3D capture, not a validated robotics world.</strong> The existing campus routes, replay, collision map and Gazebo results are from separate synthetic environments. Robot positions are <strong>not yet registered to this garden</strong>. The splat is streamed from SuperSplat and requires internet access. <a href="https://superspl.at/scene/bc0906cd" target="_blank" rel="noopener noreferrer">Open original Garden ↗</a></p>
+        <p class="garden-disclosure" id="garden-disclosure" hidden><strong>Photorealistic environment preview — separate from robot simulation.</strong> The existing campus routes, replay, collision map and Gazebo results are from separate synthetic environments. Robot positions are <strong>not yet registered to this garden</strong>. The splat is streamed from SuperSplat and requires internet access. <a href="https://superspl.at/scene/bc0906cd" target="_blank" rel="noopener noreferrer">Open original Garden ↗</a></p>
         <div class="cad-status-bar"><span class="cad-source-dot"></span><strong id="mesh-provenance" aria-live="polite">Loading original CAD models…</strong><span class="cad-source-caption">Source-licensed CAD + deterministic path overlay</span></div>
         <div class="scene-tip">Rotate: drag · Zoom: scroll · Click a labeled destination marker to run a simulated route. Solid fixtures use the planner collision map. Facade ornament and ground markings remain decorative.</div>
         <div class="asset-note">Robot variants are original <strong>illustrative 3D concepts</strong> with licensed real CAD components from open-source robotics projects; all share the existing CDR-01 <strong>2D kinematic playback</strong>, not Nav2 or live Gazebo physics. <a id="profile-source" href="https://github.com/ahpa5246-lgtm/Delivery-Robot" target="_blank" rel="noopener noreferrer">Source reference ↗</a></div>
