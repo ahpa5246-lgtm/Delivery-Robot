@@ -27,7 +27,7 @@ for _name in (
     "robot/rbot-wheel.stl", "robot/rbot-camera.stl", "robot/delivery-cad-part.stl",
     "world/warehouse-shelf.dae", "world/warehouse-lamp.dae",
     "world/warehouse-cargo.dae", "world/warehouse-roof.dae",
-    "world/cafe-table.dae",
+    "world/cafe-table.dae", "world/clearpath-office.dae",
 ):
     STATIC["/assets/" + _name] = ("assets/" + _name,
         "model/stl" if _name.endswith(".stl") else "model/vnd.collada+xml")
