@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
 import {chromium} from 'playwright';
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl']});
 try{
@@ -38,6 +39,37 @@ try{
  'CLICK A PATCH OF GRASS OR PAVING TO PLACE ROBOT');
  assert.ok(await page.locator('#viewer canvas').count()>0);
  assert.equal(await page.locator('#floor-y').inputValue(),'-2');
+ // Explicit manual anchor is required: camera-only placement is no proof
+ // of ground contact. Export is demonstrably labeled unverified.
+ await page.locator('#place').click();
+ const dlPromise=page.waitForEvent('download');
+ await page.locator('#export-garden-calibration').click();
+ const download=await dlPromise;
+ assert.equal(download.suggestedFilename(),'garden-calibration.json');
+ const exported=JSON.parse(await readFile(await download.path(),'utf8'));
+ assert.equal(exported.schema,'cdr-garden-calibration-v1');
+ assert.equal(exported.terrain_collision_verified,false);
+ assert.equal(exported.source_sha256.length,64);
+ // Browser fixture for API contract only: actual dynamics are covered
+ // separately by Gazebo Harmonic workflow, not by this mocked response.
+ await page.route('**/api/garden-gazebo-run',route=>route.fulfill({
+   contentType:'application/json',status:200,body:JSON.stringify({
+    schema:'cdr-garden-gazebo-replay-v1',
+    source:'recorded_gazebo_harmonic_odometry',
+    physics_world:'flat_contact_proxy_not_real_garden_terrain',
+    contact_mesh_validated:false,
+    garden_source_sha256:exported.source_sha256,
+    samples:3,
+    frames:[{time_s:0,x_m:0,y_m:0,yaw_rad:0},
+            {time_s:.5,x_m:.12,y_m:0,yaw_rad:0},
+            {time_s:1,x_m:.25,y_m:0,yaw_rad:0}]
+   })
+ }));
+ await page.locator('#load-garden-gazebo').click();
+ assert.ok((await page.locator('#pose-readout').innerText()).includes('RECORDED GAZEBO FLAT CONTACT PROXY'));
+ assert.ok((await page.locator('#provenance').innerText()).includes('NO GARDEN PHYSICS'));
+ assert.equal(await page.locator('#play').isEnabled(),true);
+ console.log('GARDEN_CALIBRATION_EXPORT_AND_SOURCE_LABELED_REPLAY_CONTRACT_OK');
  console.log('SPLAT_SCENE_LOAD_OK_GROUND_PICK_REQUIRED');
  console.log('ROBOT_AND_SPLAT_SCENE_VALIDATED_IN_BROWSER');
  if(errs.length)console.log('BROWSER_WARNINGS',JSON.stringify(errs.slice(0,5)));
