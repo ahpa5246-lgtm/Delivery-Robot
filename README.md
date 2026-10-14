@@ -4,6 +4,24 @@
 
 This repository will host a simulation-first **autonomous ground delivery robot** for university campuses and controlled outdoor pedestrian walkways. The initial scope is **one robot**, with a clean interface for a future multi-robot fleet.
 
+## Full Codespaces Garden + Gazebo preview
+
+To run all **currently integrated** features through the browser, including the
+original Garden 3DGS and a **recorded, headless Gazebo Harmonic** physics run:
+
+```bash
+bash scripts/start_codespaces_full.sh
+```
+
+You must first upload the original Garden LOD ZIP to
+`assets/gaussian-garden.zip` in Codespaces. The launcher verifies its SHA-256
+and ZIP manifest before running; it does not silently substitute a fake garden.
+Open the forwarded private port **8765** and select a visible Garden ground
+anchor before replaying recorded Gazebo data. The actual Garden surface is not
+a Gazebo collision mesh, and this is not a Gazebo GUI or live-synchronized twin.
+
+See [complete Codespaces instructions](docs/CODESPACES_FULL_DEMO.md).
+
 ## Baseline decision
 
 - **Operating environment:** paved, pedestrian-only campus paths; no road traffic, kerb climbing, stairs, heavy rain, or unknown rough terrain.

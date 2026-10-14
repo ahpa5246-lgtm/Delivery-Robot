@@ -29,6 +29,8 @@ jobs:
       - name: Validate prototype contracts without pretending to run physics
         run: |
           python3 -m unittest tests.test_garden_physics -v
+          bash -n scripts/start_codespaces_full.sh
+          bash scripts/start_codespaces_full.sh --help >/dev/null
           mkdir -p experiments/garden_gazebo
       - name: Run actual Gazebo Harmonic in a ROS Jazzy container
         run: |
