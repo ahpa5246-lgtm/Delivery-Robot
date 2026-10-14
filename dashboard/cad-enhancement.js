@@ -18,7 +18,8 @@
   lamp:'/assets/world/warehouse-lamp.dae',
   cargo:'/assets/world/warehouse-cargo.dae',
   roof:'/assets/world/warehouse-roof.dae',
-  table:'/assets/world/cafe-table.dae'
+  table:'/assets/world/cafe-table.dae',
+  office:'/assets/world/clearpath-office.dae'
  };
  const meshCache=new Map();
  const loaded=new Set();
@@ -34,6 +35,17 @@
       return {type:'stl',geometry:geom};
     }
     // ColladaLoader resolves original source material references relative to the DAE URL.
+    if(name==='office') {
+      // Clearpath's office references external large texture JPGs. Preserve the
+      // licensed original geometry while substituting neutral material pixels
+      // so the locally-hosted viewer does not make broken image requests.
+      const xml=await response.text();
+      const pixel='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg==';
+      const sanitized=xml.replace(/<library_images>[\s\S]*?<\/library_images>/,section=>
+        section.replace(/<init_from>[^<]*\.(?:jpg|png)[^<]*<\/init_from>/gi,'<init_from>'+pixel+'</init_from>'));
+      const collada=dae.parse(sanitized,'/assets/world/');
+      return {type:'dae',scene:collada.scene};
+    }
     const collada=await new Promise((resolve,reject)=>
       dae.load(assets[name],resolve,undefined,reject));
     return {type:'dae',scene:collada.scene};
@@ -111,22 +123,31 @@
   cargo:[[5,0,-4],[21,0,-14],[28,0,-5]],
   lamp:[[7.8,0,-7.9],[17,0,-14.5]],
   roof:[[14,3.2,-10]],
-  table:[[23,0,-5],[26,0,-5],[27,0,-9]]
+  table:[[23,0,-5],[26,0,-5],[27,0,-9]],
+  office:[[21.5,0,-10]]
  };
  async function onWorld(e){
    const token=++worldGeneration, {environment,theme}=e.detail;
-   const names=theme==='warehouse'?['shelf','cargo','lamp','roof']:['table','lamp'];
+   const names=theme==='warehouse'?['shelf','cargo','lamp','roof']:['office','table','lamp'];
    const data=await Promise.allSettled(names.map(loadCad));
    if(token!==worldGeneration || environment!==CAD.environment)return;
    for(let i=0;i<names.length;i++){
      if(data[i].status!=='fulfilled')continue;
      const source=data[i].value;
      if(source.type!=='dae')continue;
-     const name=names[i],scale={shelf:1.65,cargo:1.1,lamp:2.2,roof:3.0,table:1.35}[name];
+     const name=names[i],scale={shelf:1.65,cargo:1.1,lamp:2.2,roof:3.0,table:1.35,office:5.7}[name];
      const locs=spots[name]||[];
      for(const [k,loc] of locs.entries()){
        const obj=fitObject(source.scene,scale,loc,k*.72);
-       if(obj)environment.add(obj);
+       if(obj) {
+         environment.add(obj);
+         if(name==='office') {
+           // The new architectural mesh replaces the east-wing placeholder,
+           // preserving the same obstacle footprint for planning.
+           for(const child of environment.children)
+             if(child.userData.buildingIndex===2)child.visible=false;
+         }
+       }
      }
      loaded.add(name);
    }
