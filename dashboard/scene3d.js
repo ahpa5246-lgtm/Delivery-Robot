@@ -145,25 +145,70 @@
     environment.add(g);
   }
   function building(i,[x0,y0,x1,y1],theme){
-    const w=x1-x0,d=y1-y0, cx=(x0+x1)/2,cz=-(y0+y1)/2;
+    // The original physical obstacle footprint is intentionally unchanged.
+    // Layered, dimensioned façade architecture supplies actual 3D depth and
+    // readable scale instead of a flat schematic cuboid.
+    const w=x1-x0,d=y1-y0,cx=(x0+x1)/2,cz=-(y0+y1)/2;
     const height=(i===3?1.6:3.0+i*.4);
-    const base=mat([0x88acaa,0xa89178,0x6993a9,0x79a18b][i]);
-    cube(environment,w,height,d,base,cx,height/2,cz);
-    cube(environment,w+.2,.18,d+.2,mat(0x304450),cx,height+.08,cz);
-    // Small accessible glass entrance (purely visual; collisions not changed).
-    const dx=cx,front=-y0-.018;
-    cube(environment,1.28,1.75,.035,glass,dx,.89,front);
-    cube(environment,1.45,.16,.2,dark,dx,1.78,front);
-    const stories=Math.max(1,Math.floor(height/1.1));
-    for(let s=0;s<stories;s++){
-      for(let a=0;a<Math.min(4,Math.floor(w/1.5));a++){
-        const xx=x0+(a+1)*w/(Math.min(4,Math.floor(w/1.5))+1);
-        cube(environment,.55,.54,.024,glass,xx,.95+s*1.02,-y1-.022);
-        cube(environment,.55,.54,.024,glass,xx,.95+s*1.02,front);
+    const stone=mat([0xc5d0c7,0xd9c6a7,0xa9bfc7,0xafc5a9][i]);
+    const structural=mat(0x6f8890,{roughness:.76});
+    const trim=mat(0x304f62,{metalness:.40,roughness:.48});
+    const glazing=mat(0x548d9b,{roughness:.16,metalness:.22,transparent:true,opacity:.83});
+    const sill=mat(0xe3d7bd);
+    const roof=mat(0x455c64);
+    const front=-y0,back=-y1;
+    cube(environment,w,height,d,stone,cx,height/2,cz);
+    cube(environment,w+.40,.21,d+.40,roof,cx,height+.09,cz);
+    // Brick plinth, projecting corners and restrained horizontal façade bands.
+    for(const z of [front,back]){
+      cube(environment,w+.16,.18,.12,structural,cx,.17,z);
+      cube(environment,w+.18,.12,.10,structural,cx,height*.53,z);
+      cube(environment,w+.17,.14,.12,trim,cx,height-.13,z);
+      for(const edge of [x0+.08,x1-.08])
+        cube(environment,.21,height,.24,structural,edge,height/2,z);
+    }
+    for(const x of [x0,x1]){
+      cube(environment,.12,.20,d+.12,structural,x,.15,cz);
+      cube(environment,.13,.13,d+.17,trim,x,height-.15,cz);
+    }
+    // Deep windows, actual frames, sills and mullions on both long elevations.
+    const floorCount=i===3?1:2;
+    const bays=Math.max(2,Math.min(4,Math.floor(w/1.35)));
+    for(let floor=0;floor<floorCount;floor++){
+      const yy=height*.35+floor*(height*.34);
+      for(let bay=0;bay<bays;bay++){
+        const xx=x0+(bay+.5)*w/bays;
+        if(bay===Math.floor(bays/2)&&floor===0)continue; // entrance bay
+        for(const z of [front+.082,back-.082]){
+          cube(environment,.81,.77,.045,trim,xx,yy,z);
+          cube(environment,.68,.63,.055,glazing,xx,yy,z+(z===front?-.03:.03));
+          cube(environment,.045,.67,.09,sill,xx,yy,z);
+          cube(environment,.87,.08,.16,sill,xx,yy-.41,z);
+          cube(environment,.85,.11,.14,trim,xx,yy+.41,z);
+        }
       }
     }
-    signText(environment,theme==='warehouse'?['LOADING A','STORAGE B','SORTING','GARDEN'][i]:
-      ['WEST WING','NORTH WING','EAST WING','GREENHOUSE'][i],cx,height+.24,cz,Math.min(w*1.12,3.0));
+    // Recessed lobby, accessible visual threshold and a substantial canopy.
+    cube(environment,1.43,1.72,.17,trim,cx,.88,front+.07);
+    cube(environment,1.17,1.54,.11,glazing,cx,.79,front-.05);
+    cube(environment,.055,1.55,.13,sill,cx,.79,front-.13);
+    cube(environment,1.8,.16,.70,structural,cx,1.82,front-.35);
+    for(const x of [cx-.74,cx+.74])cube(environment,.10,1.8,.26,structural,x,.9,front-.19);
+    cube(environment,1.65,.09,.45,sill,cx,.045,front-.23);
+    // Parapet, solar glass and rooftop utility enclosures increase silhouette detail.
+    for(const z of [front+.22,back-.22])
+      cube(environment,w+.10,.26,.10,trim,cx,height+.28,z);
+    for(const x of [x0+.20,x1-.20])
+      cube(environment,.10,.26,d+.03,trim,x,height+.28,cz);
+    const skylight=mat(0x31788b,{metalness:.38,roughness:.23});
+    for(let k=0;k<2;k++){
+      const xx=x0+w*(.30+.40*k);
+      cube(environment,Math.min(1.25,w*.27),.07,Math.min(1.25,d*.24),trim,xx,height+.24,cz);
+      cube(environment,Math.min(1.08,w*.23),.08,Math.min(1.08,d*.20),skylight,xx,height+.30,cz);
+    }
+    const facility=theme==='warehouse'?['LOADING A','STORAGE B','SORTING','GARDEN'][i]:
+      ['WEST WING','NORTH WING','EAST WING','GREENHOUSE'][i];
+    signText(environment,facility,cx,height+.50,cz,Math.min(w*1.0,2.8));
   }
   function addStop(name,p){
     cyl(environment,.32,.32,.035,mat(name==='depot'?0xeebd7d:0x62d9bb,{emissive:0x093e36}),p[0],.045,-p[1]);
