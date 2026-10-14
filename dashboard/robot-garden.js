@@ -86,6 +86,7 @@ window.addEventListener('message',e=>{
    e.data?.type!=='cdr:garden-visibility')return;
  if(viewer?.app)viewer.app.renderNextFrame=true;
 });
+const ORIGINAL_GARDEN_SHA256='e2c82908d3c871c47dc4e6498529944afaebd7d01cf130b65aa0bf01202086c3';
 const GARDEN_META_URL='/garden-assets/lod-meta.json';
 const GARDEN_META_NAME='lod-meta.json';
 const poseInputs=['origin-x','origin-y','origin-z','robot-scale','robot-yaw'];
@@ -192,6 +193,7 @@ $('load-url').addEventListener('click',()=>{
 });
 function importFrames(frames,label){
  if(!robot)return;
+ if(!groundAnchor){status('SELECT LAWN GROUND ANCHOR BEFORE APPLYING A TRAJECTORY');return;}
  if(!Array.isArray(frames)||frames.length<2||frames.some(f=>!
    [f.time_s,f.x_m,f.y_m].every(Number.isFinite))) {
   status('INVALID TRAJECTORY: time_s, x_m, y_m required');return;
@@ -199,12 +201,47 @@ function importFrames(frames,label){
  frames.sort((a,b)=>a.time_s-b.time_s);
  if(frames.some((f,i)=>i>0&&f.time_s<=frames[i-1].time_s)){status('INVALID NON-MONOTONIC TIMESTAMPS');return;}
  stop();trajectory={frames,label};
- motionSource=label.startsWith('IMPORTED')?'imported':'scripted';
+ motionSource=(label.startsWith('IMPORTED')||label.startsWith('RECORDED GAZEBO'))?'imported':'scripted';
  $('play').disabled=false;$('reset').disabled=false;
  const f=frames[0];manualPose={x:0,z:0,yaw:0};applyPose(0,0,0);
  $('pose-readout').textContent=label+' · '+frames.length+' frames · START READY';
  provenance('3DGS CO-RENDERING + '+label+' · NOT METRICALLY ALIGNED TO GARDEN · NO GARDEN PHYSICS');
 }
+$('load-garden-gazebo').addEventListener('click',async()=>{
+ try{
+  if(!groundAnchor)throw Error('Choose the lawn ground anchor before replay');
+  const response=await fetch('/api/garden-gazebo-run',{cache:'no-store'});
+  const record=await response.json();
+  if(!response.ok)throw Error(record.error||'Gazebo recording unavailable');
+  if(record.schema!=='cdr-garden-gazebo-replay-v1' ||
+     record.source!=='recorded_gazebo_harmonic_odometry' ||
+     record.contact_mesh_validated!==false ||
+     record.physics_world!=='flat_contact_proxy_not_real_garden_terrain' ||
+     record.garden_source_sha256!==ORIGINAL_GARDEN_SHA256)
+     throw Error('Invalid or misattributed Gazebo recording');
+  importFrames(record.frames,'RECORDED GAZEBO FLAT CONTACT PROXY (NOT GARDEN COLLISIONS)');
+  status(record.samples+' GAZEBO ODOMETRY SAMPLES · FLAT PROXY ONLY');
+ }catch(e){status(e.message);}
+});
+$('export-garden-calibration').addEventListener('click',()=>{
+ if(!robot||!groundAnchor){status('PLACE ROBOT ON LAWN BEFORE EXPORTING CALIBRATION');return;}
+ const scale=Number($('scene-to-meters').value);
+ if(!Number.isFinite(scale)||scale<.01||scale>10){status('INVALID SCALE: USE 0.01 TO 10');return;}
+ const d={
+  schema:'cdr-garden-calibration-v1',source_sha256:ORIGINAL_GARDEN_SHA256,
+  origin_scene:{x:val('origin-x'),y:val('origin-y'),z:val('origin-z')},
+  meters_per_scene_unit:scale,scene_yaw_deg:val('robot-yaw'),
+  scene_y_axis:'up',flat_patch_size_m:8,terrain_collision_verified:false,
+  calibration_status:'OPERATOR-ESTIMATED. NO VERIFIED GARDEN TERRAIN MESH',
+  notes:'This defines an origin and orientation for a local flat Gazebo pad only.'
+ };
+ const b=new Blob([JSON.stringify(d,null,2)+'\\n'],{type:'application/json'});
+ const u=URL.createObjectURL(b);
+ const a=document.createElement('a');a.href=u;a.download='garden-calibration.json';
+ document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(u),1000);
+ status('VISUAL CALIBRATION EXPORTED · UPLOAD JSON TO assets/ IN CODESPACES');
+});
 $('load-scripted').addEventListener('click',async()=>{
  try{const r=await fetch('/api/run?world=campus&scenario=clear&seed=7');
   if(!r.ok)throw Error('Replay API '+r.status);

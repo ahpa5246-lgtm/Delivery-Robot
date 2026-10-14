@@ -35,8 +35,12 @@
   $('garden-pose-xz').textContent=d.x.toFixed(2)+' / '+d.z.toFixed(2);
   $('garden-pose-yaw').textContent=d.yaw.toFixed(1)+'°';
   $('garden-travel').textContent=d.distance.toFixed(2)+' units';
-  $('garden-ground-mode').textContent=d.anchor?'VISUAL PLANE':'NOT SET';
-  $('garden-calibration').textContent=d.anchor?'Robot anchored to visual Y-plane '+d.y.toFixed(2)+'; Gazebo terrain not calibrated.':'Choose a visible ground patch for the robot.';
+  $('garden-ground-mode').textContent=
+    d.source==='imported'?'GAZEBO REPLAY · FLAT':d.anchor?'VISUAL PLANE':'NOT SET';
+  $('garden-calibration').textContent=
+    d.source==='imported'?'Gazebo odometry replay on flat contact pad; Garden terrain collisions NOT modeled.':
+    d.anchor?'Robot anchored to visual Y-plane '+d.y.toFixed(2)+'; Gazebo terrain not calibrated.':
+    'Choose a visible ground patch for the robot.';
  });
  const view=new URLSearchParams(location.search).get('view');
  if(view==='map')view2d.click();

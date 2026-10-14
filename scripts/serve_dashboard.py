@@ -24,6 +24,26 @@ GARDEN_ENTRY = re.compile(
     r"(?:means_l|means_u|quats|scales|sh0|shN_labels|shN_centroids)\.webp))\Z"
 )
 MAX_GARDEN_FILE_SIZE = 4 * 1024 * 1024
+GARDEN_REPLAY = REPO_ROOT / "experiments" / "garden_gazebo" / "latest_run.json"
+
+def gazebo_garden_resource() -> tuple[int, str, bytes]:
+    """Read only a bounded, independently generated real Gazebo recording."""
+    if not GARDEN_REPLAY.is_file():
+        return 404, "application/json", b'{"error":"No recorded Garden flat-proxy Gazebo run. Execute scripts/run_garden_gazebo.sh"}'
+    if GARDEN_REPLAY.stat().st_size > 3 * 1024 * 1024:
+        return 413, "application/json", b'{"error":"Gazebo recording too large"}'
+    try:
+        data = json.loads(GARDEN_REPLAY.read_text(encoding="utf-8"))
+        if (data.get("schema") != "cdr-garden-gazebo-replay-v1" or
+            data.get("source") != "recorded_gazebo_harmonic_odometry" or
+            data.get("contact_mesh_validated") is not False or
+            data.get("physics_world") != "flat_contact_proxy_not_real_garden_terrain" or
+            not isinstance(data.get("frames"), list) or len(data["frames"]) < 2):
+            raise ValueError("invalid Gazebo experiment provenance")
+        return 200, "application/json", json.dumps(data).encode("utf-8")
+    except (ValueError, OSError, TypeError):
+        return 422, "application/json", b'{"error":"Invalid Gazebo experiment recording"}'
+
 
 def garden_resource(name: str) -> tuple[int, str, bytes]:
     """Serve *only* known harmless LOD files from the uploaded archive."""
@@ -109,6 +129,8 @@ def response_for(path: str) -> tuple[int, str, bytes]:
         return garden_resource(parsed.path[len("/garden-assets/"):])
     if parsed.path == "/api/garden-asset":
         return 200, "application/json", json.dumps(garden_status()).encode("utf-8")
+    if parsed.path == "/api/garden-gazebo-run":
+        return gazebo_garden_resource()
     if parsed.path in STATIC:
         filename, media_type = STATIC[parsed.path]
         return 200, media_type, (ROOT / filename).read_bytes()
