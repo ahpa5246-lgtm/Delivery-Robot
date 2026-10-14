@@ -60,3 +60,25 @@ replay settings are collapsed by default. A camera-relative visual placement
 keeps the robot in view on first load but **does not** align it to the floor:
 it must never be misrepresented as physical contact, collision avoidance, or
 a valid Gard​en Gazebo run. The genuine ZIP must already be in Codespaces.
+
+## Full dashboard retained and no floating robot
+
+The first-party real Garden viewer is now embedded inside the full existing
+mission studio, using a **same-origin** `/robot-garden?embed=1` component.
+The actual Gaussian data and robot mesh continue to live in one PlayCanvas
+renderer inside that component. Dashboard mission controls, analytics, physics
+archive and diagnostic widgets remain present. Their output is explicitly
+from the **separate scripted campus** and must never be attributed to the
+Garden capture. A small dedicated manual Garden readout receives verified
+same-origin pose events and labels distances as *uncalibrated scene units*.
+
+The old auto spawn in front of the camera was removed after a screenshot
+showed the robot floating above the hedges. **On each model load the robot
+starts hidden**, and the user is prompted to choose a patch of lawn/paving
+in the 3DGS rendering. Screen coordinates are projected as a ray against
+a configurable horizontal Y-plane (initial -2.0 scene units); the robot
+base is placed at the intersection. If ray/plane intersection fails, no
+flying robot is shown and a clear error is displayed. The floor-Y field
+can be adjusted by the operator. The plane is a user calibration aid,
+not an actual Gaussian collision mesh, so this remains visual-only.
+The physical Gazebo world remains to be reconstructed.

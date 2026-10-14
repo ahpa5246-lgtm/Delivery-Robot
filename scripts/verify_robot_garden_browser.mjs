@@ -17,7 +17,7 @@ try{
  await page.locator('#splat-url').fill(source);
  await page.locator('#load-url').click();
  try {
-  await page.waitForFunction(()=>document.querySelector('#status')?.textContent?.includes('ROBOT IN GARDEN VIEW'),{timeout:65000});
+  await page.waitForFunction(()=>document.querySelector('#status')?.textContent?.includes('PICK LAWN'),{timeout:65000});
  }catch(e){
   console.error('3DGS LOAD STATUS',await page.locator('#status').innerText());
   console.error('BROWSER ERRORS',errs);
@@ -31,9 +31,14 @@ try{
  await page.locator('#origin-x').fill('1.5');
  await page.locator('#origin-x').dispatchEvent('change');
  await page.locator('#quick-focus').click();
- assert.ok((await page.locator('#pose-readout').innerText()).includes('CAMERA VIEW'));
- await page.locator('#quick-forward').click();
- assert.ok((await page.locator('#pose-readout').innerText()).includes('MANUAL CONTROL'));
+ assert.equal(await page.locator('#ground-pick-layer').isVisible(),true);
+ assert.equal(await page.locator('#quick-ground').isEnabled(),true);
+ // The robot must not float until a visual floor anchor has been selected.
+ assert.equal(await page.locator('#status').innerText(),
+ 'CLICK A PATCH OF GRASS OR PAVING TO PLACE ROBOT');
+ assert.ok(await page.locator('#viewer canvas').count()>0);
+ assert.equal(await page.locator('#floor-y').inputValue(),'-2');
+ console.log('SPLAT_SCENE_LOAD_OK_GROUND_PICK_REQUIRED');
  console.log('ROBOT_AND_SPLAT_SCENE_VALIDATED_IN_BROWSER');
  if(errs.length)console.log('BROWSER_WARNINGS',JSON.stringify(errs.slice(0,5)));
  await page.close();
