@@ -51,10 +51,19 @@
   renderer.shadowMap.type = T.PCFSoftShadowMap;
   renderer.outputEncoding = T.sRGBEncoding;
   renderer.toneMapping = T.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.80;
+  renderer.toneMappingExposure = 0.70;
   root.appendChild(renderer.domElement);
   renderer.domElement.setAttribute('aria-label', 'Interactive three-dimensional campus and robot replay');
   const scene = new T.Scene();
+  const previewScene = new T.Scene();
+  previewScene.background = new T.Color(0x17323b);
+  previewScene.add(new T.HemisphereLight(0xd9f4ff,0x28404b,1.7));
+  const previewLight = new T.DirectionalLight(0xffe5bf,2.2);
+  previewLight.position.set(3,6,4);previewScene.add(previewLight);
+  const previewCamera = new T.PerspectiveCamera(44,1,0.1,30);
+  previewCamera.position.set(1.95,1.85,2.4);
+  previewCamera.lookAt(0,.45,0);
+  let previewRobot=null;
   scene.background = new T.Color(0x142b3b);
   scene.fog = new T.Fog(0x142b3b, 26, 85);
   const camera = new T.PerspectiveCamera(48, 1, 0.1, 170);
@@ -69,8 +78,8 @@
     camera.lookAt(target);
   }
   camera.position.set(39,30,19);setPose();
-  const hemi = new T.HemisphereLight(0xcdeafa,0x243b45,1.20);scene.add(hemi);
-  const sun = new T.DirectionalLight(0xffe6bb,1.85);
+  const hemi = new T.HemisphereLight(0xcdeafa,0x243b45,0.90);scene.add(hemi);
+  const sun = new T.DirectionalLight(0xffe6bb,1.55);
   sun.position.set(12,33,8);sun.castShadow=true;
   sun.shadow.mapSize.set(2048,2048);
   sun.shadow.camera.left=-30;sun.shadow.camera.right=30;
@@ -248,6 +257,12 @@
     }
     // This is a visual silhouette only. Physics in recorded trace is always CDR-01.
     scene.add(g);robot=g;robot.position.set(lastX,0,-lastY);
+    if(previewRobot)previewScene.remove(previewRobot);
+    previewRobot=g.clone(true);
+    previewRobot.position.set(0,0,0);
+    previewScene.add(previewRobot);
+    const label=document.getElementById('inspector-model');
+    if(label)label.textContent=(nav[profile]||nav.cdr)[0].replace(' concept','');
   }
   function trajectory(run,time){
     if(!run||!run.frames?.length)return null;
@@ -324,7 +339,24 @@
     if(cameraMode==='follow'&&robot)target.lerp(new T.Vector3(robot.position.x,.45,robot.position.z),.08);
     else if(cameraMode==='orbit')target.lerp(new T.Vector3(16,0,-10),.02);
     if(cameraMode!=='top')setPose();
+    renderer.setViewport(0,0,root.clientWidth,root.clientHeight);
     renderer.render(scene,camera);
+    // Dedicated robot model inspector: the robot remains visible independently
+    // of whether buildings would occlude the main world camera.
+    if(previewRobot) {
+      previewRobot.rotation.y=timestamp*.00026;
+      const w=root.clientWidth,h=root.clientHeight;
+      const side=Math.min(w<490?120:164,Math.floor(w*.32),Math.floor(h*.44));
+      const gap=12;
+      const x=w-side-gap,y=h-side-gap;
+      previewCamera.aspect=1;previewCamera.updateProjectionMatrix();
+      renderer.setScissorTest(true);
+      renderer.setViewport(x,y,side,side);
+      renderer.setScissor(x,y,side,side);
+      renderer.render(previewScene,previewCamera);
+      renderer.setScissorTest(false);
+      renderer.setViewport(0,0,w,h);
+    }
   }
   renderer.domElement.addEventListener('pointerdown',e=>{
     dragging=true;oldX=e.clientX;oldY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId);
@@ -345,7 +377,7 @@
       cameraMode=mode;
       if(mode==='top'){
         target.set(16,0,-10);camera.position.set(16,45,-10.01);camera.lookAt(target);
-      }else if(mode==='follow'){orbitRadius=12;orbitElevation=.55;orbitAz=.55;}
+      }else if(mode==='follow'){orbitRadius=9;orbitElevation=1.14;orbitAz=.55;}
       else{orbitRadius=47;orbitElevation=.95;orbitAz=.82;target.set(16,0,-10);}
       for(const b of document.querySelectorAll('[data-camera]'))b.classList.toggle('active',b===btn);
     });
