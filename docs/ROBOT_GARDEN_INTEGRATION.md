@@ -49,3 +49,14 @@ Confirm installation using `/api/garden-asset`, which responds with
 If the user chooses a separate Codespaces workspace, the ZIP must be
 transferred into that workspace; uploads attached in ChatGPT are not
 automatically present in GitHub or Codespaces.
+
+## No external SuperSplat website sidebar
+
+The root Garden tab routes directly to `/robot-garden`, where the PlayCanvas
+`createViewer` loads the 3DGS LOD ZIP with `ui:false` and adds the CDR robot
+as an engine entity. No third-party iframe is used. The user sees a large
+Garden renderer and compact manual robot controls. Advanced calibration and
+replay settings are collapsed by default. A camera-relative visual placement
+keeps the robot in view on first load but **does not** align it to the floor:
+it must never be misrepresented as physical contact, collision avoidance, or
+a valid Gard​en Gazebo run. The genuine ZIP must already be in Codespaces.
