@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'dashboard/**'
+      - 'world/**'
       - 'cdr_sim/**'
       - 'scripts/serve_dashboard.py'
       - 'scripts/visual_smoke.mjs'
@@ -11,6 +12,7 @@ on:
   pull_request:
     paths:
       - 'dashboard/**'
+      - 'world/**'
       - 'cdr_sim/**'
       - 'scripts/serve_dashboard.py'
       - 'scripts/visual_smoke.mjs'
