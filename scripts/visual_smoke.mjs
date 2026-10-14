@@ -49,6 +49,18 @@ try {
       && document.querySelector('#scene-status').textContent.includes('INTERACTIVE 3D')
     ), { timeout: 15000 });
     assert.equal(await page.locator('#view3d').getAttribute('aria-pressed'), 'true');
+    await page.waitForFunction(() => Number(document.querySelector('#scene-detail-count')?.textContent.replaceAll(',', '')) > 100);
+    assert.match(await page.locator('#scene-detail-mode').innerText(), /Campus landscape/);
+    assert.equal(await page.locator('#lighting-caption').innerText(), 'Day — visualization');
+    await page.locator('#lighting-preset').selectOption('golden');
+    assert.equal(await page.locator('#lighting-caption').innerText(), 'Evening — visualization');
+    await page.locator('#lighting-preset').selectOption('night');
+    assert.equal(await page.locator('#lighting-caption').innerText(), 'Night — visualization');
+    await page.locator('#lighting-preset').selectOption('day');
+    await page.locator('#world-preset').selectOption('warehouse');
+    await page.waitForFunction(() => document.querySelector('#scene-detail-mode').textContent === 'Logistics detail');
+    await page.locator('#world-preset').selectOption('campus');
+    await page.waitForFunction(() => document.querySelector('#scene-detail-mode').textContent === 'Campus landscape');
     assert.equal(await page.locator('#robot-profile option').count(), 9);
     await page.waitForFunction(() => (
       document.querySelector('#mesh-provenance')?.textContent.includes('ORIGINAL CAD')
@@ -91,6 +103,15 @@ try {
     });
     const distance = Number(await page.locator('#distance').innerText());
     assert.ok(distance > 1, 'Modeled distance should update during replay');
+    await page.waitForFunction(() => document.querySelector('#audit-integrity').textContent === 'CONSISTENT');
+    assert.ok(Number((await page.locator('#audit-position').innerText()).split('/')[0]) >= 0);
+    assert.ok(Number(await page.locator('#audit-route').innerText()) > 1);
+    assert.ok(Number(await page.locator('#audit-efficiency').innerText()) > 0);
+    assert.ok((await page.locator('#phase-ribbon > div').count()) > 1);
+    const auditKeys=['audit-accel','audit-turnrate','audit-power','audit-goal','audit-duty'];
+    for(const key of auditKeys){
+      assert.ok((await page.locator('#'+key).innerText()).length>0, key+' should show a derived reading');
+    }
     const chartRendered = await page.locator('#trace').evaluate(c => {
       const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
       return d.some((n, i) => i % 4 !== 3 && n > 70);
