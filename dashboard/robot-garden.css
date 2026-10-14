@@ -73,3 +73,9 @@ body.embedded .viewer-quick-controls{bottom:41px}
  padding:12px 15px;font-size:12px;font-weight:800;text-align:center;max-width:90%;pointer-events:none}
 .pick-instruction span{display:block;font-size:10px;font-weight:400;margin-top:5px;color:#bcdbd0}
 #quick-ground{background:#a9e9cc;color:#06271c;font-weight:800}
+
+#garden-floor-help{position:absolute;left:14px;top:14px;z-index:19;
+ background:#071b23e4;border:1px solid #6fada3;border-radius:8px;
+ padding:10px 14px;color:#cde8dc;font-size:11px;line-height:1.5;
+ max-width:min(80%,450px);pointer-events:none}
+#garden-floor-help[hidden]{display:none}

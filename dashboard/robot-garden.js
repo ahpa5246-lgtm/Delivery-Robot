@@ -50,6 +50,7 @@ function projectToGround(nx,ny){
  robot.enabled=true;
  applyPose(0,0,0);
  pickingOverlay.hidden=true;
+ $('garden-floor-help').hidden=true;
  $('pose-readout').textContent='VISUAL GROUND ANCHOR: X '+p.x.toFixed(2)+' Z '+p.z.toFixed(2)+
   ' Y '+y.toFixed(2)+' · NOT GAZEBO';
  status('ROBOT GROUNDED TO SELECTED VISUAL Y PLANE · ADJUST IF NEEDED');
@@ -59,8 +60,9 @@ function projectToGround(nx,ny){
 }
 function startGroundPlacement(){
  if(!robot||!viewer)return;
- pickingOverlay.hidden=false;
- status('CLICK A PATCH OF GRASS OR PAVING TO PLACE ROBOT');
+ pickingOverlay.hidden=!pickingOverlay.hidden;
+ status(pickingOverlay.hidden?'ROTATE THE CAMERA TO FIND THE LAWN THEN PLACE AGAIN':
+  'CLICK A PATCH OF GRASS OR PAVING TO PLACE ROBOT');
 }
 $('quick-ground')?.addEventListener('click',startGroundPlacement);
 $('quick-focus')?.addEventListener('click',startGroundPlacement);
@@ -165,9 +167,10 @@ async function load(source,filename){
     robot=buildRobot(viewer.app);
     robot.enabled=false;groundAnchor=false;manualDistance=0;lastWorld=null;
     for(const id of quickIds)$(id).disabled=false;
-    startGroundPlacement();
+    pickingOverlay.hidden=true;
+    $('garden-floor-help').hidden=false;
     $('robot-controls').hidden=false;$('playback-controls').hidden=false;
-    status('PICK LAWN · ROBOT HIDDEN UNTIL GROUND IS SELECTED');
+    status('PICK LAWN · ORBIT UNTIL GRASS IS VISIBLE, THEN PLACE');
     provenance('REAL 3DGS + CDR ROBOT IN SAME PLAYCANVAS ENGINE · SPATIAL REGISTRATION / GARDEN COLLISION NOT VERIFIED');
     viewer.app.renderNextFrame=true;
   };
