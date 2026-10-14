@@ -68,7 +68,7 @@
   scene.fog = new T.Fog(0x142b3b, 26, 85);
   const camera = new T.PerspectiveCamera(48, 1, 0.1, 170);
   const target = new T.Vector3(16,0,-10);
-  let orbitAz = Math.PI*0.28, orbitElevation=0.78, orbitRadius=root.clientWidth<650?46:35;
+  let orbitAz = Math.PI*0.28, orbitElevation=0.69, orbitRadius=root.clientWidth<650?40:29;
   let cameraMode = 'orbit', dragging=false, oldX=0, oldY=0;
   function setPose() {
     const horizontal = orbitRadius*Math.cos(orbitElevation);
@@ -394,9 +394,17 @@
     if(timestamp-lastGpuFrame<32)return;
     lastGpuFrame=timestamp;
     refreshSize();
-    if(cameraMode==='follow'&&robot)target.lerp(new T.Vector3(robot.position.x,.45,robot.position.z),.08);
-    else if(cameraMode==='orbit')target.lerp(new T.Vector3(16,0,-10),.02);
-    if(cameraMode!=='top')setPose();
+    if(cameraMode==='follow'&&robot){
+      // Keep the camera almost vertically above the robot. Buildings must not
+      // hide the tracked vehicle during a handover or final approach.
+      const focus=new T.Vector3(robot.position.x,.34,robot.position.z);
+      target.lerp(focus,.19);
+      camera.position.lerp(new T.Vector3(target.x+1.45,target.y+7.8,target.z+1.60),.20);
+      camera.lookAt(target);
+    }else{
+      if(cameraMode==='orbit')target.lerp(new T.Vector3(16,0,-10),.02);
+      if(cameraMode!=='top')setPose();
+    }
     renderer.setViewport(0,0,root.clientWidth,root.clientHeight);
     renderer.render(scene,camera);
     // Dedicated robot model inspector: the robot remains visible independently
@@ -460,7 +468,7 @@
         target.set(16,0,-10);camera.position.set(16,45,-10.01);camera.lookAt(target);
       }else if(mode==='follow'){orbitRadius=9;orbitElevation=1.14;orbitAz=.55;}
       else if(mode==='street'){orbitRadius=29;orbitElevation=.26;orbitAz=.56;target.set(16,.75,-10);}
-      else{orbitRadius=root.clientWidth<650?46:35;orbitElevation=.78;orbitAz=.82;target.set(16,0,-10);}
+      else{orbitRadius=root.clientWidth<650?40:29;orbitElevation=.69;orbitAz=.82;target.set(16,0,-10);}
       for(const b of document.querySelectorAll('[data-camera]'))b.classList.toggle('active',b===btn);
     });
   }
