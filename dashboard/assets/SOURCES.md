@@ -1,0 +1,28 @@
+# Third-party geometry and material provenance
+
+This directory contains actual upstream-authored triangulated CAD and Collada assets, rather than the low-poly placeholder geometry used previously. They are **visual assets** only: they do not change collisions, dynamics, navigation, sensor models, wheel dimensions or physical validation.
+
+| Local assets | Original repository / paths | License |
+| --- | --- | --- |
+| `robot/rbot-wheel.stl`, `robot/rbot-camera.stl` | [rlxai/rbot](https://github.com/rlxai/rbot), `src/robot/rlai_meshes/meshes/wheel.stl` and `depth_camera_housing.stl` | Apache-2.0 |
+| `robot/delivery-cad-part.stl` | [Pouya-Mansournia/Delivery-Robot-ROS](https://github.com/Pouya-Mansournia/Delivery-Robot-ROS), `src/delivery_robot_description/meshes/visual/full_0029.stl` | MIT |
+| `world/warehouse-shelf.dae`, `world/warehouse-lamp.dae`, `world/warehouse-cargo.dae`, `world/warehouse-roof.dae` and associated `../materials/textures` | [motomechatronics/aws_robomaker_small_warehouse_world](https://github.com/motomechatronics/aws_robomaker_small_warehouse_world), corresponding `models/aws_robomaker_warehouse_*/meshes/*_visual.DAE` and `materials/textures` | MIT-0 |
+| `world/cafe-table.dae` | [ROBOTIS-GIT/turtlebot3_simulations](https://github.com/ROBOTIS-GIT/turtlebot3_simulations), `turtlebot3_gazebo/models/turtlebot3_house/cafe_table/meshes/cafe_table.dae` | Apache-2.0 |
+| `../vendor/STLLoader.js` and `../vendor/ColladaLoader.js` | [mrdoob/three.js](https://github.com/mrdoob/three.js/tree/r147/examples/js/loaders), release `r147` | MIT |
+
+The source projects' licenses are retained in this repository under:
+- `integrations/upstream_samples/rbot-nav2/LICENSE`
+- `integrations/upstream_samples/pouya-sixwheel/LICENSE`
+- `integrations/upstream_samples/aws-warehouse/LICENSE`
+- `integrations/upstream_samples/turtlebot3/LICENSE`
+- `dashboard/vendor/THREE_LICENSE.txt`
+
+**Implementation notes**
+
+All external mesh files are allowlisted in `scripts/serve_dashboard.py`, served locally with correct MIME types, and loaded with self-hosted Three.js loaders. The Collada material textures preserve the relative image hierarchy expected by their original assets. The 3D world adds genuine geometric prop meshes to the original campus scene; it remains a **visualization** of the Python deterministic 2D replay. A successful image fetch is not a Gazebo physics result.
+
+The original CDR-01 and other selectable robot base silhouettes continue to be illustrative models; the imported STL wheel and camera geometry are **true upstream CAD sub-components**, not complete external robot assemblies. We deliberately do not claim a full imported CAD assembly when a usable licensed complete assembly is not available within the asset size budget. This should not be represented in demonstrations as a 1:1 mechanical model.
+
+**Performance**: the browser keeps one cached copy per CAD/Collada source, reuses geometries, limits device pixel ratio and provides the 2D fallback. Avoid copying all external meshes into every robot instance.
+
+See `docs/OPEN_SOURCE_INTEGRATION.md` for the broader ten-repository roadmap.
