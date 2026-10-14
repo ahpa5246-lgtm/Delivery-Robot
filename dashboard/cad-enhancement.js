@@ -12,6 +12,8 @@
  const stl=new THREE.STLLoader(),dae=new THREE.ColladaLoader();
  const assets={
   wheel:'/assets/robot/rbot-wheel.stl',
+  chassis:'/assets/robot/rbot-chassis.stl',
+  mecanumChassis:'/assets/robot/mecanum-chassis.stl',
   camera:'/assets/robot/rbot-camera.stl',
   delivery:'/assets/robot/delivery-cad-part.stl',
   shelf:'/assets/world/warehouse-shelf.dae',
@@ -61,7 +63,7 @@
   return promise;
  };
  const cadMaterial=(tone)=>new THREE.MeshStandardMaterial({color:tone,metalness:.47,roughness:.42,side:THREE.DoubleSide});
- const COLORS={wheel:0x222a34,camera:0x1b5c76,delivery:0xe6a86a};
+ const COLORS={wheel:0x222a34,camera:0x1b5c76,delivery:0xe6a86a,chassis:0x78a3a8,mecanumChassis:0xc9ad83};
  function meshFor(type, target, dimension, position, rotation=[0,0,0]){
    const m=new THREE.Mesh(target.geometry,cadMaterial(COLORS[type]||0x759fb0));
    const box=target.geometry.boundingBox;
@@ -76,11 +78,19 @@
  let robotGeneration=0,worldGeneration=0;
  async function onRobot(e){
     const token=++robotGeneration, {profile,robot,preview}=e.detail;
-    const meshNames=['wheel','camera',...(profile==='six'?['delivery']:[])];
+    const shell=(profile==='mecanum'?'mecanumChassis':(['cdr','rbot','lino'].includes(profile)?'chassis':null));
+    const meshNames=['wheel','camera',...(shell?[shell]:[]),...(profile==='six'?['delivery']:[])];
     const results=await Promise.allSettled(meshNames.map(loadCad));
     if(token!==robotGeneration||!robot||!robot.parent)return;
     const found={};
     for(let i=0;i<results.length;i++)if(results[i].status==='fulfilled')found[meshNames[i]]=results[i].value;
+    if(shell && found[shell]){
+      const pos=[0,.50,0],geom=found[shell];
+      const body=meshFor(shell,geom,profile==='mecanum'?.95:1.05,pos,[0,0,0]);
+      robot.add(body);
+      if(preview)preview.add(meshFor(shell,geom,profile==='mecanum'?.95:1.05,pos));
+      loaded.add(shell);
+    }
     if(found.wheel){
       const positions=(profile==='six'?[ -.36,0,.36 ]:[-.35,.35]);
       const radius=profile==='clearpath'?.39:profile==='tb3'||profile==='tb4'?.20:.32;
