@@ -1,0 +1,34 @@
+name: One-engine Gaussian splat + 3D robot browser proof
+on:
+  push:
+    branches: [feature/real-garden-robot-simulation]
+    paths:
+      - 'dashboard/robot-garden.*'
+      - 'scripts/verify_robot_garden_browser.mjs'
+      - '.github/workflows/robot-garden-browser.yml'
+      - 'scripts/serve_dashboard.py'
+  workflow_dispatch:
+jobs:
+  robot-garden:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - name: Install Playwright
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve application
+        run: |
+          python3 scripts/serve_dashboard.py > /tmp/robot-garden-server.log 2>&1 &
+          for n in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/robot-garden > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/robot-garden-server.log
+          exit 1
+      - name: Load real sample Gaussian splat and inspect robot integration
+        run: node scripts/verify_robot_garden_browser.mjs
