@@ -17,13 +17,13 @@
 <section class="workspace">
 <div class="viewer-col">
  <div id="viewer" aria-label="Unified interactive Gaussian Splatting and robot scene"><div class="empty"><strong>Real Garden and delivery robot</strong><p>Upload the original multi-file LOD ZIP to <code>assets/gaussian-garden.zip</code> in Codespaces, then refresh. The actual Garden splats and the robot will load into one scene.</p><a target="_blank" rel="noopener" href="https://superspl.at/scene/bc0906cd">Sign in to SuperSplat and download Garden ↗</a></div></div>
- <div class="viewer-quick-controls" id="viewer-quick-controls" aria-label="Robot manual drive controls" hidden>
+ <div class="viewer-quick-controls" id="viewer-quick-controls" aria-label="Robot manual drive controls">
   <span>CDR-01 · MANUAL PREVIEW</span>
-  <button id="quick-forward" type="button" aria-label="Move robot forward">↑</button>
-  <button id="quick-left" type="button" aria-label="Turn robot left">↶</button>
-  <button id="quick-right" type="button" aria-label="Turn robot right">↷</button>
-  <button id="quick-back" type="button" aria-label="Move robot backward">↓</button>
-  <button id="quick-focus" type="button">Show robot</button>
+  <button id="quick-forward" type="button" disabled aria-label="Move robot forward">↑</button>
+  <button id="quick-left" type="button" disabled aria-label="Turn robot left">↶</button>
+  <button id="quick-right" type="button" disabled aria-label="Turn robot right">↷</button>
+  <button id="quick-back" type="button" disabled aria-label="Move robot backward">↓</button>
+  <button id="quick-focus" type="button" disabled>Show robot</button>
   <button id="panel-toggle" type="button" aria-controls="lab-options" aria-expanded="false">Settings</button>
  </div>
  <div id="provenance">NO GARDEN MODEL LOADED · NO GARDEN PHYSICS VALIDATION</div>

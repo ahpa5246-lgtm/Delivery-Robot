@@ -98,7 +98,7 @@ function stop(){playing=false;cancelAnimationFrame(timer);$('play').disabled=!tr
 async function load(source,filename){
  stop();status('LOADING GAUSSIAN SCENE…');
  $('robot-controls').hidden=true;$('playback-controls').hidden=true;
- $('viewer-quick-controls').hidden=true;
+ for (const id of [...quickIds,'quick-focus']) $(id).disabled=true;
  if(viewer){viewer.destroy();viewer=null;robot=null;}
  try{
   viewer=await createViewer({container:$('viewer'),settings:defaultSettings(),
@@ -107,7 +107,7 @@ async function load(source,filename){
   const ready=()=>{
     robot=buildRobot(viewer.app);initialPlacement();
     placeNearView();
-    $('viewer-quick-controls').hidden=false;
+    for (const id of [...quickIds,'quick-focus']) $(id).disabled=false;
     $('robot-controls').hidden=false;$('playback-controls').hidden=false;
     status('ROBOT IN GARDEN VIEW · VISUAL PREVIEW');
     provenance('REAL 3DGS + CDR ROBOT IN SAME PLAYCANVAS ENGINE · SPATIAL REGISTRATION / GARDEN COLLISION NOT VERIFIED');

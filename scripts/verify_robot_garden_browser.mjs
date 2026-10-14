@@ -8,6 +8,7 @@ try{
  assert.equal(r.status(),200);
  assert.equal(await page.locator('iframe').count(),0);
  assert.equal(await page.locator('#splat-file').count(),1);
+ assert.equal(await page.locator('#panel-toggle').isVisible(),true);
  await page.waitForFunction(() => document.querySelector('#status')?.textContent?.includes('UPLOAD ORIGINAL 3DGS ZIP TO CODESPACES'));
  assert.ok((await page.locator('#provenance').innerText()).includes('NO GARDEN MODEL LOADED'));
  await page.locator('#panel-toggle').click();
