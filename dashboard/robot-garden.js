@@ -126,9 +126,13 @@ function initialPlacement(){
 function applyPose(x,z,heading){
  if(!robot)return;
  const scale=Math.max(.01,Math.min(5,val('robot-scale')));
+ // Visual robot size is independent of metric trajectory displacement.
+ // ROS/Gazebo pose is metres; world uses unverified scene units until surveyed.
+ const metricToScene=motionSource==='manual'?1:
+   1/Math.max(.01,Math.min(10,val('scene-to-meters')));
  const angle=val('robot-yaw')*Math.PI/180,cs=Math.cos(angle),sn=Math.sin(angle);
- robot.setPosition(val('origin-x')+scale*(x*cs-z*sn),
-                   val('origin-y'),val('origin-z')+scale*(x*sn+z*cs));
+ robot.setPosition(val('origin-x')+metricToScene*(x*cs-z*sn),
+                   val('origin-y'),val('origin-z')+metricToScene*(x*sn+z*cs));
  robot.setLocalScale(scale,scale,scale);
  robot.setEulerAngles(0,val('robot-yaw')+heading*180/Math.PI,0);
  viewer.app.renderNextFrame=true;
