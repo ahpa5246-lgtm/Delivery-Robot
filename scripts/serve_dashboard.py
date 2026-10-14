@@ -16,7 +16,26 @@ STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
           "/app.js": ("app.js", "text/javascript; charset=utf-8"),
           "/scene3d.js": ("scene3d.js", "text/javascript; charset=utf-8"),
           "/vendor/three.min.js": ("vendor/three.min.js", "text/javascript; charset=utf-8"),
-          "/style.css": ("style.css", "text/css; charset=utf-8")}
+          "/style.css": ("style.css", "text/css; charset=utf-8"),
+          "/vendor/STLLoader.js": ("vendor/STLLoader.js", "text/javascript; charset=utf-8"),
+          "/vendor/ColladaLoader.js": ("vendor/ColladaLoader.js", "text/javascript; charset=utf-8"),
+          "/cad-enhancement.js": ("cad-enhancement.js", "text/javascript; charset=utf-8"),
+          "/analytics.js": ("analytics.js", "text/javascript; charset=utf-8")}
+# Asset paths are fixed and reviewed. Never allow arbitrary file system traversal.
+for _name in (
+    "robot/rbot-wheel.stl", "robot/rbot-camera.stl", "robot/delivery-cad-part.stl",
+    "world/warehouse-shelf.dae", "world/warehouse-lamp.dae",
+    "world/warehouse-cargo.dae", "world/warehouse-roof.dae",
+    "world/cafe-table.dae",
+):
+    STATIC["/assets/" + _name] = ("assets/" + _name,
+        "model/stl" if _name.endswith(".stl") else "model/vnd.collada+xml")
+for _name in (
+    "ShelfD_01","ShelfD_02","ShelfD_03","ShelfD_04",
+    "Lamp_01","RoofB_01","ClutteringA_01","ClutteringA_02","ClutteringA_03"
+):
+    _asset = "assets/materials/textures/aws_robomaker_warehouse_" + _name + ".png"
+    STATIC["/" + _asset] = (_asset,"image/png")
 
 
 def response_for(path: str) -> tuple[int, str, bytes]:
