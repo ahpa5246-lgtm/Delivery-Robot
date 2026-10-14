@@ -351,9 +351,9 @@
           "kind": "shelf",
           "footprint_m": [
             19.25,
-            15.575,
+            16.575,
             20.75,
-            16.425
+            17.425
           ],
           "cad_asset": "shelf"
         },
@@ -362,9 +362,9 @@
           "kind": "shelf",
           "footprint_m": [
             27.25,
-            16.575,
+            17.875,
             28.75,
-            17.425
+            18.725
           ],
           "cad_asset": "shelf"
         },
@@ -372,10 +372,10 @@
           "id": "warehouse_shelf_3",
           "kind": "shelf",
           "footprint_m": [
-            4.25,
-            15.575,
-            5.75,
-            16.425
+            2.95,
+            17.575,
+            4.45,
+            18.425
           ],
           "cad_asset": "shelf"
         },
