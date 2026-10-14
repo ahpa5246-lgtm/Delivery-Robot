@@ -1,0 +1,113 @@
+/* CDR-01 engineering interface, layered on the existing responsive baseline.
+ * The viewport is the hero. All modeled metrics live BELOW it. */
+:root { --panel:#101c2a; --panel-2:#142438; --line:#2c4354; --accent:#5af0c5; --muted:#91aabb; --bg:#080f1c; }
+body{background:radial-gradient(ellipse at 40% 0, #153049 0%, #0a1525 32%, #080f1c 65%)}
+main{max-width:1850px;padding-top:34px}
+.brand h1{font-size:clamp(34px,3.15vw,51px);font-weight:770}
+.masthead{margin-bottom:26px}
+.mission-bar{background:linear-gradient(130deg,#15293a,#101c2b);box-shadow:0 15px 44px #01060b35}
+.workspace{display:flex;flex-direction:column;gap:28px}
+.map-panel{width:100%;padding:22px 24px 20px;background:linear-gradient(150deg,#142437,#101b2b);border-color:#34566c;box-shadow:0 24px 80px #01071140}
+.map-panel h2{font-size:23px}
+.panel-top{padding-bottom:18px}
+#stage-viewport{aspect-ratio:2.08;min-height:500px;border:1px solid #486c7a;border-radius:12px}
+#stage-viewport.show3d .robot-inspector-label{border-color:#5c96a5aa;background:#102d3edb}
+#stage-viewport .scene-3d-bar{bottom:20px;left:20px;right:20px}
+#stage-viewport #scene-status{font-size:10px;border:1px solid #669f9e55}
+.scene-toolbar{margin:0 0 15px}
+.scene-options select{height:39px;font-size:12px;min-width:145px}
+.scene-options select:focus,.view-switch button:focus-visible,.camera-buttons button:focus-visible{outline:2px solid #8ffce3;outline-offset:3px}
+.view-switch button{font-size:11px;padding:12px 16px}
+.camera-buttons button{font-size:11px;padding:11px 14px}
+.cad-status-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid #24495b;border-radius:8px;background:#0b1d2c;padding:12px 15px;margin-top:12px}
+.cad-source-dot{width:8px;height:8px;background:#62dabe;border-radius:50%;box-shadow:0 0 10px #5eefd85d}
+.cad-status-bar strong{font-size:10px;color:#d0f7ef;letter-spacing:.055em}
+.cad-source-caption{font-size:10px;color:#8faaba;margin-left:auto}
+.asset-note{background:none;border:0;padding:8px 2px 2px;font-size:11px}
+.playback{border-top:1px solid #274155;margin-top:12px}
+.trace-panel{border-top:1px solid #2a4756;padding:22px 3px 0;margin-top:15px}
+.trace-panel h2{font-size:19px}
+#trace{aspect-ratio:3.4;max-height:370px;border-radius:11px}
+.insights{display:grid!important;grid-template-columns:repeat(12,minmax(0,1fr))!important;align-items:stretch;gap:15px!important;width:100%}
+.operations-heading{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:11px 3px 3px}
+.operations-heading h2{font-size:29px;margin:7px 0}
+.operations-heading p{max-width:760px;color:#91a9b8;font-size:12px;line-height:1.6}
+.operations-heading .evidence-tag{white-space:nowrap;border:1px solid #426274;background:#1b3845}
+.status-panel{grid-column:span 4;min-height:210px;background:linear-gradient(155deg,#132c39,#12202e)}
+.status-line{font-size:25px}
+.metrics{grid-column:span 8;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.metric{min-height:210px;display:flex;flex-direction:column;justify-content:center;padding:23px;background:#11273a;border-color:#315066}
+.metric strong{font-size:34px;color:#f0f9fa}
+.metric span{font-size:10px;white-space:normal;line-height:1.4}
+.metric small{margin-top:5px}
+.metric:nth-child(2) strong{color:#74d9f3}
+.metric:nth-child(4) strong{color:#65edb9}
+.flight-panel,.diagnostic-chart,.sensor-panel{border:1px solid #2d4a5e;border-radius:14px;background:linear-gradient(145deg,#102336,#101c2b);padding:20px;min-width:0}
+.flight-panel{grid-column:1/-1}
+.flight-stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-top:17px}
+.flight-stats>div{background:#0b1a29;border:1px solid #294658;border-radius:9px;padding:15px;min-width:0}
+.flight-stats span{color:#92adba;font-size:9px;line-height:1.5;letter-spacing:.065em;font-weight:750;display:block}
+.flight-stats strong{font-size:26px;letter-spacing:-.035em;font-variant-numeric:tabular-nums;display:block;margin:7px 0 3px;color:#c6f9e5}
+.flight-stats small{display:block;font-size:10px;color:#8ca5b1;line-height:1.45}
+.diagnostic-chart{grid-column:span 6;min-height:375px}
+.diagnostic-chart p{color:#91abba;font-size:11px;line-height:1.55;margin:8px 0 12px}
+.analytic-legend{display:flex;gap:19px;flex-wrap:wrap;font-size:11px;color:#adc1ca;margin-bottom:10px}
+.legend-blue{color:#66baff}.legend-yellow{color:#ffca78}
+.diagnostic-chart canvas{width:100%;height:235px;display:block;background:#0b1928;border:1px solid #274358;border-radius:9px}
+.phase-distribution{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}
+.phase-distribution span{font-size:10px;background:#1c3945;border:1px solid #3a6172;color:#bfe5ea;border-radius:6px;padding:6px 10px}
+.sensor-panel{grid-column:span 7}
+.sensor-rows{margin-top:15px;border-top:1px solid #254356}
+.sensor-rows>div{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #234052;padding:12px 0;font-size:12px;color:#cfdee3}
+.sensor-rows strong{color:#f4b0a3;font-size:10px;letter-spacing:.055em;text-align:right}
+.sensor-rows strong.modeled-label{color:#6fe5c5}.sensor-rows strong.archived-label{color:#edd09b}
+.sensor-footnote{font-size:11px;line-height:1.65;color:#90afbd;margin-top:14px}
+.gazebo-panel{grid-column:span 5;min-width:0;background:linear-gradient(145deg,#12323c,#102431);border-color:#2f626a}
+.gazebo-measures{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.gazebo-measures>div{padding:9px}
+.gazebo-measures span{font-size:8px}
+.gazebo-measures strong{font-size:21px}
+.timeline-panel{grid-column:1/-1;min-height:260px}
+.event-feed{max-height:305px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:20px;align-content:start}
+.event{min-height:75px}
+footer{border-top:1px solid #263c4a;padding-top:19px}
+.reference-library{margin-top:26px}
+/* Camera inspector remains visible above the actual modeled campus. */
+@media(max-width:1300px){
+ .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .metric{min-height:120px}
+ .flight-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .status-panel{grid-column:span 4}
+ .metrics{grid-column:span 8}
+}
+@media(max-width:1000px){
+ #stage-viewport{min-height:370px;aspect-ratio:1.55}
+ .status-panel,.metrics,.sensor-panel,.gazebo-panel{grid-column:1/-1}
+ .metric{min-height:115px}
+ .diagnostic-chart{grid-column:1/-1}
+ .event-feed{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:650px){
+ main{padding:18px 12px}
+ .brand h1{font-size:29px}
+ .map-panel{padding:12px}
+ #stage-viewport{min-height:310px;aspect-ratio:1.05}
+ #stage-viewport #scene-status{font-size:8px;max-width:52%}
+ .operations-heading{flex-direction:column;align-items:flex-start}
+ .operations-heading h2{font-size:25px}
+ .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .metric{padding:14px;min-height:110px}
+ .metric strong{font-size:27px}
+ .flight-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .flight-stats strong{font-size:24px}
+ .diagnostic-chart,.sensor-panel,.flight-panel{padding:13px}
+ .diagnostic-chart canvas{height:200px}
+ .gazebo-measures{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .gazebo-measures strong{font-size:16px}
+ .gazebo-measures span{font-size:7px}
+ .event-feed{display:block}
+ .cad-source-caption{margin-left:0}
+ .asset-note{font-size:10px}
+ #trace{aspect-ratio:2}
+}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
