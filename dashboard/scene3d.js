@@ -86,6 +86,42 @@
   sun.shadow.camera.top=30;sun.shadow.camera.bottom=-30;
   sun.shadow.bias=-0.00045;sun.shadow.normalBias=.025;sun.shadow.radius=2.4;scene.add(sun);
   const mat = (c, extra={})=>new T.MeshStandardMaterial({color:c, roughness:0.78, metalness:0.08, ...extra});
+  // Seeded fine-grain masonry, not a flattened gray billboard. This uses real
+  // texture variation and incident light; it creates no phantom collisions.
+  function grain(base,seed,strokes=1600){
+    const c=document.createElement('canvas');c.width=c.height=256;
+    const g=c.getContext('2d');g.fillStyle=base;g.fillRect(0,0,256,256);
+    let n=seed>>>0;
+    const rnd=()=>{n=(1664525*n+1013904223)>>>0;return n/4294967296;};
+    for(let i=0;i<strokes;i++){
+      const k=Math.floor(rnd()*37),light=rnd()>.5;
+      g.fillStyle='rgba('+(light?'244,231,214':'38,44,45')+','+
+        (k/1000+.008).toFixed(3)+')';
+      g.fillRect(rnd()*256,rnd()*256,1+rnd()*2,1+rnd()*2);
+    }
+    for(let y=0;y<256;y+=64){
+      g.fillStyle='rgba(44,48,49,.055)';g.fillRect(0,y,256,1);
+      for(let x=(y/64%2?32:0);x<256;x+=64)g.fillRect(x,y,1,64);
+    }
+    const tex=new T.CanvasTexture(c);tex.wrapS=tex.wrapT=T.RepeatWrapping;
+    tex.repeat.set(2,2);tex.anisotropy=2;tex.encoding=T.sRGBEncoding;
+    return tex;
+  }
+  const masonry=[grain('#b8b6a9',31),grain('#bdb3a0',77),
+    grain('#9db0b0',103),grain('#aab7a6',181)];
+  function chamferedRoof(parent,w,d,x,y,z,material){
+    const r=.12,shape=new T.Shape();
+    shape.moveTo(r,0);shape.lineTo(w-r,0);shape.quadraticCurveTo(w,0,w,r);
+    shape.lineTo(w,d-r);shape.quadraticCurveTo(w,d,w-r,d);
+    shape.lineTo(r,d);shape.quadraticCurveTo(0,d,0,d-r);
+    shape.lineTo(0,r);shape.quadraticCurveTo(0,0,r,0);
+    const geo=new T.ExtrudeGeometry(shape,{depth:.17,steps:1,
+      bevelEnabled:true,bevelThickness:.06,bevelSize:.055,bevelSegments:2});
+    geo.translate(-w/2,-d/2,0);
+    const roof=new T.Mesh(geo,material);roof.rotation.x=-Math.PI/2;
+    roof.position.set(x,y,z);roof.castShadow=true;roof.receiveShadow=true;
+    parent.add(roof);
+  }
   const grass=mat(0x52684c), road=mat(0x5d6668), pavers=mat(0x97948a),
         pavement=mat(0x9f9a8e), dark=mat(0x2c3740), rubber=mat(0x1a2228),
         cyan=mat(0xa8bcac,{emissive:0x1f4a39,emissiveIntensity:0.13}),
@@ -150,7 +186,8 @@
     // readable scale instead of a flat schematic cuboid.
     const w=x1-x0,d=y1-y0,cx=(x0+x1)/2,cz=-(y0+y1)/2;
     const height=(i===3?1.6:3.0+i*.4);
-    const stone=mat([0xc5d0c7,0xd9c6a7,0xa9bfc7,0xafc5a9][i]);
+    const stone=mat([0xb9bcb0,0xc7bba9,0xa4b5b4,0xb7c3af][i],
+      {map:masonry[i],roughness:.94,metalness:0});
     const structural=mat(0x6f8890,{roughness:.76});
     const trim=mat(0x304f62,{metalness:.40,roughness:.48});
     const glazing=mat(0x548d9b,{roughness:.16,metalness:.22,transparent:true,opacity:.83});
@@ -158,7 +195,7 @@
     const roof=mat(0x455c64);
     const front=-y0,back=-y1;
     cube(environment,w,height,d,stone,cx,height/2,cz);
-    cube(environment,w+.40,.21,d+.40,roof,cx,height+.09,cz);
+    chamferedRoof(environment,w+.38,d+.38,cx,height,cz,roof);
     // Brick plinth, projecting corners and restrained horizontal façade bands.
     for(const z of [front,back]){
       cube(environment,w+.16,.18,.12,structural,cx,.17,z);
@@ -170,6 +207,14 @@
     for(const x of [x0,x1]){
       cube(environment,.12,.20,d+.12,structural,x,.15,cz);
       cube(environment,.13,.13,d+.17,trim,x,height-.15,cz);
+    }
+    // Window lintels, cornices and recessed shadow channels create scale cues.
+    // Contact-depth lines are explicitly visual; planner building rectangles stay.
+    for(const z of [front-.10,back+.10]){
+      for(let level=0;level<(i===3?1:2);level++){
+        const yy=height*(.29+level*.34);
+        cube(environment,w-.23,.035,.065,trim,cx,yy-.48,z,false);
+      }
     }
     // Deep windows, actual frames, sills and mullions on both long elevations.
     const floorCount=i===3?1:2;
