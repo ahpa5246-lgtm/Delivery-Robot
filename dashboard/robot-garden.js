@@ -129,14 +129,20 @@ function applyPose(x,z,heading){
  robot.setLocalScale(scale,scale,scale);
  robot.setEulerAngles(0,val('robot-yaw')+heading*180/Math.PI,0);
  viewer.app.renderNextFrame=true;
+ publishPose();
 }
 for(const id of poseInputs)$(id).addEventListener('change',()=>{
  if(!robot)return; applyPose(manualPose.x,manualPose.z,manualPose.yaw);
 });
-$('place').addEventListener('click',()=>{if(robot){trajectory=null;stop();manualPose={x:0,z:0,yaw:0};initialPlacement();$('pose-readout').textContent='MANUAL ROBOT PLACEMENT · NO PHYSICS';}});
+$('place').addEventListener('click',()=>{if(robot){
+ trajectory=null;stop();manualPose={x:0,z:0,yaw:0};groundAnchor=true;
+ motionSource='manual';robot.enabled=true;lastWorld=null;applyPose(0,0,0);
+ $('pose-readout').textContent='MANUALLY SET Y-PLANE POSITION · NOT GAZEBO';
+}});
 for(const [id,dx,dz,dyaw] of [['drive-forward',.15,0,0],['drive-back',-.15,0,0],['drive-left',0,0,-.15],['drive-right',0,0,.15]]){
  $(id).addEventListener('click',()=>{
-  stop();trajectory=null;
+  if(!groundAnchor){startGroundPlacement();return;}
+  stop();trajectory=null;motionSource='manual';
   manualPose.x+=Math.cos(manualPose.yaw)*dx;
   manualPose.z+=Math.sin(manualPose.yaw)*dx;
   manualPose.yaw+=dyaw;
@@ -148,18 +154,20 @@ function stop(){playing=false;cancelAnimationFrame(timer);$('play').disabled=!tr
 async function load(source,filename){
  stop();status('LOADING GAUSSIAN SCENE…');
  $('robot-controls').hidden=true;$('playback-controls').hidden=true;
- for (const id of [...quickIds,'quick-focus']) $(id).disabled=true;
+ for (const id of quickIds) $(id).disabled=true;
+ pickingOverlay.hidden=true;groundAnchor=false;manualDistance=0;lastWorld=null;
  if(viewer){viewer.destroy();viewer=null;robot=null;}
  try{
   viewer=await createViewer({container:$('viewer'),settings:defaultSettings(),
     contentUrl:source,contentFilename:filename,renderer:'webgl',ui:false,aa:true});
   viewer.events.on('progress:changed',p=>status('LOADING 3DGS '+p+'%'));
   const ready=()=>{
-    robot=buildRobot(viewer.app);initialPlacement();
-    placeNearView();
-    for (const id of [...quickIds,'quick-focus']) $(id).disabled=false;
+    robot=buildRobot(viewer.app);
+    robot.enabled=false;groundAnchor=false;manualDistance=0;lastWorld=null;
+    for(const id of quickIds)$(id).disabled=false;
+    startGroundPlacement();
     $('robot-controls').hidden=false;$('playback-controls').hidden=false;
-    status('ROBOT IN GARDEN VIEW · VISUAL PREVIEW');
+    status('PICK LAWN · ROBOT HIDDEN UNTIL GROUND IS SELECTED');
     provenance('REAL 3DGS + CDR ROBOT IN SAME PLAYCANVAS ENGINE · SPATIAL REGISTRATION / GARDEN COLLISION NOT VERIFIED');
     viewer.app.renderNextFrame=true;
   };
@@ -188,6 +196,7 @@ function importFrames(frames,label){
  frames.sort((a,b)=>a.time_s-b.time_s);
  if(frames.some((f,i)=>i>0&&f.time_s<=frames[i-1].time_s)){status('INVALID NON-MONOTONIC TIMESTAMPS');return;}
  stop();trajectory={frames,label};
+ motionSource=label.startsWith('IMPORTED')?'imported':'scripted';
  $('play').disabled=false;$('reset').disabled=false;
  const f=frames[0];manualPose={x:0,z:0,yaw:0};applyPose(0,0,0);
  $('pose-readout').textContent=label+' · '+frames.length+' frames · START READY';
