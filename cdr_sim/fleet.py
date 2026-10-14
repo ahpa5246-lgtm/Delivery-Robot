@@ -202,6 +202,7 @@ def fleet_replay(world: Campus | None=None, seed: int=7) -> dict:
                         "rgbd":"NOT CONNECTED","gps":"NOT CONNECTED"},
         "robots":[{"id":a["id"],"destination":a["destination"],"pad":a["pad"],
                    "mission_status":a["mission"]["status"],
+                   "planned_route_xy":a["mission"]["routes"][0]["points"] if a["mission"]["routes"] else [],
                    "arrived":a["elapsed"]>=a["mission"]["duration_sim_s"]-.001,
                    "yielding_seconds":round(a["wait_s"],1),
                    "frames":a["frames"]} for a in agents]
