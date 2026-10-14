@@ -1,0 +1,16 @@
+{
+  "schema": "cdr-garden-calibration-v1",
+  "source_sha256": "e2c82908d3c871c47dc4e6498529944afaebd7d01cf130b65aa0bf01202086c3",
+  "origin_scene": {
+    "x": 0,
+    "y": 0,
+    "z": 0
+  },
+  "meters_per_scene_unit": 1,
+  "scene_yaw_deg": 0,
+  "scene_y_axis": "up",
+  "flat_patch_size_m": 8,
+  "terrain_collision_verified": false,
+  "calibration_status": "PLACEHOLDER: choose Garden lawn anchor and measured scale before representing an aligned experiment",
+  "notes": "Only a local Gazebo flat-contact pad. Do not describe as Garden surface reconstruction."
+}
