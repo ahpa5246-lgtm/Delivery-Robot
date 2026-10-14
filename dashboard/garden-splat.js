@@ -24,19 +24,41 @@
   view3d.setAttribute('aria-pressed','false');view2d.setAttribute('aria-pressed','false');
   frame.contentWindow?.postMessage({type:'cdr:garden-visibility',visible:true},location.origin);
  }
+ $('garden-replay-gazebo').addEventListener('click',()=>{
+  frame.contentWindow?.postMessage({type:'cdr:garden-start-gazebo-replay'},location.origin);
+ });
  gardenButton.addEventListener('click',showGarden);
  view3d.addEventListener('click',exitGarden);
  view2d.addEventListener('click',exitGarden);
  window.addEventListener('message',event=>{
   if(event.origin!==location.origin||event.source!==frame.contentWindow)return;
   const d=event.data;
-  if(!d||d.type!=='cdr:garden-pose'||!['manual','scripted','imported'].includes(d.source))return;
+  if(!d)return;
+  if(d.type==='cdr:garden-record-info' && d.source==='recorded_gazebo_harmonic_odometry' &&
+     Number.isInteger(d.samples) && d.samples>=2 &&
+     [d.duration_s,d.odometry_path_length_m].every(Number.isFinite) &&
+     typeof d.stopped_at_end==='boolean'){
+    $('garden-record-samples').textContent=String(d.samples);
+    $('garden-record-duration').textContent=d.duration_s.toFixed(1)+' s';
+    $('garden-record-distance').textContent=d.odometry_path_length_m.toFixed(2)+' m';
+    $('garden-record-stopped').textContent=d.stopped_at_end?'PASS · SIMULATED':'FAILED / STILL MOVING';
+    return;
+  }
+  if(d.type==='cdr:garden-status' && typeof d.text==='string'){
+   $('garden-replay-status').textContent=d.text.slice(0,200);
+   return;
+  }
+  if(d.type!=='cdr:garden-pose'||!['manual','scripted','imported'].includes(d.source))return;
   if(![d.x,d.y,d.z,d.yaw,d.distance].every(Number.isFinite))return;
   $('garden-pose-xz').textContent=d.x.toFixed(2)+' / '+d.z.toFixed(2);
   $('garden-pose-yaw').textContent=d.yaw.toFixed(1)+'°';
-  $('garden-travel').textContent=d.distance.toFixed(2)+' units';
-  $('garden-ground-mode').textContent=d.anchor?'VISUAL PLANE':'NOT SET';
-  $('garden-calibration').textContent=d.anchor?'Robot anchored to visual Y-plane '+d.y.toFixed(2)+'; Gazebo terrain not calibrated.':'Choose a visible ground patch for the robot.';
+  $('garden-travel').textContent=d.distance.toFixed(2)+(d.source==='manual'?' units':' m');
+  $('garden-ground-mode').textContent=
+    d.source==='imported'?'GAZEBO REPLAY · FLAT':d.anchor?'VISUAL PLANE':'NOT SET';
+  $('garden-calibration').textContent=
+    d.source==='imported'?'Gazebo odometry replay on flat contact pad; Garden terrain collisions NOT modeled.':
+    d.anchor?'Robot anchored to visual Y-plane '+d.y.toFixed(2)+'; Gazebo terrain not calibrated.':
+    'Choose a visible ground patch for the robot.';
  });
  const view=new URLSearchParams(location.search).get('view');
  if(view==='map')view2d.click();

@@ -20,3 +20,9 @@ assets/gaussian-garden-download/
 
 # Uploaded licensed archive consumed on demand by the lab server.
 assets/gaussian-garden.zip
+
+# Locally calibrated, non-metric Garden physics test outputs (separate from source ZIP).
+assets/garden-calibration.json
+simulation/garden_physics_proxy.sdf
+simulation/garden_physics_proxy.provenance.json
+experiments/garden_gazebo/

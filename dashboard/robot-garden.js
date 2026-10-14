@@ -8,6 +8,7 @@ const $=id=>document.getElementById(id);
 let viewer=null,robot=null,sourceUrl=null,trajectory=null,timer=0,playing=false,startAt=0;
 let manualPose={x:0,z:0,yaw:0};
 let groundAnchor=false,manualDistance=0,lastWorld=null,motionSource='manual';
+let replayDistance=0,playbackSeconds=0;
 const pickingOverlay=$('ground-pick-layer'),floorY=$('floor-y');
 if(new URLSearchParams(location.search).get('embed')==='1')document.body.classList.add('embedded');
 const quickIds=['quick-forward','quick-left','quick-right','quick-back','quick-ground','quick-focus'];
@@ -27,7 +28,8 @@ function publishPose(){
  if(window.parent!==window)
   window.parent.postMessage({type:'cdr:garden-pose',source:motionSource,
    x:now.x,y:now.y,z:now.z,yaw:robot.getEulerAngles().y,
-   distance:manualDistance,anchor:groundAnchor},location.origin);
+   distance:motionSource==='manual'?manualDistance:replayDistance,
+   anchor:groundAnchor},location.origin);
 }
 function projectToGround(nx,ny){
  if(!robot||!viewer)return false;
@@ -82,15 +84,22 @@ floorY.addEventListener('change',()=>{
  provenance('VISUAL GROUND HEIGHT ADJUSTED TO '+floorY.value+' · NO PHYSICS');
 });
 window.addEventListener('message',e=>{
- if(e.origin!==location.origin||e.source!==window.parent||
-   e.data?.type!=='cdr:garden-visibility')return;
- if(viewer?.app)viewer.app.renderNextFrame=true;
+ if(e.origin!==location.origin||e.source!==window.parent)return;
+ if(e.data?.type==='cdr:garden-start-gazebo-replay'){
+  $('load-garden-gazebo')?.click();
+  return;
+ }
+ if(e.data?.type==='cdr:garden-visibility'&&viewer?.app)viewer.app.renderNextFrame=true;
 });
+const ORIGINAL_GARDEN_SHA256='e2c82908d3c871c47dc4e6498529944afaebd7d01cf130b65aa0bf01202086c3';
 const GARDEN_META_URL='/garden-assets/lod-meta.json';
 const GARDEN_META_NAME='lod-meta.json';
 const poseInputs=['origin-x','origin-y','origin-z','robot-scale','robot-yaw'];
 const val=id=>Number($(id).value);
-function status(msg){$('status').textContent=msg}
+function status(msg){
+ $('status').textContent=msg;
+ if(window.parent!==window)window.parent.postMessage({type:'cdr:garden-status',text:String(msg)},location.origin);
+}
 function provenance(msg){$('provenance').textContent=msg}
 function material(rgb,metalness=0){
  const m=new StandardMaterial();m.diffuse=new Color(...rgb);
@@ -125,9 +134,13 @@ function initialPlacement(){
 function applyPose(x,z,heading){
  if(!robot)return;
  const scale=Math.max(.01,Math.min(5,val('robot-scale')));
+ // Visual robot size is independent of metric trajectory displacement.
+ // ROS/Gazebo pose is metres; world uses unverified scene units until surveyed.
+ const metricToScene=motionSource==='manual'?1:
+   1/Math.max(.01,Math.min(10,val('scene-to-meters')));
  const angle=val('robot-yaw')*Math.PI/180,cs=Math.cos(angle),sn=Math.sin(angle);
- robot.setPosition(val('origin-x')+scale*(x*cs-z*sn),
-                   val('origin-y'),val('origin-z')+scale*(x*sn+z*cs));
+ robot.setPosition(val('origin-x')+metricToScene*(x*cs-z*sn),
+                   val('origin-y'),val('origin-z')+metricToScene*(x*sn+z*cs));
  robot.setLocalScale(scale,scale,scale);
  robot.setEulerAngles(0,val('robot-yaw')+heading*180/Math.PI,0);
  viewer.app.renderNextFrame=true;
@@ -137,14 +150,15 @@ for(const id of poseInputs)$(id).addEventListener('change',()=>{
  if(!robot)return; applyPose(manualPose.x,manualPose.z,manualPose.yaw);
 });
 $('place').addEventListener('click',()=>{if(robot){
- trajectory=null;stop();manualPose={x:0,z:0,yaw:0};groundAnchor=true;
+ trajectory=null;stop();replayDistance=0;playbackSeconds=0;
+  manualPose={x:0,z:0,yaw:0};groundAnchor=true;
  motionSource='manual';robot.enabled=true;lastWorld=null;applyPose(0,0,0);
  $('pose-readout').textContent='MANUALLY SET Y-PLANE POSITION · NOT GAZEBO';
 }});
 for(const [id,dx,dz,dyaw] of [['drive-forward',.15,0,0],['drive-back',-.15,0,0],['drive-left',0,0,-.15],['drive-right',0,0,.15]]){
  $(id).addEventListener('click',()=>{
   if(!groundAnchor){startGroundPlacement();return;}
-  stop();trajectory=null;motionSource='manual';
+  stop();trajectory=null;motionSource='manual';replayDistance=0;playbackSeconds=0;
   manualPose.x+=Math.cos(manualPose.yaw)*dx;
   manualPose.z+=Math.sin(manualPose.yaw)*dx;
   manualPose.yaw+=dyaw;
@@ -154,7 +168,8 @@ for(const [id,dx,dz,dyaw] of [['drive-forward',.15,0,0],['drive-back',-.15,0,0],
 }
 function stop(){playing=false;cancelAnimationFrame(timer);$('play').disabled=!trajectory;$('pause').disabled=true;}
 async function load(source,filename){
- stop();status('LOADING GAUSSIAN SCENE…');
+ stop();trajectory=null;replayDistance=0;playbackSeconds=0;
+ status('LOADING GAUSSIAN SCENE…');
  $('robot-controls').hidden=true;$('playback-controls').hidden=true;
  for (const id of quickIds) $(id).disabled=true;
  pickingOverlay.hidden=true;groundAnchor=false;manualDistance=0;lastWorld=null;
@@ -192,19 +207,71 @@ $('load-url').addEventListener('click',()=>{
 });
 function importFrames(frames,label){
  if(!robot)return;
- if(!Array.isArray(frames)||frames.length<2||frames.some(f=>!
-   [f.time_s,f.x_m,f.y_m].every(Number.isFinite))) {
-  status('INVALID TRAJECTORY: time_s, x_m, y_m required');return;
+ if(!groundAnchor){status('SELECT LAWN GROUND ANCHOR BEFORE APPLYING A TRAJECTORY');return;}
+ if(!Array.isArray(frames)||frames.length<2||frames.length>50000||
+    frames.some(f=>!f||![f.time_s,f.x_m,f.y_m].every(Number.isFinite)||
+      (f.yaw_rad!==undefined&&!Number.isFinite(f.yaw_rad)))){
+  status('INVALID TRAJECTORY: finite time_s, x_m, y_m and optional yaw_rad required');return;
  }
- frames.sort((a,b)=>a.time_s-b.time_s);
- if(frames.some((f,i)=>i>0&&f.time_s<=frames[i-1].time_s)){status('INVALID NON-MONOTONIC TIMESTAMPS');return;}
- stop();trajectory={frames,label};
- motionSource=label.startsWith('IMPORTED')?'imported':'scripted';
+ // Preserve the recorded message order instead of silently sorting corrupt data.
+ if(frames.some((f,i)=>i>0&&f.time_s<=frames[i-1].time_s)){
+  status('INVALID NON-MONOTONIC TIMESTAMPS');return;
+ }
+ const cumulative=[0];
+ for(let i=1;i<frames.length;i++)
+  cumulative.push(cumulative[i-1]+Math.hypot(frames[i].x_m-frames[i-1].x_m,
+                                            frames[i].y_m-frames[i-1].y_m));
+ stop();playbackSeconds=0;replayDistance=0;
+ trajectory={frames,label,cumulative};
+ motionSource=(label.startsWith('IMPORTED')||label.startsWith('RECORDED GAZEBO'))?'imported':'scripted';
  $('play').disabled=false;$('reset').disabled=false;
- const f=frames[0];manualPose={x:0,z:0,yaw:0};applyPose(0,0,0);
+ manualPose={x:0,z:0,yaw:0};applyPose(0,0,0);
  $('pose-readout').textContent=label+' · '+frames.length+' frames · START READY';
  provenance('3DGS CO-RENDERING + '+label+' · NOT METRICALLY ALIGNED TO GARDEN · NO GARDEN PHYSICS');
 }
+$('load-garden-gazebo').addEventListener('click',async()=>{
+ try{
+  if(!groundAnchor)throw Error('Choose the lawn ground anchor before replay');
+  const response=await fetch('/api/garden-gazebo-run',{cache:'no-store'});
+  const record=await response.json();
+  if(!response.ok)throw Error(record.error||'Gazebo recording unavailable');
+  if(record.schema!=='cdr-garden-gazebo-replay-v1' ||
+     record.source!=='recorded_gazebo_harmonic_odometry' ||
+     record.contact_mesh_validated!==false ||
+     record.physics_world!=='flat_contact_proxy_not_real_garden_terrain' ||
+     record.garden_source_sha256!==ORIGINAL_GARDEN_SHA256 ||
+     !Array.isArray(record.frames) || record.samples!==record.frames.length)
+     throw Error('Invalid or misattributed Gazebo recording');
+  importFrames(record.frames,'RECORDED GAZEBO FLAT CONTACT PROXY (NOT GARDEN COLLISIONS)');
+  if(window.parent!==window && [record.duration_s,record.odometry_path_length_m].every(Number.isFinite))
+   window.parent.postMessage({
+    type:'cdr:garden-record-info',source:'recorded_gazebo_harmonic_odometry',
+    samples:record.samples,duration_s:record.duration_s,
+    odometry_path_length_m:record.odometry_path_length_m,
+    stopped_at_end:record.stopped_at_end===true
+   },location.origin);
+  status(record.samples+' GAZEBO ODOMETRY SAMPLES · FLAT PROXY ONLY');
+ }catch(e){status(e.message);}
+});
+$('export-garden-calibration').addEventListener('click',()=>{
+ if(!robot||!groundAnchor){status('PLACE ROBOT ON LAWN BEFORE EXPORTING CALIBRATION');return;}
+ const scale=Number($('scene-to-meters').value);
+ if(!Number.isFinite(scale)||scale<.01||scale>10){status('INVALID SCALE: USE 0.01 TO 10');return;}
+ const d={
+  schema:'cdr-garden-calibration-v1',source_sha256:ORIGINAL_GARDEN_SHA256,
+  origin_scene:{x:val('origin-x'),y:val('origin-y'),z:val('origin-z')},
+  meters_per_scene_unit:scale,scene_yaw_deg:val('robot-yaw'),
+  scene_y_axis:'up',flat_patch_size_m:8,terrain_collision_verified:false,
+  calibration_status:'OPERATOR-ESTIMATED. NO VERIFIED GARDEN TERRAIN MESH',
+  notes:'This defines an origin and orientation for a local flat Gazebo pad only.'
+ };
+ const b=new Blob([JSON.stringify(d,null,2),String.fromCharCode(10)],{type:'application/json'});
+ const u=URL.createObjectURL(b);
+ const a=document.createElement('a');a.href=u;a.download='garden-calibration.json';
+ document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(u),1000);
+ status('VISUAL CALIBRATION EXPORTED · UPLOAD JSON TO assets/ IN CODESPACES');
+});
 $('load-scripted').addEventListener('click',async()=>{
  try{const r=await fetch('/api/run?world=campus&scenario=clear&seed=7');
   if(!r.ok)throw Error('Replay API '+r.status);
@@ -224,30 +291,45 @@ $('odom-file').addEventListener('change',async e=>{
  importFrames(frames,'IMPORTED GAZEBO ODOMETRY (UNVERIFIED)');
 });
 function sample(t){
- const a=trajectory.frames;
+ const a=trajectory.frames,dist=trajectory.cumulative;
  const first=a[0],last=a[a.length-1],time=Math.min(t+first.time_s,last.time_s);
  let lo=0,hi=a.length-1;
  while(lo+1<hi){const k=(lo+hi)>>1;if(a[k].time_s<=time)lo=k;else hi=k;}
  const p=a[lo],q=a[Math.min(lo+1,a.length-1)];
  const u=p===q?0:Math.max(0,Math.min(1,(time-p.time_s)/(q.time_s-p.time_s)));
+ const pYaw=Number.isFinite(p.yaw_rad)?p.yaw_rad:Math.atan2(q.y_m-p.y_m,q.x_m-p.x_m);
+ const qYaw=Number.isFinite(q.yaw_rad)?q.yaw_rad:pYaw;
+ const firstYaw=Number.isFinite(first.yaw_rad)?first.yaw_rad:0;
+ const delta=Math.atan2(Math.sin(qYaw-pYaw),Math.cos(qYaw-pYaw));
  return {x:p.x_m+(q.x_m-p.x_m)*u-first.x_m,
- z:p.y_m+(q.y_m-p.y_m)*u-first.y_m,
- heading:Number.isFinite(p.yaw_rad)?p.yaw_rad:Math.atan2(q.y_m-p.y_m,q.x_m-p.x_m)};
+  z:p.y_m+(q.y_m-p.y_m)*u-first.y_m,
+  heading:pYaw+u*delta-firstYaw,
+  distance_m:dist[lo]+u*(dist[Math.min(lo+1,a.length-1)]-dist[lo])};
 }
 function tick(now){
  if(!playing||!trajectory)return;
- const t=(now-startAt)/1000;
+ const end=trajectory.frames.at(-1).time_s-trajectory.frames[0].time_s;
+ const t=Math.min(Math.max(0,(now-startAt)/1000),end);
+ playbackSeconds=t;
  const f=sample(t);
+ replayDistance=f.distance_m;
  manualPose={x:f.x,z:f.z,yaw:f.heading};
  applyPose(f.x,f.z,f.heading);
- $('pose-readout').textContent=trajectory.label+' · '+t.toFixed(1)+'s · X '+f.x.toFixed(2)+'m Z '+f.z.toFixed(2)+'m (unregistered)';
- if(t>=trajectory.frames.at(-1).time_s-trajectory.frames[0].time_s){stop();return;}
+ $('pose-readout').textContent=trajectory.label+' · '+t.toFixed(1)+'s · X '+f.x.toFixed(2)+'m Z '+f.z.toFixed(2)+'m · '+replayDistance.toFixed(2)+'m path';
+ if(t>=end){stop();playbackSeconds=0;return;}
  timer=requestAnimationFrame(tick);
 }
-$('play').addEventListener('click',()=>{if(!trajectory)return;stop();playing=true;startAt=performance.now();$('pause').disabled=false;timer=requestAnimationFrame(tick);});
+$('play').addEventListener('click',()=>{
+ if(!trajectory)return;
+ stop();playing=true;startAt=performance.now()-playbackSeconds*1000;
+ $('pause').disabled=false;timer=requestAnimationFrame(tick);
+});
 $('pause').addEventListener('click',stop);
-$('reset').addEventListener('click',()=>{stop();if(trajectory){manualPose={x:0,z:0,yaw:0};applyPose(0,0,0);$('pose-readout').textContent=trajectory.label+' · RESET';}});
-
+$('reset').addEventListener('click',()=>{
+ stop();playbackSeconds=0;replayDistance=0;
+ if(trajectory){manualPose={x:0,z:0,yaw:0};applyPose(0,0,0);
+  $('pose-readout').textContent=trajectory.label+' · RESET';}
+});
 /* Load the already-received original LOD ZIP from Codespaces automatically.
    No file can be guessed from a public iframe. Serving tiles is handled by
    the Python ZIP resource endpoint, including its strict asset allowlist. */

@@ -46,12 +46,16 @@
    <p>The robot is a PlayCanvas 3D entity sharing the splat camera and render scene. Set its location and size; scene registration is not validated yet.</p>
    <div class="fields"><label>X <input id="origin-x" type="number" step="0.1" value="0"></label><label>Y (robot base) <input id="origin-y" type="number" step="0.05" value="-2"></label><label>Z <input id="origin-z" type="number" step="0.1" value="0"></label><label>Scale <input id="robot-scale" type="number" min="0.01" max="5" step="0.05" value="1"></label><label>Yaw ° <input id="robot-yaw" type="number" step="5" value="0"></label></div>
    <label>Assumed horizontal ground Y<input id="floor-y" type="number" step="0.05" value="-2"></label>
+   <label>Estimated metres per scene unit<input id="scene-to-meters" type="number" min="0.01" max="10" step="0.01" value="1"></label>
+   <button id="export-garden-calibration" type="button">Export selected Garden origin for Gazebo</button>
    <p class="warning">Select a patch of grass or paving with Place on lawn. Adjust the ground-plane Y if wheels appear raised or submerged. No physical collision model is present. UNREGISTERED: no surveyed garden landmarks or validated collision mesh. Coordinates cannot yet be used as real-world ground truth.</p>
    <button id="place" type="button">Place robot at these coordinates</button>
    <button id="place-camera" type="button">Choose ground location in image</button>
    <div class="drive"><button id="drive-forward">↑ Forward</button><button id="drive-left">← Left</button><button id="drive-right">Right →</button><button id="drive-back">↓ Backward</button></div>
  </section>
  <section id="playback-controls" hidden><span class="eyebrow">03 / SOURCE-LABELED REPLAY</span><h2>Robot motion data</h2>
+   <button id="load-garden-gazebo" type="button">Replay recorded Gazebo Garden-proxy run</button>
+   <p>The replay uses <b>real Gazebo odometry</b> on a flat collision pad. Garden terrain and obstacle collisions are NOT modeled. Run the headless physics experiment first.</p>
    <button id="load-scripted" type="button">Load scripted Python campus run</button>
    <p>Scripted campus trajectory is <b>NOT</b> a Garden/Gazebo physics result. Shown only after explicit selection.</p>
    <label class="file">Import recorded Gazebo odometry CSV<input id="odom-file" type="file" accept=".csv,text/csv"></label>

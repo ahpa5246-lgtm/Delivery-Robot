@@ -1,0 +1,49 @@
+name: Garden flat-contact physics and odometry proof
+on:
+  push:
+    branches: [main, feat/garden-gazebo-physics-replay]
+    paths:
+      - 'scripts/generate_garden_gazebo.py'
+      - 'scripts/export_garden_odometry.py'
+      - 'scripts/run_garden_gazebo.sh'
+      - 'scripts/drive_garden_ros2.py'
+      - 'scripts/ros_velocity_watchdog.py'
+      - 'tests/test_garden_physics.py'
+      - 'world/garden_calibration_example.json'
+      - '.github/workflows/garden-physics.yml'
+  pull_request:
+    paths:
+      - 'scripts/generate_garden_gazebo.py'
+      - 'scripts/export_garden_odometry.py'
+      - 'scripts/run_garden_gazebo.sh'
+      - 'tests/test_garden_physics.py'
+      - 'world/garden_calibration_example.json'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  garden-physics:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate prototype contracts without pretending to run physics
+        run: |
+          python3 -m unittest tests.test_garden_physics -v
+          mkdir -p experiments/garden_gazebo
+      - name: Run actual Gazebo Harmonic in a ROS Jazzy container
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/work" -w /work ros:jazzy-ros-base bash -eo pipefail -c '
+            apt-get update
+            DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ros-jazzy-ros-gz
+            source /opt/ros/jazzy/setup.bash
+            bash scripts/run_garden_gazebo.sh world/garden_calibration_example.json
+          '
+      - name: Save raw observed odometry and provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gazebo-real-odometry-flat-garden-proxy
+          path: |
+            experiments/garden_gazebo/
+            simulation/garden_physics_proxy.provenance.json
+          retention-days: 14

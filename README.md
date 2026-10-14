@@ -158,3 +158,7 @@ in independent synthetic environments. Use `/?view=campus` to start in the
 original engineering simulator or `/?view=map` to start in the 2D map.
 
 The Garden mode now opens the *robot-inside-Garden* engine at `/robot-garden` directly, rather than embedding the public SuperSplat site and its sidebar. Use Show robot in the manual controls if you move the camera. It places the robot inside the camera view only; terrain contact and Gazebo collision physics are not validated.
+
+### Garden Gazebo physics (experimental, recorded)
+
+A genuine headless Gazebo flat-pad physics experiment can now be recorded and source-labeled inside the 3D Gaussian Garden. The main dashboard offers **REPLAY RECORDED GAZEBO TRAJECTORY** once a user-selected Garden origin and experimental run exist. This does **not** simulate the real lawn or hedges as collision objects. See [run instructions](docs/GARDEN_PHYSICS_PIPELINE.md). The archive `assets/gaussian-garden.zip` stays out of Git.
