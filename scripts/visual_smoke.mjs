@@ -191,19 +191,27 @@ try {
     });
     assert.equal(await page.locator('#status').innerText(), 'PAUSED SAFE');
     assert.ok((await page.locator('#reason').innerText()).includes('ESTOP_LATCHED'));
-    // Redirect to a same-origin PlayCanvas scene, never third-party iframe.
-    assert.equal(await page.locator('#garden-frame').count(),0);
-    await page.locator('#view-garden').click();
-    await page.waitForURL('**/robot-garden',{timeout:30000});
-    assert.equal(await page.locator('iframe').count(),0);
-    assert.equal(await page.locator('#viewer').count(),1);
-    assert.equal(await page.locator('#lab-options').isVisible(),false);
-    await page.screenshot({path:'experiments/ui_visual/'+viewport.name+'-robot-garden.png',fullPage:true});
+    // The robot is visible in the original robotics dashboard viewport.
     await page.goto(base,{waitUntil:'domcontentloaded',timeout:30000});
-    await page.waitForURL('**/robot-garden',{timeout:30000});
-    assert.equal(await page.locator('iframe').count(),0);
-    await page.goto(base+'/?view=campus',{waitUntil:'domcontentloaded',timeout:30000});
+    await page.waitForFunction(()=>document.querySelector('#stage-viewport')?.classList.contains('garden-active'));
+    assert.equal(await page.locator('#garden-engine').getAttribute('src'),'/robot-garden?embed=1');
+    assert.equal(await page.locator('#garden-dashboard-note').isVisible(),true);
+    assert.equal(await page.locator('#mission-studio').isVisible(),true);
+    assert.equal(await page.locator('#analytics-section').count(),1);
+    assert.equal(await page.locator('#sensor-section').count(),1);
+    assert.equal(await page.locator('#garden-engine').count(),1);
+    await page.frameLocator('#garden-engine').locator('#viewer').waitFor({state:'attached',timeout:45000});
+    assert.equal(await page.frameLocator('#garden-engine').locator('#viewer').count(),1);
+    assert.equal(await page.frameLocator('#garden-engine').locator('#ground-pick-layer').count(),1);
+    assert.equal(await page.frameLocator('#garden-engine').locator('iframe').count(),0);
+    await page.screenshot({path:'experiments/ui_visual/'+viewport.name+'-garden-dashboard.png',fullPage:true});
+    await page.locator('#view3d').click();
+    assert.equal(await page.locator('#garden-dashboard-note').isVisible(),false);
     assert.equal(await page.locator('#scene3d').isVisible(),true);
+    await page.locator('#view-garden').click();
+    assert.equal(await page.locator('#garden-dashboard-note').isVisible(),true);
+    await page.locator('#view2d').click();
+    assert.equal(await page.locator('#map').isVisible(),true);
     assert.deepEqual(errors, [], 'Unexpected browser errors');
     console.log(JSON.stringify({ viewport: viewport.name, canvas: 'rendered', horizontalOverflow: false, gazeboOdomDistanceM: 4.399, gazebosSamples: 397, estop: 'PAUSED_SAFE', jsErrors: errors.length }));
     await page.close();

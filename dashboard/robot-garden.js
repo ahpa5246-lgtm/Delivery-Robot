@@ -7,33 +7,85 @@ import { Entity, Color, StandardMaterial } from 'playcanvas';
 const $=id=>document.getElementById(id);
 let viewer=null,robot=null,sourceUrl=null,trajectory=null,timer=0,playing=false,startAt=0;
 let manualPose={x:0,z:0,yaw:0};
-const quickIds=['quick-forward','quick-left','quick-right','quick-back'];
+let groundAnchor=false,manualDistance=0,lastWorld=null,motionSource='manual';
+const pickingOverlay=$('ground-pick-layer'),floorY=$('floor-y');
+if(new URLSearchParams(location.search).get('embed')==='1')document.body.classList.add('embedded');
+const quickIds=['quick-forward','quick-left','quick-right','quick-back','quick-ground','quick-focus'];
 const baseIds=['drive-forward','drive-left','drive-right','drive-back'];
-quickIds.forEach((id,i)=>$(id)?.addEventListener('click',()=>$(baseIds[i])?.click()));
+quickIds.slice(0,4).forEach((id,i)=>$(id)?.addEventListener('click',()=>$(baseIds[i])?.click()));
 const panelToggle=$('panel-toggle'), optionsPanel=$('lab-options');
 panelToggle?.addEventListener('click',()=>{
   optionsPanel.hidden=!optionsPanel.hidden;
   panelToggle.setAttribute('aria-expanded',String(!optionsPanel.hidden));
 });
-function placeNearView(){
- if(!robot||!viewer)return;
- // The default splat origin is not guaranteed to be on the Garden floor.
- // Place the mesh where a person can see it, in the same camera coordinate
- // frame. This is visual preview placement, NOT registered physical contact.
- const camera=viewer.app.root.findByName('camera');
- if(!camera){status('CAMERA NOT FOUND · CHECK COORDINATES IN SETTINGS');return;}
- const world=camera.getPosition().clone().add(camera.forward.clone().mulScalar(3.5));
- $('origin-x').value=world.x.toFixed(3);
- $('origin-y').value=(world.y-0.35).toFixed(3);
- $('origin-z').value=world.z.toFixed(3);
- manualPose={x:0,z:0,yaw:0};
- applyPose(0,0,0);
- $('pose-readout').textContent='ROBOT IN CAMERA VIEW · GROUND NOT REGISTERED';
- provenance('REAL GARDEN SPLAT + CDR-01 MESH IN ONE RENDERER · CAMERA PREVIEW POSITION / PHYSICS NOT VALIDATED');
- status('ROBOT IN GARDEN VIEW · VISUAL PREVIEW');
+function publishPose(){
+ if(!robot)return;
+ const p=robot.getPosition(),now={x:p.x,y:p.y,z:p.z};
+ if(lastWorld&&groundAnchor&&motionSource==='manual')
+  manualDistance+=Math.hypot(now.x-lastWorld.x,now.z-lastWorld.z);
+ lastWorld=now;
+ if(window.parent!==window)
+  window.parent.postMessage({type:'cdr:garden-pose',source:motionSource,
+   x:now.x,y:now.y,z:now.z,yaw:robot.getEulerAngles().y,
+   distance:manualDistance,anchor:groundAnchor},location.origin);
 }
-$('quick-focus')?.addEventListener('click',placeNearView);
-$('place-camera')?.addEventListener('click',placeNearView);
+function projectToGround(nx,ny){
+ if(!robot||!viewer)return false;
+ const cam=viewer.app.root.findByName('camera');
+ if(!cam?.camera){status('3D CAMERA NOT READY');return false;}
+ const eye=cam.getPosition(),device=viewer.app.graphicsDevice;
+ const end=cam.camera.screenToWorld(nx*device.width,ny*device.height,1);
+ const dir=end.clone().sub(eye);
+ const y=Number(floorY.value),t=(y-eye.y)/dir.y;
+ if(!Number.isFinite(t)||Math.abs(dir.y)<1e-5||t<=0||t>500){
+  status('RAY MISSES GROUND PLANE · CHOOSE LOWER IMAGE OR CHANGE FLOOR Y');
+  return false;
+ }
+ const p=eye.clone().add(dir.mulScalar(t));
+ $('origin-x').value=p.x.toFixed(3);
+ $('origin-y').value=y.toFixed(3);
+ $('origin-z').value=p.z.toFixed(3);
+ manualPose={x:0,z:0,yaw:0};
+ groundAnchor=true;lastWorld=null;manualDistance=0;motionSource='manual';
+ robot.enabled=true;
+ applyPose(0,0,0);
+ pickingOverlay.hidden=true;
+ $('garden-floor-help').hidden=true;
+ $('pose-readout').textContent='VISUAL GROUND ANCHOR: X '+p.x.toFixed(2)+' Z '+p.z.toFixed(2)+
+  ' Y '+y.toFixed(2)+' · NOT GAZEBO';
+ status('ROBOT GROUNDED TO SELECTED VISUAL Y PLANE · ADJUST IF NEEDED');
+ provenance('REAL GARDEN · MANUALLY SELECTED GROUND PLANE Y '+y.toFixed(2)+
+  ' · NOT CALIBRATED COLLISION OR ROBOT PHYSICS');
+ return true;
+}
+function startGroundPlacement(){
+ if(!robot||!viewer)return;
+ pickingOverlay.hidden=!pickingOverlay.hidden;
+ status(pickingOverlay.hidden?'ROTATE THE CAMERA TO FIND THE LAWN THEN PLACE AGAIN':
+  'CLICK A PATCH OF GRASS OR PAVING TO PLACE ROBOT');
+}
+$('quick-ground')?.addEventListener('click',startGroundPlacement);
+$('quick-focus')?.addEventListener('click',startGroundPlacement);
+$('place-camera')?.addEventListener('click',startGroundPlacement);
+pickingOverlay.addEventListener('click',e=>{
+ const r=$('viewer').getBoundingClientRect();
+ projectToGround((e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height);
+});
+pickingOverlay.addEventListener('keydown',e=>{
+ if(e.key==='Escape'){pickingOverlay.hidden=true;e.preventDefault();}
+ if(e.key==='Enter'){projectToGround(.5,.75);e.preventDefault();}
+});
+floorY.addEventListener('change',()=>{
+ if(!groundAnchor)return;
+ $('origin-y').value=String(floorY.value);
+ lastWorld=null;applyPose(manualPose.x,manualPose.z,manualPose.yaw);
+ provenance('VISUAL GROUND HEIGHT ADJUSTED TO '+floorY.value+' · NO PHYSICS');
+});
+window.addEventListener('message',e=>{
+ if(e.origin!==location.origin||e.source!==window.parent||
+   e.data?.type!=='cdr:garden-visibility')return;
+ if(viewer?.app)viewer.app.renderNextFrame=true;
+});
 const GARDEN_META_URL='/garden-assets/lod-meta.json';
 const GARDEN_META_NAME='lod-meta.json';
 const poseInputs=['origin-x','origin-y','origin-z','robot-scale','robot-yaw'];
@@ -79,14 +131,20 @@ function applyPose(x,z,heading){
  robot.setLocalScale(scale,scale,scale);
  robot.setEulerAngles(0,val('robot-yaw')+heading*180/Math.PI,0);
  viewer.app.renderNextFrame=true;
+ publishPose();
 }
 for(const id of poseInputs)$(id).addEventListener('change',()=>{
  if(!robot)return; applyPose(manualPose.x,manualPose.z,manualPose.yaw);
 });
-$('place').addEventListener('click',()=>{if(robot){trajectory=null;stop();manualPose={x:0,z:0,yaw:0};initialPlacement();$('pose-readout').textContent='MANUAL ROBOT PLACEMENT · NO PHYSICS';}});
+$('place').addEventListener('click',()=>{if(robot){
+ trajectory=null;stop();manualPose={x:0,z:0,yaw:0};groundAnchor=true;
+ motionSource='manual';robot.enabled=true;lastWorld=null;applyPose(0,0,0);
+ $('pose-readout').textContent='MANUALLY SET Y-PLANE POSITION · NOT GAZEBO';
+}});
 for(const [id,dx,dz,dyaw] of [['drive-forward',.15,0,0],['drive-back',-.15,0,0],['drive-left',0,0,-.15],['drive-right',0,0,.15]]){
  $(id).addEventListener('click',()=>{
-  stop();trajectory=null;
+  if(!groundAnchor){startGroundPlacement();return;}
+  stop();trajectory=null;motionSource='manual';
   manualPose.x+=Math.cos(manualPose.yaw)*dx;
   manualPose.z+=Math.sin(manualPose.yaw)*dx;
   manualPose.yaw+=dyaw;
@@ -98,18 +156,21 @@ function stop(){playing=false;cancelAnimationFrame(timer);$('play').disabled=!tr
 async function load(source,filename){
  stop();status('LOADING GAUSSIAN SCENE…');
  $('robot-controls').hidden=true;$('playback-controls').hidden=true;
- for (const id of [...quickIds,'quick-focus']) $(id).disabled=true;
+ for (const id of quickIds) $(id).disabled=true;
+ pickingOverlay.hidden=true;groundAnchor=false;manualDistance=0;lastWorld=null;
  if(viewer){viewer.destroy();viewer=null;robot=null;}
  try{
   viewer=await createViewer({container:$('viewer'),settings:defaultSettings(),
     contentUrl:source,contentFilename:filename,renderer:'webgl',ui:false,aa:true});
   viewer.events.on('progress:changed',p=>status('LOADING 3DGS '+p+'%'));
   const ready=()=>{
-    robot=buildRobot(viewer.app);initialPlacement();
-    placeNearView();
-    for (const id of [...quickIds,'quick-focus']) $(id).disabled=false;
+    robot=buildRobot(viewer.app);
+    robot.enabled=false;groundAnchor=false;manualDistance=0;lastWorld=null;
+    for(const id of quickIds)$(id).disabled=false;
+    pickingOverlay.hidden=true;
+    $('garden-floor-help').hidden=false;
     $('robot-controls').hidden=false;$('playback-controls').hidden=false;
-    status('ROBOT IN GARDEN VIEW · VISUAL PREVIEW');
+    status('PICK LAWN · ORBIT UNTIL GRASS IS VISIBLE, THEN PLACE');
     provenance('REAL 3DGS + CDR ROBOT IN SAME PLAYCANVAS ENGINE · SPATIAL REGISTRATION / GARDEN COLLISION NOT VERIFIED');
     viewer.app.renderNextFrame=true;
   };
@@ -138,6 +199,7 @@ function importFrames(frames,label){
  frames.sort((a,b)=>a.time_s-b.time_s);
  if(frames.some((f,i)=>i>0&&f.time_s<=frames[i-1].time_s)){status('INVALID NON-MONOTONIC TIMESTAMPS');return;}
  stop();trajectory={frames,label};
+ motionSource=label.startsWith('IMPORTED')?'imported':'scripted';
  $('play').disabled=false;$('reset').disabled=false;
  const f=frames[0];manualPose={x:0,z:0,yaw:0};applyPose(0,0,0);
  $('pose-readout').textContent=label+' · '+frames.length+' frames · START READY';

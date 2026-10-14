@@ -53,3 +53,29 @@ small{display:block;color:#8ba8b4;line-height:1.5;font-size:10px;margin-top:12px
  .viewer-quick-controls span{flex:1 1 100%;text-align:center}
  .viewer-quick-controls button{flex:1 1 auto;padding:7px}
 }
+
+/* One same-origin Garden component embedded inside the full dashboard. */
+body.embedded{margin:0;height:100vh;overflow:hidden;background:#061419}
+body.embedded header,body.embedded .heading,body.embedded footer{display:none}
+body.embedded main{padding:0;max-width:none;height:100vh}
+body.embedded .workspace,body.embedded .viewer-col{display:block;height:100%;border:0;border-radius:0}
+body.embedded #viewer{height:100%!important;min-height:0!important}
+body.embedded #lab-options{position:absolute;z-index:60;right:10px;top:10px;bottom:86px;
+ width:min(345px,95vw);max-height:calc(100% - 96px);overflow:auto;box-shadow:0 10px 55px #000b}
+body.embedded #provenance{position:absolute;z-index:21;bottom:0;left:0;right:0;
+ font-size:9px;text-align:center;padding:4px}
+body.embedded .viewer-quick-controls{bottom:41px}
+#ground-pick-layer{position:absolute;inset:0;z-index:25;cursor:crosshair;
+ background:linear-gradient(180deg,#071a1d77,transparent 35%);touch-action:none}
+#ground-pick-layer[hidden]{display:none!important}
+.pick-instruction{position:absolute;top:13%;left:50%;transform:translateX(-50%);
+ background:#08222bea;border:1px solid #9dd8b9;border-radius:9px;
+ padding:12px 15px;font-size:12px;font-weight:800;text-align:center;max-width:90%;pointer-events:none}
+.pick-instruction span{display:block;font-size:10px;font-weight:400;margin-top:5px;color:#bcdbd0}
+#quick-ground{background:#a9e9cc;color:#06271c;font-weight:800}
+
+#garden-floor-help{position:absolute;left:14px;top:14px;z-index:19;
+ background:#071b23e4;border:1px solid #6fada3;border-radius:8px;
+ padding:10px 14px;color:#cde8dc;font-size:11px;line-height:1.5;
+ max-width:min(80%,450px);pointer-events:none}
+#garden-floor-help[hidden]{display:none}
