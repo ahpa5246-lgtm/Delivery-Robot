@@ -13,6 +13,9 @@ from cdr_sim.campus import Campus, ReplayOptions, replay
 
 ROOT = Path(__file__).resolve().parents[1] / "dashboard"
 STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
+          "/robot-garden": ("robot-garden.html", "text/html; charset=utf-8"),
+          "/robot-garden.js": ("robot-garden.js", "text/javascript; charset=utf-8"),
+          "/robot-garden.css": ("robot-garden.css", "text/css; charset=utf-8"),
           "/app.js": ("app.js", "text/javascript; charset=utf-8"),
           "/scene3d.js": ("scene3d.js", "text/javascript; charset=utf-8"),
           "/vendor/three.min.js": ("vendor/three.min.js", "text/javascript; charset=utf-8"),
@@ -118,10 +121,20 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "DENY")
-        self.send_header("Content-Security-Policy",
-                         "default-src 'self'; script-src 'self'; style-src 'self'; "
-                         "img-src 'self' data:; connect-src 'self'; frame-src https://superspl.at; "
-                         "object-src 'none'; frame-ancestors 'none'")
+        if urlsplit(self.path).path == "/robot-garden":
+            # CDN modules are pinned to versions. Only this experimental lab
+            # can load the PlayCanvas viewer and local Gaussian asset blobs.
+            policy = ("default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                      "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                      "connect-src 'self' blob: https:; "
+                      "img-src 'self' data: blob: https:; "
+                      "font-src 'self' data: https://cdn.jsdelivr.net; "
+                      "worker-src 'self' blob:; object-src 'none'; frame-ancestors 'none'")
+        else:
+            policy = ("default-src 'self'; script-src 'self'; style-src 'self'; "
+                      "img-src 'self' data:; connect-src 'self'; frame-src https://superspl.at; "
+                      "object-src 'none'; frame-ancestors 'none'")
+        self.send_header("Content-Security-Policy", policy)
         self.end_headers()
         self.wfile.write(body)
 
