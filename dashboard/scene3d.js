@@ -416,16 +416,39 @@
       renderer.setViewport(0,0,w,h);
     }
   }
+  let pointerStart=null,pointerMoveDistance=0;
+  const raycaster=new T.Raycaster();
+  const groundPlane=new T.Plane(new T.Vector3(0,1,0),0);
+  const groundHit=new T.Vector3();
   renderer.domElement.addEventListener('pointerdown',e=>{
-    dragging=true;oldX=e.clientX;oldY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId);
+    dragging=true;pointerStart=[e.clientX,e.clientY];pointerMoveDistance=0;
+    oldX=e.clientX;oldY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId);
   });
   renderer.domElement.addEventListener('pointermove',e=>{
     if(!dragging)return;
     const dx=e.clientX-oldX,dy=e.clientY-oldY;oldX=e.clientX;oldY=e.clientY;
+    pointerMoveDistance+=Math.hypot(dx,dy);
     orbitAz-=dx*.007;orbitElevation=Math.max(.18,Math.min(1.43,orbitElevation+dy*.005));
     if(cameraMode==='top')cameraMode='orbit';
   });
-  renderer.domElement.addEventListener('pointerup',()=>dragging=false);
+  renderer.domElement.addEventListener('pointerup',e=>{
+    dragging=false;
+    if(!map||!pointerStart||pointerMoveDistance>7){pointerStart=null;return;}
+    const rect=renderer.domElement.getBoundingClientRect();
+    const ndc=new T.Vector2(((e.clientX-rect.left)/rect.width)*2-1,
+      -((e.clientY-rect.top)/rect.height)*2+1);
+    pointerStart=null;
+    raycaster.setFromCamera(ndc,camera);
+    if(!raycaster.ray.intersectPlane(groundPlane,groundHit))return;
+    const goal=Object.entries(map.stops).filter(([name])=>name!=='depot')
+      .map(([name,xy])=>({name,dist:Math.hypot(groundHit.x-xy[0],-groundHit.z-xy[1])}))
+      .sort((a,b)=>a.dist-b.dist)[0];
+    if(goal&&goal.dist<1.05){
+      const picker=document.getElementById('destination');
+      picker.value=goal.name;
+      document.getElementById('run').click();
+    }
+  });
   renderer.domElement.addEventListener('wheel',e=>{
     e.preventDefault();orbitRadius=Math.max(9,Math.min(75,orbitRadius+e.deltaY*.036));
   },{passive:false});
@@ -436,6 +459,7 @@
       if(mode==='top'){
         target.set(16,0,-10);camera.position.set(16,45,-10.01);camera.lookAt(target);
       }else if(mode==='follow'){orbitRadius=9;orbitElevation=1.14;orbitAz=.55;}
+      else if(mode==='street'){orbitRadius=29;orbitElevation=.26;orbitAz=.56;target.set(16,.75,-10);}
       else{orbitRadius=root.clientWidth<650?46:35;orbitElevation=.78;orbitAz=.82;target.set(16,0,-10);}
       for(const b of document.querySelectorAll('[data-camera]'))b.classList.toggle('active',b===btn);
     });
