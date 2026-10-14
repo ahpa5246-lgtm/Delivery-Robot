@@ -51,7 +51,7 @@
   renderer.shadowMap.type = T.PCFSoftShadowMap;
   renderer.outputEncoding = T.sRGBEncoding;
   renderer.toneMapping = T.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.92;
+  renderer.toneMappingExposure = 0.82;
   root.appendChild(renderer.domElement);
   renderer.domElement.setAttribute('aria-label', 'Interactive three-dimensional campus and robot replay');
   const scene = new T.Scene();
@@ -78,8 +78,8 @@
     camera.lookAt(target);
   }
   camera.position.set(39,30,19);setPose();
-  const hemi = new T.HemisphereLight(0xfff2dd,0x35443f,1.23);scene.add(hemi);
-  const sun = new T.DirectionalLight(0xfff5df,2.15);
+  const hemi = new T.HemisphereLight(0xfff2dd,0x35443f,1.04);scene.add(hemi);
+  const sun = new T.DirectionalLight(0xfff5df,1.65);
   sun.position.set(12,33,8);sun.castShadow=true;
   sun.shadow.mapSize.set(2048,2048);
   sun.shadow.camera.left=-30;sun.shadow.camera.right=30;
