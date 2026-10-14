@@ -66,6 +66,14 @@ python scripts/generate_gazebo_world.py
 
 **Next verification:** Nav2 / localization / LiDAR integration, independent ground-truth-versus-odometry benchmarking, motor torque / contact / charging models and complete delivery workflow. ROS 2 Jazzy/Gazebo startup, commanded odometry, bridged odometry and ROS watchdog timeout have already passed narrow real-simulator smoke/acceptance checks. No claims of real-world deployment or certified human safety have been established.
 
+## Mission Intelligence v2 and authentic CAD assets
+
+The local dashboard now places the **full-width 3D campus first**, with mission status, energy, speed, direction, historic Gazebo evidence, sensor connection indicators and an exportable CSV flight recorder **beneath the scene**. Its physical-looking objects include licensed source CAD/Collada (with a topology-reduced rbot chassis and Mecanum robot base, original wheel and camera parts, Clearpath building detail, textured warehouse props, and TurtleBot furniture), not only primitive box placeholders.
+
+Run `python3 scripts/serve_dashboard.py` and open http://127.0.0.1:8765. See **[Command-center readings, provenance and test gates](docs/COMMAND_CENTER_V2.md)** and **[imported asset source licenses](dashboard/assets/SOURCES.md)**.
+
+**Do not confuse the 3D replay with Nav2 or real-time Gazebo physics.** Motion, energy, SOC, and heading still derive from the deterministic Python mission simulator; historical Gazebo odometry is a separate measured experiment.
+
 ## Interactive 3D mission studio (source-guided upgrade)
 
 The local dashboard now includes a **WebGL 3D campus scene** using a locally bundled MIT-licensed Three.js engine. It provides orbit, overhead and follow cameras, a robot model inspector, a 3D/2D view switch, outdoor campus and logistics scene variants, and nine selectable **visual robot designs**. The browser scene follows the existing deterministic **2D replay**, not ROS2/Gazebo physics. Simulated values remain clearly labeled separately from historical Gazebo odometry.

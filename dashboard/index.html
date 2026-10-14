@@ -4,22 +4,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0b111c">
-  <title>CDR-01 — Campus Robotics Control Room</title>
+  <title>CDR-01 — Engineering Mission Intelligence</title>
   <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/command-center.css">
   <script src="/vendor/three.min.js" defer></script>
+  <script src="/vendor/STLLoader.js" defer></script>
+  <script src="/vendor/ColladaLoader.js" defer></script>
   <script src="/app.js" defer></script>
   <script src="/scene3d.js" defer></script>
+  <script src="/cad-enhancement.js" defer></script>
+  <script src="/analytics.js" defer></script>
 </head>
 <body>
 <div class="shell">
   <aside class="rail" aria-label="Navigation">
     <div class="monogram">C<span>·</span></div>
-    <div class="rail-icons"><span class="rail-active" title="Mission simulation">◈</span><span title="Diagnostic maps">▦</span><span title="Telemetry">◉</span><span title="Safety">⬡</span></div>
+    <nav class="rail-icons" aria-label="Jump to sections"><a class="rail-active" href="#mission-studio" aria-label="Mission visualization" title="Mission visualization">◈</a><a href="#analytics-section" aria-label="Mission analytics" title="Mission analytics">▦</a><a href="#telemetry-section" aria-label="Telemetry plots" title="Telemetry plots">◉</a><a href="#sensor-section" aria-label="Sensor diagnostics" title="Sensor diagnostics">⬡</a></nav>
     <div class="rail-bottom">01</div>
   </aside>
   <main>
     <header class="masthead">
-      <div class="brand"><span class="eyebrow">CDR / CAMPUS DELIVERY ROBOTICS</span><h1>Mission control<span class="period">.</span></h1><p>Autonomous campus logistics <span class="slash">/</span> Offline route replay</p></div>
+      <div class="brand"><span class="eyebrow">CDR / CAMPUS DELIVERY ROBOTICS</span><h1>Robotics command center<span class="period">.</span></h1><p>Campus delivery research <span class="slash">/</span> Interactive visualization &amp; measured evidence</p></div>
       <div class="mast-actions"><span class="pill"><span class="live-dot"></span> LOCAL SIMULATOR</span><span class="clock" id="clock">SIM — 00:00</span></div>
     </header>
     <section class="mission-bar" aria-label="Mission parameters">
@@ -29,7 +34,7 @@
       <button id="run" class="primary" type="button"><span>▶</span> RUN SIMULATION</button>
     </section>
     <div class="workspace">
-      <section class="map-panel" aria-label="Campus mission replay">
+      <section class="map-panel" id="mission-studio" aria-label="Campus mission replay">
         <div class="panel-top"><div><span class="panel-kicker">01 / IMMERSIVE MISSION STUDIO</span><h2>Campus mission simulation</h2></div><div class="legend"><span><i class="legend-path"></i> Route</span><span><i class="legend-robot"></i> CDR-01</span><span><i class="legend-zone"></i> Restricted</span></div></div>
         <div class="scene-toolbar" aria-label="Mission scene settings">
           <div class="view-switch"><button id="view3d" type="button" aria-pressed="true">3D WORLD</button><button id="view2d" type="button" aria-pressed="false">2D MAP</button></div>
@@ -55,12 +60,13 @@
           <div class="robot-inspector-label">3D MODEL PREVIEW<strong id="inspector-model">CDR-01 delivery concept</strong></div>
           <div class="scene-3d-bar"><span id="scene-status">LOADING 3D SCENE</span><div class="camera-buttons"><button data-camera="orbit" class="active" type="button">Orbit</button><button data-camera="follow" type="button">Follow</button><button data-camera="top" type="button">Top</button></div></div>
           <div class="map-overlay">MAP COORDINATES <strong>LOCAL XY</strong><br>32 × 20 METRES <span>·</span> NOT TO SCALE</div><div class="map-badge">SCRIPTED NAVIGATION <span class="accent">●</span></div></div>
-        <div class="asset-note">Robot variants are original <strong>illustrative 3D concepts</strong> inspired by open-source robotics projects; all share the existing CDR-01 <strong>2D kinematic playback</strong>, not Nav2 or live Gazebo physics. <a id="profile-source" href="https://github.com/ahpa5246-lgtm/Delivery-Robot" target="_blank" rel="noopener noreferrer">Source reference ↗</a></div>
+        <div class="cad-status-bar"><span class="cad-source-dot"></span><strong id="mesh-provenance" aria-live="polite">Loading original CAD models…</strong><span class="cad-source-caption">Source-licensed CAD + deterministic path overlay</span></div>
+        <div class="asset-note">Robot variants are original <strong>illustrative 3D concepts</strong> with licensed real CAD components from open-source robotics projects; all share the existing CDR-01 <strong>2D kinematic playback</strong>, not Nav2 or live Gazebo physics. <a id="profile-source" href="https://github.com/ahpa5246-lgtm/Delivery-Robot" target="_blank" rel="noopener noreferrer">Source reference ↗</a></div>
         <div class="playback">
           <button id="play" title="Pause or resume replay" aria-label="Pause or resume replay">Ⅱ</button><span class="time" id="elapsed">00:00</span><input id="timeline" aria-label="Replay position" type="range" min="0" max="100" value="0"><span class="time muted" id="total">00:00</span><select id="speed" aria-label="Playback speed"><option value="1">1×</option><option value="4" selected>4×</option><option value="12">12×</option><option value="30">30×</option></select>
         </div>
         <div class="notice"><span class="notice-symbol">ⓘ</span><span>The 3D robot is animated from a <strong>deterministic 2D trajectory</strong> (not Gazebo contact physics). Only the separately labeled Gazebo archive contains Gazebo odometry. Robot variants are visual demonstrations, not tested configurations.</span></div>
-        <section class="trace-panel" aria-label="Two-dimensional model telemetry traces">
+        <section class="trace-panel" id="telemetry-section" aria-label="Two-dimensional model telemetry traces">
           <div class="row-title"><div><span class="panel-kicker">02 / REPLAY TELEMETRY</span><h2>Motion and battery profile</h2></div><span class="evidence-tag">2D MODEL</span></div>
           <div class="trace-legend"><span class="trace-speed">● Modeled velocity (m/s)</span><span class="trace-soc">● Modeled battery SOC (%)</span></div>
           <canvas id="trace" width="1152" height="290" role="img" aria-label="Speed and battery state of charge over simulated mission time"></canvas>
@@ -68,14 +74,53 @@
         </section>
       </section>
       <aside class="insights">
+        <div class="operations-heading" id="analytics-section">
+          <div><span class="panel-kicker">02 / OPERATIONS INTELLIGENCE</span><h2>Mission analytics</h2><p>Timeline-linked readings from the executed offline simulator. Gazebo experiments appear separately.</p></div>
+          <div class="operations-actions"><span class="evidence-tag">MODELED · NOT HARDWARE</span><button id="export-csv" type="button" class="export-button">↓ EXPORT TELEMETRY CSV</button></div>
+        </div>
         <section class="status-panel"><div class="row-title"><span class="panel-kicker">02 / MISSION STATUS</span><span class="small-id">CDR-01</span></div><div class="status-line"><span class="status-icon" id="status-dot"></span><span id="status">INITIALIZING</span></div><p id="reason">Preparing campus simulation...</p><div class="mini-line"><span>Current stage</span><strong id="phase">—</strong></div></section>
         <section class="metrics"><div class="metric"><span>DISTANCE TRAVELLED</span><strong id="distance">—</strong><small>metres · modeled</small></div><div class="metric"><span>ENERGY CONSUMED</span><strong id="energy">—</strong><small>watt-hours · estimate</small></div><div class="metric"><span>PATH REPLANS</span><strong id="replans">—</strong><small>detected closures</small></div><div class="metric"><span>BATTERY SOC</span><strong id="battery">—</strong><small>modeled capacity</small></div></section>
+        <section class="flight-panel">
+          <div class="row-title"><div><span class="panel-kicker">03 / FLIGHT RECORDER</span><h2>Motion diagnostics</h2></div><span class="evidence-tag">2D KINEMATICS</span></div>
+          <div class="flight-stats">
+            <div><span>CURRENT SPEED</span><strong id="current-speed">—</strong><small>m/s · model</small></div>
+            <div><span>AVERAGE SPEED</span><strong id="average-speed">—</strong><small>m/s · traveled / time</small></div>
+            <div><span>PEAK SPEED</span><strong id="peak-speed">—</strong><small>m/s · observed frames</small></div>
+            <div><span>COURSE</span><strong id="course-heading">—</strong><small>deg · derived from position</small></div>
+            <div><span>REPLAY PROGRESS</span><strong id="mission-progress">—</strong><small>% of scripted mission</small></div>
+            <div><span>SIM TIME REMAINING</span><strong id="sim-remaining">—</strong><small>simulated seconds</small></div>
+          </div>
+        </section>
+        <section class="diagnostic-chart energy-chart">
+          <div class="row-title"><div><span class="panel-kicker">04 / ESTIMATED CONSUMPTION</span><h2>Energy and distance</h2></div><span class="evidence-tag">CALCULATED</span></div>
+          <p>Battery energy estimate and total modeled distance versus simulated mission time.</p>
+          <div class="analytic-legend"><span class="legend-blue">● Energy (Wh)</span><span class="legend-yellow">● Distance (m)</span></div>
+          <canvas id="energy-chart" role="img" aria-label="Modeled energy and traveled distance over simulation time"></canvas>
+        </section>
+        <section class="diagnostic-chart course-chart">
+          <div class="row-title"><div><span class="panel-kicker">05 / NAVIGATION</span><h2>Heading and mission phases</h2></div><span class="evidence-tag">DERIVED</span></div>
+          <p>Course is computed from consecutive positions; phases are read from the simulation frames.</p>
+          <canvas id="course-chart" role="img" aria-label="Course heading over simulation time"></canvas>
+          <div id="phase-distribution" class="phase-distribution" aria-label="Mission phase distribution"></div>
+        </section>
+        <section class="sensor-panel" id="sensor-section">
+          <div class="row-title"><div><span class="panel-kicker">06 / SENSOR INTEGRITY</span><h2>Data source health</h2></div><span class="evidence-tag">NO HARDWARE LINK</span></div>
+          <div class="sensor-rows">
+            <div><span>LiDAR / range scan</span><strong>NOT CONNECTED</strong></div>
+            <div><span>RGB-D camera</span><strong>NOT CONNECTED</strong></div>
+            <div><span>IMU / gyroscope</span><strong>NOT CONNECTED</strong></div>
+            <div><span>GPS / localization</span><strong>NOT CONNECTED</strong></div>
+            <div><span>Path / battery / speed</span><strong class="modeled-label">PYTHON MODEL</strong></div>
+            <div><span>Gazebo Odometry</span><strong class="archived-label">ARCHIVED TEST</strong></div>
+          </div>
+          <p class="sensor-footnote">The current 3D world is a visual replay. It does not produce live sensor, motor, current, or torque measurements.</p>
+        </section>
         <section class="gazebo-panel" aria-label="Archived Gazebo simulator results">
-          <div class="row-title"><div><span class="panel-kicker">03 / PHYSICS EXPERIMENT</span><h2>Gazebo odometry</h2></div><span class="evidence-tag">ARCHIVED</span></div>
+          <div class="row-title"><div><span class="panel-kicker">07 / PHYSICS EXPERIMENT</span><h2>Gazebo odometry</h2></div><span class="evidence-tag">ARCHIVED</span></div>
           <div class="gazebo-measures"><div><span>ODOMETRY DISTANCE</span><strong id="gazebo-displacement">—</strong><small>m · reported, not independent ground truth</small></div><div><span>MAXIMUM VELOCITY</span><strong id="gazebo-speed">—</strong><small>m/s · simulated</small></div><div><span>ODOMETRY SAMPLES</span><strong id="gazebo-samples">—</strong><small>recorded messages</small></div></div>
           <p id="gazebo-provenance">Historical Gazebo run, not live telemetry or hardware measurement. <a href="https://github.com/ahpa5246-lgtm/Delivery-Robot/actions/runs/38099667180" target="_blank" rel="noopener noreferrer">Original CI evidence ↗</a></p>
         </section>
-        <section class="timeline-panel"><div class="row-title"><div><span class="panel-kicker">04 / EVENT STREAM</span><h2>Activity log</h2></div><span class="event-count" id="event-count">0 EVENTS</span></div><div class="event-feed" id="events" aria-live="polite"></div></section>
+        <section class="timeline-panel"><div class="row-title"><div><span class="panel-kicker">08 / EVENT STREAM</span><h2>Activity log</h2></div><span class="event-count" id="event-count">0 EVENTS</span></div><div class="event-feed" id="events" aria-live="polite"></div></section>
       </aside>
     </div>
     <details class="reference-library"><summary><span>OPEN-SOURCE ENGINEERING LIBRARY</span><strong>10 credited upstream projects</strong><span class="ref-hint">Sources, reusable design patterns &amp; compatibility limits</span></summary><div id="integration-list" class="reference-grid"></div></details>
