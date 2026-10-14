@@ -210,9 +210,19 @@ class NoRoute(Exception):
     """Destination cannot be reached within the known occupancy grid."""
 
 
+# Safe only for obstacle-free initial-route queries. Dynamic construction closures
+# are NEVER reused from this cache, and every caller receives a mutable copy.
+_NOMINAL_ROUTE_CACHE: dict[tuple, tuple[Point, ...]] = {}
+
+
 def astar(campus: Campus, start: Point, goal: Point,
           closure: frozenset[Cell] = frozenset()) -> list[Point]:
     """Inflated 8-connected A*; rejects diagonal corner-cutting and blocked goals."""
+    key = (campus.width, campus.height, campus.resolution,
+           campus.robot_radius, campus.safety_margin, campus.obstacles,
+           start, goal) if not closure else None
+    if key is not None and key in _NOMINAL_ROUTE_CACHE:
+        return list(_NOMINAL_ROUTE_CACHE[key])
     s, g = campus.cell(start), campus.cell(goal)
     if not campus.free(s, closure) or not campus.free(g, closure):
         raise NoRoute("blocked start or goal")
@@ -249,6 +259,10 @@ def astar(campus: Campus, start: Point, goal: Point,
                     raise NoRoute("grid route was not segment-safe")
                 points.append(vertices[j])
                 i=j
+            if key is not None:
+                if len(_NOMINAL_ROUTE_CACHE) >= 96:
+                    _NOMINAL_ROUTE_CACHE.clear()
+                _NOMINAL_ROUTE_CACHE[key] = tuple(points)
             return points
         for dx, dy in neighbors:
             nxt = (cell[0]+dx, cell[1]+dy)
