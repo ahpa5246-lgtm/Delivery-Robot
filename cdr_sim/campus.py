@@ -9,12 +9,57 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from heapq import heappop, heappush
-from math import hypot, isfinite
+from math import hypot, isfinite, sqrt
+from pathlib import Path
+from functools import lru_cache
+import json
 import random
 
 
 Point = tuple[float, float]
 Cell = tuple[int, int]
+Box = tuple[float, float, float, float]
+
+
+@lru_cache(maxsize=1)
+def shared_world() -> dict:
+    """Read one authoritative map for the offline planner and both browser scenes."""
+    src = Path(__file__).resolve().parents[1] / "world" / "campus_layout.json"
+    spec = json.loads(src.read_text(encoding="utf-8"))
+    if spec.get("schema") != "cdr-shared-collision-world-v4":
+        raise ValueError("unsupported world collision schema")
+    if set(spec["worlds"]) != {"campus", "warehouse"}:
+        raise ValueError("world themes require both declared collision maps")
+    return spec
+
+
+def swept_rect_intersects(a: Point, b: Point, rect: Box, padding: float) -> bool:
+    """Exact 2-D segment vs axis-aligned robot-inflated rectangle (slab test)."""
+    x0, y0, x1, y1 = rect
+    lo, hi = 0.0, 1.0
+    for origin, delta, lower, upper in (
+        (a[0], b[0]-a[0], x0-padding, x1+padding),
+        (a[1], b[1]-a[1], y0-padding, y1+padding),
+    ):
+        if abs(delta) < 1e-12:
+            if not lower <= origin <= upper:
+                return False
+        else:
+            ta, tb = (lower-origin)/delta, (upper-origin)/delta
+            if ta > tb:
+                ta, tb = tb, ta
+            lo, hi = max(lo, ta), min(hi, tb)
+            if lo > hi:
+                return False
+    return True
+
+
+def distance_to_box(point: Point, rect: Box) -> float:
+    """Unsigned Euclidean distance to the physical footprint, zero when inside."""
+    x0, y0, x1, y1 = rect
+    return hypot(max(x0-point[0], 0, point[0]-x1),
+                 max(y0-point[1], 0, point[1]-y1))
+
 
 
 @dataclass(frozen=True)
@@ -23,18 +68,41 @@ class Campus:
     height: float = 20.0
     resolution: float = 0.5
     robot_radius: float = 0.35
-    buildings: tuple[tuple[float, float, float, float], ...] = (
-        (8.0, 0.0, 13.0, 6.0),
-        (8.0, 11.0, 13.0, 20.0),
-        (19.0, 7.0, 24.0, 13.0),
-        (2.0, 8.0, 5.0, 11.0),
-    )
+    theme: str = "campus"
+    safety_margin: float = 0.10
+    buildings: tuple[Box, ...] = field(default_factory=lambda: tuple(
+        tuple(b["footprint_m"]) for b in shared_world()["buildings"]))
     stops: dict[str, Point] = field(default_factory=lambda: {
-        "depot": (2.0, 2.0),
-        "engineering": (5.5, 16.0),
-        "library": (28.0, 16.0),
-        "student_center": (28.0, 3.0),
-    })
+        k: tuple(v) for k, v in shared_world()["stops"].items()})
+
+    def __post_init__(self):
+        if self.theme not in shared_world()["worlds"]:
+            raise ValueError("unsupported world theme")
+        if not (isfinite(self.safety_margin) and self.safety_margin >= 0):
+            raise ValueError("invalid clearance margin")
+
+    @property
+    def fixtures(self) -> tuple[dict, ...]:
+        # Synthetic miniature worlds in unit tests must not inherit 32x20 m fixtures.
+        m = shared_world()["map"]
+        if abs(self.width-m["width_m"]) > 1e-7 or abs(self.height-m["height_m"]) > 1e-7:
+            return ()
+        return tuple(shared_world()["worlds"][self.theme]["fixtures"])
+
+    @property
+    def obstacles(self) -> tuple[Box, ...]:
+        return self.buildings + tuple(tuple(f["footprint_m"]) for f in self.fixtures)
+
+    def clearance(self, point: Point) -> float:
+        return min((distance_to_box(point, b) for b in self.obstacles),
+                   default=float("inf")) - self.robot_radius
+
+    def segment_safe(self, a: Point, b: Point) -> bool:
+        # Independent continuous check (supercover alone is not enough at sub-cell edges).
+        if not all(isfinite(v) for v in (*a, *b)):
+            return False
+        pad = self.robot_radius + self.safety_margin
+        return not any(swept_rect_intersects(a, b, box, pad) for box in self.obstacles)
 
     @property
     def shape(self) -> tuple[int, int]:
@@ -49,7 +117,7 @@ class Campus:
     def free(self, cell: Cell, closure: frozenset[Cell] = frozenset()) -> bool:
         nx, ny = self.shape
         x, y = self.center(cell)
-        pad = self.robot_radius
+        pad = self.robot_radius + self.safety_margin
         if not (0 <= cell[0] < nx and 0 <= cell[1] < ny):
             return False
         if x < pad or y < pad or x > self.width - pad or y > self.height - pad:
@@ -57,7 +125,7 @@ class Campus:
         if cell in closure:
             return False
         return all(not (x0-pad <= x <= x1+pad and y0-pad <= y <= y1+pad)
-                   for x0, y0, x1, y1 in self.buildings)
+                   for x0, y0, x1, y1 in self.obstacles)
 
     def disk_cells(self, point: Point, radius: float) -> frozenset[Cell]:
         if radius <= 0 or not isfinite(radius):
@@ -81,6 +149,8 @@ class Campus:
         from math import inf
         start, target = self.cell(a), self.cell(b)
         if not self.free(start, closure) or not self.free(target, closure):
+            return False
+        if not self.segment_safe(a, b):
             return False
         if start == target:
             return True
@@ -119,7 +189,11 @@ class Campus:
     def as_dict(self) -> dict:
         return {"width_m": self.width, "height_m": self.height,
                 "resolution_m": self.resolution, "robot_radius_m": self.robot_radius,
+                "safety_margin_m": self.safety_margin, "world": self.theme,
+                "geometry_schema": "cdr-shared-collision-world-v4",
                 "buildings": [list(r) for r in self.buildings],
+                "fixtures": list(self.fixtures),
+                "collision_objects": len(self.buildings) + len(self.fixtures),
                 "stops": {k: list(v) for k, v in self.stops.items()}}
 
 
@@ -408,6 +482,13 @@ def replay(options: ReplayOptions = ReplayOptions(), campus: Campus | None = Non
         "distance_m": round(distance, 3), "energy_estimated_wh": round(energy, 4),
         "final_soc_estimated": round(soc(), 6), "replans": replans,
         "collision_detected_in_known_map": collision,
+        "world": world.theme, "geometry_schema": "cdr-shared-collision-world-v4",
+        "collision_objects": len(world.obstacles),
+        "collision_checked": all(world.segment_safe(
+            (a["x_m"], a["y_m"]), (b["x_m"], b["y_m"]))
+            for a, b in zip(frames, frames[1:])),
+        "minimum_sampled_clearance_m": round(min(
+            (world.clearance((f["x_m"], f["y_m"])) for f in frames), default=0), 4),
         "final_pose_m": [round(x, 3) for x in position],
         "closure_cells": [list(c) for c in sorted(closure)],
         "routes": planned_routes, "events": events, "frames": frames
