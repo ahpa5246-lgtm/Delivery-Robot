@@ -21,7 +21,7 @@ ROOT = REPO_ROOT / "dashboard"
 GARDEN_ZIP = Path(os.environ.get("CDR_GARDEN_ZIP", str(REPO_ROOT / "assets" / "gaussian-garden.zip")))
 GARDEN_ENTRY = re.compile(
     r"(?:lod-meta\.json|license\.txt|[0-9]+_[0-9]+/(?:meta\.json|"
-    r"(?:means_l|means_u|quats|scales|sh0|shN_labels|shN_centroids)\.webp))\\Z"
+    r"(?:means_l|means_u|quats|scales|sh0|shN_labels|shN_centroids)\.webp))\Z"
 )
 MAX_GARDEN_FILE_SIZE = 4 * 1024 * 1024
 
