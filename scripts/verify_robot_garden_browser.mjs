@@ -23,7 +23,7 @@ try{
   console.error('BROWSER ERRORS',errs);
   throw e;
  }
- assert.equal(await page.locator('#lab-options').isVisible(),false);
+ assert.equal(await page.locator('#lab-options').isVisible(),true);
  assert.equal(await page.locator('#viewer-quick-controls').isVisible(),true);
  assert.equal(await page.locator('#robot-controls').isVisible(),true);
  assert.ok((await page.locator('#provenance').innerText()).includes('GARDEN COLLISION NOT VERIFIED'));
