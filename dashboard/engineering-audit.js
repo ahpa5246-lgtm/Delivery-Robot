@@ -118,7 +118,14 @@
       $('audit-integrity').textContent=integrity?'CHECK FAILED':'CONSISTENT';
       $('audit-integrity').classList.toggle('invalid',!!integrity);
       $('audit-integrity-note').textContent=integrity||'Validated internally against model output; NOT independent sensor truth.';
-      if(integrity){$('phase-ribbon').replaceChildren();$('phase-legend').replaceChildren();return;}
+      if(integrity){
+        $('phase-ribbon').replaceChildren();$('phase-legend').replaceChildren();
+        for(const id of ['audit-position','audit-accel','audit-turnrate','audit-power',
+                          'audit-goal','audit-efficiency','audit-duty','audit-route']){
+          $(id).textContent='—';
+        }
+        return;
+      }
       derivedFrames();phaseTimeline();shown=-1;
     }
     const t=clamp(Number(d.time)||0,0,run.duration_sim_s);
