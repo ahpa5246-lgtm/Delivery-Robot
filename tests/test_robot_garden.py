@@ -40,6 +40,7 @@ class GardenRobotTests(unittest.TestCase):
     def test_homepage_has_visible_lab_entry(self):
         data=response_for("/")[2].decode()
         self.assertIn('href="/robot-garden"', data)
+        self.assertIn("ROBOT INSIDE 3DGS", data)
         self.assertIn("not yet registered to this garden", data)
 
 

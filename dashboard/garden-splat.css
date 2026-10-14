@@ -96,3 +96,11 @@ body.garden-mode .garden-disclosure { margin: 14px 2px 0; background: #101d25; }
     gap: 10px; min-width: 0; }
   .masthead .brand h1 { overflow-wrap: anywhere; }
 }
+
+/* Explicit route to the unified rendering lab, distinct from third-party iframe. */
+.robot-lab-cta { display:inline-flex; align-items:center; justify-content:center;
+  flex:0 1 auto; min-width:0; padding:10px 14px; border-radius:9px; border:1px solid #8bccb1;
+  background:#172c2d; color:#cef8df; text-decoration:none; font-size:11px;
+  font-weight:850; letter-spacing:.01em; white-space:normal; text-align:center; }
+.robot-lab-cta:hover{background:#285044}
+@media(max-width:700px){.robot-lab-cta{flex:1 1 100%;width:100%;}}

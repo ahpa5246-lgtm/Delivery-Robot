@@ -11,3 +11,9 @@ experiments/ci_baseline/
 *.db3
 *.mcap
 .DS_Store
+
+# Source Gaussian splats are large and should be hosted outside Git history.
+assets/gaussian-garden-download/
+*.sog
+*.spz
+*.compressed.ply
