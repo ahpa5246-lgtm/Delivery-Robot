@@ -1,0 +1,4 @@
+Repository: https://github.com/Pouya-Mansournia/Delivery-Robot-ROS
+Source ref: main
+Original path: src/delivery_robot_description/urdf/delivery_robot.urdf.xacro
+Status: attributed REFERENCE fixture; not a stand-alone runnable Gazebo or ROS package.

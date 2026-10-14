@@ -1,0 +1,4 @@
+Repository: https://github.com/rlxai/rbot
+Source ref: main
+Original path: src/robot/rlai_description/urdf/base/base.urdf.xacro
+Status: attributed REFERENCE fixture; not a stand-alone runnable Gazebo or ROS package.
