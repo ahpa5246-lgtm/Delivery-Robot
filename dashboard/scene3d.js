@@ -51,7 +51,7 @@
   renderer.shadowMap.type = T.PCFSoftShadowMap;
   renderer.outputEncoding = T.sRGBEncoding;
   renderer.toneMapping = T.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.25;
+  renderer.toneMappingExposure = 0.80;
   root.appendChild(renderer.domElement);
   renderer.domElement.setAttribute('aria-label', 'Interactive three-dimensional campus and robot replay');
   const scene = new T.Scene();
@@ -59,7 +59,7 @@
   scene.fog = new T.Fog(0x142b3b, 26, 85);
   const camera = new T.PerspectiveCamera(48, 1, 0.1, 170);
   const target = new T.Vector3(16,0,-10);
-  let orbitAz = Math.PI*0.28, orbitElevation=0.82, orbitRadius=39;
+  let orbitAz = Math.PI*0.28, orbitElevation=0.95, orbitRadius=47;
   let cameraMode = 'orbit', dragging=false, oldX=0, oldY=0;
   function setPose() {
     const horizontal = orbitRadius*Math.cos(orbitElevation);
@@ -69,16 +69,16 @@
     camera.lookAt(target);
   }
   camera.position.set(39,30,19);setPose();
-  const hemi = new T.HemisphereLight(0xcdeafa,0x38535b,2.0);scene.add(hemi);
-  const sun = new T.DirectionalLight(0xffe6bb,2.65);
+  const hemi = new T.HemisphereLight(0xcdeafa,0x243b45,1.20);scene.add(hemi);
+  const sun = new T.DirectionalLight(0xffe6bb,1.85);
   sun.position.set(12,33,8);sun.castShadow=true;
   sun.shadow.mapSize.set(2048,2048);
   sun.shadow.camera.left=-30;sun.shadow.camera.right=30;
   sun.shadow.camera.top=30;sun.shadow.camera.bottom=-30;
   sun.shadow.bias=-0.0007;scene.add(sun);
   const mat = (c, extra={})=>new T.MeshStandardMaterial({color:c, roughness:0.78, metalness:0.08, ...extra});
-  const grass=mat(0x304c42), road=mat(0x485b63), pavers=mat(0x7a8988),
-        pavement=mat(0x8a9999), dark=mat(0x27323e), rubber=mat(0x141c23),
+  const grass=mat(0x315646), road=mat(0x3e515b), pavers=mat(0x7c8981),
+        pavement=mat(0x828c90), dark=mat(0x27323e), rubber=mat(0x141c23),
         cyan=mat(0x68f0c7,{emissive:0x0b5b4a,emissiveIntensity:0.5}),
         amber=mat(0xfacb83,{emissive:0x775621,emissiveIntensity:0.2}),
         glass=mat(0x87c0ce,{roughness:0.2,metalness:0.22,transparent:true,opacity:0.72});
@@ -138,7 +138,7 @@
   function building(i,[x0,y0,x1,y1],theme){
     const w=x1-x0,d=y1-y0, cx=(x0+x1)/2,cz=-(y0+y1)/2;
     const height=(i===3?1.6:3.0+i*.4);
-    const base=mat([0xc4d1ca,0xc4b9a6,0x9cbdc4,0xb8c6b3][i]);
+    const base=mat([0x88acaa,0xa89178,0x6993a9,0x79a18b][i]);
     cube(environment,w,height,d,base,cx,height/2,cz);
     cube(environment,w+.2,.18,d+.2,mat(0x304450),cx,height+.08,cz);
     // Small accessible glass entrance (purely visual; collisions not changed).
@@ -259,7 +259,17 @@
     const a=frames[lo],b=frames[hi],dt=b.time_s-a.time_s,amount=dt>0?Math.max(0,Math.min(1,(time-a.time_s)/dt)):0;
     return {p:{x_m:a.x_m+(b.x_m-a.x_m)*amount,y_m:a.y_m+(b.y_m-a.y_m)*amount},next:b};
   }
+  let lastPathTime=-1, lastPathRun=null;
   function updateRoutes(){
+    if(lastPathRun===lastRun && Math.abs(lastPathTime-playbackTime)<0.35)return;
+    lastPathRun=lastRun;lastPathTime=playbackTime;
+    pathGroup.traverse(item=>{
+      if(item.isMesh || item.isLine){
+        item.geometry?.dispose();
+        if(Array.isArray(item.material))item.material.forEach(m=>m.dispose());
+        else item.material?.dispose();
+      }
+    });
     pathGroup.clear();
     if(!lastRun)return;
     for(let i=0;i<lastRun.routes.length;i++){
@@ -307,7 +317,6 @@
     }
     renderer.setSize(w,h,false);
   }
-  let lastPathUpdate=-1;
   function render(timestamp) {
     requestAnimationFrame(render);
     if(!sceneReady||root.hidden)return;
@@ -337,7 +346,7 @@
       if(mode==='top'){
         target.set(16,0,-10);camera.position.set(16,45,-10.01);camera.lookAt(target);
       }else if(mode==='follow'){orbitRadius=12;orbitElevation=.55;orbitAz=.55;}
-      else{orbitRadius=39;orbitElevation=.82;orbitAz=.82;target.set(16,0,-10);}
+      else{orbitRadius=47;orbitElevation=.95;orbitAz=.82;target.set(16,0,-10);}
       for(const b of document.querySelectorAll('[data-camera]'))b.classList.toggle('active',b===btn);
     });
   }
