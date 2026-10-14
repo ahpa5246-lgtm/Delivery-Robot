@@ -1,7 +1,13 @@
 name: One-engine Gaussian splat + 3D robot browser proof
 on:
   push:
-    branches: [feature/real-garden-robot-simulation]
+    branches: [main, feature/real-garden-robot-simulation]
+    paths:
+      - 'dashboard/robot-garden.*'
+      - 'scripts/verify_robot_garden_browser.mjs'
+      - '.github/workflows/robot-garden-browser.yml'
+      - 'scripts/serve_dashboard.py'
+  pull_request:
     paths:
       - 'dashboard/robot-garden.*'
       - 'scripts/verify_robot_garden_browser.mjs'
