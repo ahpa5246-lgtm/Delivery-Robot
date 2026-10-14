@@ -97,3 +97,10 @@ main{max-width:1830px}
 .fleet-transport span{color:#d8d6c9;font-size:11px;font-variant-numeric:tabular-nums}
 .fleet-transport #fleet-end{color:#98a9af}
 @media(max-width:520px){.fleet-transport{gap:6px;flex-wrap:wrap}.fleet-transport #fleet-scrub{order:5;flex-basis:100%}.fleet-transport button{padding:7px 8px}}
+
+
+.workspace-nav{display:flex;gap:4px;align-items:center;flex-wrap:wrap;border-bottom:1px solid #394953;margin:0 0 18px;padding:0 0 10px}
+.workspace-nav a{font-size:11px;text-decoration:none;color:#abb9bf;padding:10px 14px;border:1px solid transparent;border-radius:6px;font-weight:630}
+.workspace-nav a:hover,.workspace-nav a:focus-visible{background:#293943;color:#eee9df;border-color:#56666d}
+.workspace-nav a.active{background:#34453f;border-color:#52695c;color:#f0efe5}
+@media(max-width:780px){.workspace-nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}.workspace-nav a{white-space:nowrap;padding:8px 10px}}
