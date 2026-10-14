@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class ImportedGeometryTests(unittest.TestCase):
     def test_original_cad_parts_are_served_and_nonempty(self):
-        for name in ('rbot-wheel.stl','rbot-camera.stl','delivery-cad-part.stl'):
+        for name in ('rbot-wheel.stl','rbot-camera.stl','delivery-cad-part.stl','rbot-chassis.stl','mecanum-chassis.stl'):
             with self.subTest(mesh=name):
                 status, media, data = response_for('/assets/robot/'+name)
                 self.assertEqual(status, 200)
