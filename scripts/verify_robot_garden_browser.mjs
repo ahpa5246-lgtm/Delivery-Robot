@@ -66,7 +66,15 @@ try{
    })
  }));
  await page.locator('#load-garden-gazebo').click();
- assert.ok((await page.locator('#pose-readout').innerText()).includes('RECORDED GAZEBO FLAT CONTACT PROXY'));
+ try {
+  await page.waitForFunction(()=>
+   document.querySelector('#pose-readout')?.textContent?.includes('RECORDED GAZEBO FLAT CONTACT PROXY'),
+   {timeout:15000});
+ } catch (e) {
+  console.error('GAZEBO_REPLAY_STATUS',await page.locator('#status').innerText());
+  console.error('GAZEBO_POSE_READOUT',await page.locator('#pose-readout').innerText());
+  throw e;
+ }
  assert.ok((await page.locator('#provenance').innerText()).includes('NO GARDEN PHYSICS'));
  assert.equal(await page.locator('#play').isEnabled(),true);
  console.log('GARDEN_CALIBRATION_EXPORT_AND_SOURCE_LABELED_REPLAY_CONTRACT_OK');
