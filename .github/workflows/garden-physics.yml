@@ -11,8 +11,11 @@ on:
       - 'tests/test_garden_physics.py'
       - 'world/garden_calibration_example.json'
       - '.github/workflows/garden-physics.yml'
+      - 'scripts/start_codespaces_full.sh'
   pull_request:
     paths:
+      - '.github/workflows/garden-physics.yml'
+      - 'scripts/start_codespaces_full.sh'
       - 'scripts/generate_garden_gazebo.py'
       - 'scripts/export_garden_odometry.py'
       - 'scripts/run_garden_gazebo.sh'
