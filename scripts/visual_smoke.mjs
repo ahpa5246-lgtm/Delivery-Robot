@@ -191,47 +191,19 @@ try {
     });
     assert.equal(await page.locator('#status').innerText(), 'PAUSED SAFE');
     assert.ok((await page.locator('#reason').innerText()).includes('ESTOP_LATCHED'));
-    // Load the *real* public Garden URL in a network-stubbed iframe to verify
-    // navigation, browser CSP, attribution and graceful return. A stub is not
-    // evidence that an external splat has rendered or that robot poses align.
-    await page.route('https://superspl.at/**', route => route.fulfill({
-      status: 200, contentType: 'text/html',
-      body: '<!doctype html><html><body>SuperSplat garden viewer fixture</body></html>'
-    }));
-    assert.equal(await page.locator('#garden-frame').getAttribute('src'), null);
+    // Redirect to a same-origin PlayCanvas scene, never third-party iframe.
+    assert.equal(await page.locator('#garden-frame').count(),0);
     await page.locator('#view-garden').click();
-    assert.equal(await page.locator('#view-garden').getAttribute('aria-pressed'), 'true');
-    assert.equal(await page.locator('#view3d').getAttribute('aria-pressed'), 'false');
-    assert.equal(await page.locator('#garden-disclosure').isVisible(), true);
-    assert.equal(await page.locator('#garden-splat').isVisible(), true);
-    assert.equal(await page.locator('#scene3d').isVisible(), false);
-    assert.equal(await page.locator('#garden-frame').getAttribute('src'),
-      'https://superspl.at/scene/bc0906cd?aa');
-    assert.ok((await page.frameLocator('#garden-frame').locator('body').innerText())
-      .includes('garden viewer fixture'), 'Allowed cross-origin frame must load');
-    assert.ok((await page.locator('.garden-credit').innerText()).includes('CC BY 4.0'));
-    await page.screenshot({ path: 'experiments/ui_visual/'+viewport.name+'-garden-shell.png',
-      fullPage: true });
-    await page.locator('#view2d').click();
-    assert.equal(await page.locator('#garden-splat').isVisible(), false);
-    assert.equal(await page.locator('#map').isVisible(), true);
-    await page.locator('#view3d').click();
-    assert.equal(await page.locator('#scene3d').isVisible(), true);
-    assert.equal(await page.locator('#garden-disclosure').isVisible(), false);
-    // In the normal entrypoint, the real Garden opens by default.
-    // Stub the remote scene only for stability; this is not a render-quality test.
-    await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await page.waitForFunction(() => document.body.classList.contains('garden-mode'));
-    assert.equal(await page.locator('#view-garden').getAttribute('aria-pressed'), 'true');
-    assert.equal(await page.locator('#mission-studio .panel-top h2').innerText(),
-      'The real Garden, reconstructed in 3D');
-    assert.equal(await page.locator('.mission-bar').isVisible(), false);
-    assert.equal(await page.locator('#garden-splat').isVisible(), true);
-    assert.equal(await page.locator('#garden-disclosure').isVisible(), true);
-    await page.screenshot({ path: 'experiments/ui_visual/'+viewport.name+'-garden-default.png', fullPage: true });
-    await page.locator('#view3d').click();
-    assert.equal(await page.locator('.mission-bar').isVisible(), true);
-    assert.equal(await page.locator('#scene3d').isVisible(), true);
+    await page.waitForURL('**/robot-garden',{timeout:30000});
+    assert.equal(await page.locator('iframe').count(),0);
+    assert.equal(await page.locator('#viewer').count(),1);
+    assert.equal(await page.locator('#lab-options').isVisible(),false);
+    await page.screenshot({path:'experiments/ui_visual/'+viewport.name+'-robot-garden.png',fullPage:true});
+    await page.goto(base,{waitUntil:'domcontentloaded',timeout:30000});
+    await page.waitForURL('**/robot-garden',{timeout:30000});
+    assert.equal(await page.locator('iframe').count(),0);
+    await page.goto(base+'/?view=campus',{waitUntil:'domcontentloaded',timeout:30000});
+    assert.equal(await page.locator('#scene3d').isVisible(),true);
     assert.deepEqual(errors, [], 'Unexpected browser errors');
     console.log(JSON.stringify({ viewport: viewport.name, canvas: 'rendered', horizontalOverflow: false, gazeboOdomDistanceM: 4.399, gazebosSamples: 397, estop: 'PAUSED_SAFE', jsErrors: errors.length }));
     await page.close();

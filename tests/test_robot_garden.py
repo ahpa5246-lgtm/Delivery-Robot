@@ -26,7 +26,7 @@ class GardenRobotTests(unittest.TestCase):
         self.assertIn("import { createViewer }", s)
         self.assertIn("viewer.app", s)
         self.assertIn("app.root.addChild(base)", s)
-        self.assertIn("frame.setAttribute", (ROOT/"dashboard/garden-splat.js").read_text())
+        self.assertNotIn("frame.setAttribute", (ROOT/"dashboard/garden-splat.js").read_text())
         self.assertIn("SPATIAL REGISTRATION / GARDEN COLLISION NOT VERIFIED", s)
         self.assertIn("SCRIPTED PYTHON CAMPUS REPLAY (NOT GAZEBO)", s)
 
@@ -75,7 +75,7 @@ class GardenRobotTests(unittest.TestCase):
     def test_homepage_has_visible_lab_entry(self):
         data=response_for("/")[2].decode()
         self.assertIn('href="/robot-garden"', data)
-        self.assertIn("ROBOT INSIDE 3DGS", data)
+        self.assertIn("OPEN SHARED 3D SCENE", data)
         self.assertIn("not yet registered to this garden", data)
 
 

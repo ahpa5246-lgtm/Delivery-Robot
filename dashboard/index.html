@@ -44,7 +44,7 @@
       <section class="map-panel" id="mission-studio" aria-label="Campus mission replay">
         <div class="panel-top"><div><span class="panel-kicker">01 / IMMERSIVE MISSION STUDIO</span><h2>Campus mission simulation</h2></div><div class="legend"><span><i class="legend-path"></i> Route</span><span><i class="legend-robot"></i> CDR-01</span><span><i class="legend-zone"></i> Restricted</span></div></div>
         <div class="scene-toolbar" aria-label="Mission scene settings">
-          <div class="view-switch"><button id="view-garden" type="button" aria-pressed="false">REAL GARDEN · 3DGS</button><button id="view3d" type="button" aria-pressed="true">ROBOT SIMULATION</button><button id="view2d" type="button" aria-pressed="false">2D MAP</button></div><a href="/robot-garden" class="robot-lab-cta">ROBOT INSIDE 3DGS ↗</a>
+          <div class="view-switch"><button id="view-garden" type="button" aria-pressed="false">GARDEN + ROBOT · 3DGS</button><button id="view3d" type="button" aria-pressed="true">ROBOT SIMULATION</button><button id="view2d" type="button" aria-pressed="false">2D MAP</button></div><a href="/robot-garden" class="robot-lab-cta">OPEN SHARED 3D SCENE ↗</a>
           <div class="scene-options">
             <label for="robot-profile">Visual robot</label>
             <select id="robot-profile" aria-label="Visual robot design; does not change simulated kinematics">
@@ -64,11 +64,6 @@
         </div>
         <div class="map-wrap" id="stage-viewport">
           <div id="scene3d" role="img" aria-label="Interactive three dimensional university campus and robot"></div>
-          <div id="garden-splat" class="garden-splat" role="region" aria-label="Real Mip-NeRF 360 Garden Gaussian Splatting scene">
-            <div class="garden-scene-heading" aria-hidden="true"><span class="garden-overline">REAL-WORLD 3D CAPTURE</span><strong>GARDEN<span class="garden-accent">.</span></strong><span class="garden-scene-subtitle">Explore a real place reconstructed with 3.3 million Gaussian splats.</span></div>
-            <iframe id="garden-frame" title="Interactive Gaussian Splatting of the real Mip-NeRF 360 Garden" data-src="https://superspl.at/scene/bc0906cd?aa" loading="lazy" allow="fullscreen; xr-spatial-tracking" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
-            <div class="garden-credit"><span>Drag to explore · Scroll to zoom · Visual preview only</span><a href="https://superspl.at/scene/bc0906cd?aa" target="_blank" rel="noopener noreferrer">Original capture · transkatgirl · CC BY 4.0 ↗</a></div>
-          </div>
           <div class="world-inspector" aria-label="Visual environment status"><span class="world-eyebrow">CAMPUS DIGITAL MODEL</span><strong id="scene-detail-mode">Campus landscape</strong><span><b id="scene-detail-count">—</b> fixture details · registered collision proxies</span><span id="lighting-caption">Day — visualization</span></div>
 
           <canvas id="map" width="1152" height="720" role="img" aria-label="2D campus map with buildings, paths, robot, and delivery destination"></canvas>
