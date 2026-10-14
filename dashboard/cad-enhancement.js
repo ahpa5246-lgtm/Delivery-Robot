@@ -141,38 +141,46 @@
    g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.userData.sharedCad=true;}});
    return g;
  }
- const spots={
-  shelf:[[10,0,-16],[20,0,-16],[28,0,-17]],
-  cargo:[[5,0,-4],[21,0,-14],[28,0,-5]],
-  lamp:[[7.8,0,-7.9],[17,0,-14.5]],
-  roof:[[14,3.2,-10]],
-  table:[[23,0,-5],[26,0,-5],[27,0,-9]],
-  office:[[21.5,3.25,-10]]
- };
+ // CAD placement is never authored independently from the collision world.
+ // All furniture locations and their robot-safe proxy bounds come from /api/map.
  async function onWorld(e){
-   const token=++worldGeneration, {environment,theme}=e.detail;
-   const names=theme==='warehouse'?['shelf','cargo','lamp','roof']:['office','table','lamp'];
+   const token=++worldGeneration,{environment,theme,map}=e.detail;
+   const names=theme==='warehouse'?['shelf','cargo','roof']:['office','table'];
    const data=await Promise.allSettled(names.map(loadCad));
-   if(token!==worldGeneration || environment!==CAD.environment)return;
-   for(let i=0;i<names.length;i++){
-     if(data[i].status!=='fulfilled')continue;
-     const source=data[i].value;
-     if(source.type!=='dae')continue;
-     const name=names[i],scale={shelf:1.65,cargo:1.1,lamp:2.2,roof:3.0,table:1.35,office:2.9}[name];
-     const locs=spots[name]||[];
-     for(const [k,loc] of locs.entries()){
-       const obj=fitObject(source.scene,scale,loc,k*.72);
-       if(obj) {
-         obj.name='licensed-'+name;
-         environment.add(obj);
-         if(name==='office') {
-           // Detailed original architectural geometry sits ABOVE the East Wing's
-           // existing building shell. Its original rectangular obstacle stays
-           // intact; nothing here changes route planning or contact geometry.
-         }
-       }
+   if(token!==worldGeneration||environment!==CAD.environment)return;
+   const loadedAssets={};
+   for(let i=0;i<names.length;i++)if(data[i].status==='fulfilled'){
+     loadedAssets[names[i]]=data[i].value;
+     loaded.add(names[i]);
+   }
+   const east=map.buildings[2],eastCenter=[(east[0]+east[2])/2,3.25,-(east[1]+east[3])/2];
+   if(theme==='campus' && loadedAssets.office?.type==='dae'){
+     const office=fitObject(loadedAssets.office.scene,2.9,eastCenter);
+     if(office){office.name='licensed-office';environment.add(office);}
+   }
+   if(theme==='warehouse'&&loadedAssets.roof?.type==='dae'){
+     const roof=fitObject(loadedAssets.roof.scene,2.4,[10,3.35,-3.0]);
+     if(roof){roof.name='licensed-roof';environment.add(roof);}
+   }
+   for(const fixture of map.fixtures||[]){
+     const key=fixture.cad_asset;
+     const asset=loadedAssets[key];
+     if(!asset||asset.type!=='dae'||!['table','shelf','cargo'].includes(key))continue;
+     const [x0,y0,x1,y1]=fixture.footprint_m;
+     const center=[(x0+x1)/2,0,-(y0+y1)/2];
+     const obj=fitObject(asset.scene,Math.min(x1-x0,y1-y0)*.82,center);
+     if(!obj)continue;
+     // Keep the decorative mesh within the physical footprint that the planner
+     // inflates. Fail closed if a complex upstream file cannot be fitted.
+     const bb=new THREE.Box3().setFromObject(obj);
+     const tolerance=.055;
+     if(bb.min.x<x0-tolerance||bb.max.x>x1+tolerance||
+        bb.min.z< -y1-tolerance||bb.max.z> -y0+tolerance){
+       continue;
      }
-     loaded.add(name);
+     obj.name='licensed-'+key;
+     obj.userData.collisionFixtureId=fixture.id;
+     environment.add(obj);
    }
    showStatus();
  }
