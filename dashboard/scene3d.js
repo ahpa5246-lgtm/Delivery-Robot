@@ -207,9 +207,10 @@
     }
     Object.entries(data.stops).forEach(([name,p])=>addStop(name,p));
     status.textContent='INTERACTIVE 3D — KINEMATIC REPLAY / NOT GAZEBO';
+    window.dispatchEvent(new CustomEvent('cdr:environment',{detail:{environment,theme:worldSelect.value,map:data}}));
   }
   function makeRobot(profile){
-    if(robot){scene.remove(robot);robot.traverse(o=>{if(o.isMesh){o.geometry.dispose();}});}
+    if(robot){scene.remove(robot);robot.traverse(o=>{if(o.isMesh&&!o.userData.sharedCad){o.geometry.dispose();}});}
     const g=new T.Group(),compact=profile==='tb3'||profile==='tb4';
     const six=profile==='six',mec=profile==='mecanum',rover=profile==='clearpath',low=profile==='palash';
     const basecolor=mat(profile==='six'?0xefa85e:rover?0xcaae77:compact?0x2d697e:0x62c9bb,
@@ -263,6 +264,7 @@
     previewScene.add(previewRobot);
     const label=document.getElementById('inspector-model');
     if(label)label.textContent=(nav[profile]||nav.cdr)[0].replace(' concept','');
+    window.dispatchEvent(new CustomEvent('cdr:robot-model',{detail:{profile,robot:g,preview:previewRobot}}));
   }
   function trajectory(run,time){
     if(!run||!run.frames?.length)return null;
@@ -400,6 +402,7 @@
   window.addEventListener('cdr:replay',syncReplay);
   window.addEventListener('cdr:frame',syncReplay);
   window.addEventListener('resize',refreshSize);
+  window.CDR3D=Object.freeze({THREE:T,scene,environment,renderer,getRobot:()=>robot,getPreview:()=>previewRobot,getModel:()=>modelSelect.value,getWorld:()=>worldSelect.value});
   updateProfileLink();finish3d();requestAnimationFrame(render);
   show3d(true);
 })();
