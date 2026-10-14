@@ -5,6 +5,23 @@
 const $=id=>document.getElementById(id), T=window.THREE, api=window.CDR3D;
 if(!api||!T||!$('fleet-section'))return;
 let fleet=null,signature='',selected='R-01',time=0,sequence=0,models=[];
+let playing=true,lastWall=null;
+const routes=new T.Group();routes.name='FLEET_PLANNED_ROUTES';api.scene.add(routes);
+function drawRoutes(){
+  for(const o of [...routes.children]){routes.remove(o);o.geometry.dispose();o.material.dispose();}
+  if(!fleet)return;
+  const colors=[0xc9af81,0xb2c2bb,0xd0b89f,0xa5b7c7,0xb7b8a0];
+  fleet.robots.forEach((robot,i)=>{
+    const path=robot.planned_route_xy||[];
+    if(path.length<2)return;
+    const geometry=new T.BufferGeometry().setFromPoints(
+      path.map(p=>new T.Vector3(p[0],.15+i*.006,-p[1])));
+    const material=new T.LineDashedMaterial({
+      color:colors[i],dashSize:.42,gapSize:.23,transparent:true,opacity:.82});
+    const line=new T.Line(geometry,material);line.computeLineDistances();
+    line.userData.robotId=robot.id;routes.add(line);
+  });
+}
 const fmt=(v,n=1)=>Number.isFinite(v)?v.toFixed(n):'—';
 const mm=t=>String(Math.floor(t/60)).padStart(2,'0')+':'+String(Math.floor(t%60)).padStart(2,'0');
 const name=s=>String(s||'—').replaceAll('_',' ');
@@ -63,6 +80,10 @@ function rangeDraw(frame){
 function draw(){
   if(!fleet)return;
   $('fleet-clock').textContent='SIM + '+mm(time);
+  $('fleet-playhead').textContent=mm(time);
+  $('fleet-end').textContent=mm(fleet.duration_sim_s);
+  $('fleet-scrub').max=String(fleet.duration_sim_s);
+  $('fleet-scrub').value=String(Math.floor(time));
   $('fleet-integrity').textContent=fleet.separation_checked?'INTER-ROBOT CLEARANCE VERIFIED':'UNVERIFIED';
   const list=$('fleet-robot-list');list.replaceChildren();
   const active=[],states=[];
@@ -117,6 +138,10 @@ function draw(){
     ['NEAREST RAY',ranges.length?fmt(Math.min(...ranges),2)+' m':'—'],
     ['STATIC CLEARANCE',fmt(current.nearest_static_clearance_m,2)+' m'],
     ['POSE',fmt(current.x_m,1)+' / '+fmt(current.y_m,1)+' m'],
+    ['FRONT / REAR',fmt(scan.front_proximity_m,1)+' / '+fmt(scan.rear_proximity_m,1)+' m'],
+    ['YAW RATE MODEL',fmt(current.imu_yaw_rate_estimate_rad_s,2)+' rad/s'],
+    ['LONGITUDINAL ACCEL',fmt(current.acceleration_estimate_mps2,2)+' m/s²'],
+    ['WHEEL TURNS EST.',fmt(current.wheel_revolutions_estimated,1)],
     ['SENSOR SOURCE','GEOMETRY ONLY']]){
     const cell=document.createElement('div'),label=document.createElement('span');
     label.textContent=item[0];const value=document.createElement('strong');
@@ -147,25 +172,45 @@ async function load(force=false){
     if(!response.ok)throw Error(data.error||'fleet unavailable');
     if(data.robot_count!==5||!data.separation_checked||data.world!==map.world)
       throw Error('fleet safety proof or provenance mismatch');
-    fleet=data;makeModels();move(window.__cdrReplayState?.time||0);
+    fleet=data;time=0;playing=true;lastWall=null;
+    $('fleet-toggle').textContent='Ⅱ Pause fleet';
+    drawRoutes();makeModels();move(0);
   }catch(e){
     if(token!==sequence)return;
-    fleet=null;signature='';clear();
+    fleet=null;signature='';clear();drawRoutes();
     $('fleet-integrity').textContent='UNAVAILABLE · '+e.message;
   }
 }
 function onFrame(e){
   if(e.detail?.run)load();
-  if(fleet && Number.isFinite(e.detail?.time)){
-    const t=Math.floor(e.detail.time);
-    if(t!==Math.floor(time))move(t);
-  }
+}
+function fleetTick(timestamp){
+  requestAnimationFrame(fleetTick);
+  if(!fleet||!playing){lastWall=timestamp;return;}
+  if(lastWall===null){lastWall=timestamp;return;}
+  const dt=Math.min(.15,(timestamp-lastWall)/1000);
+  lastWall=timestamp;
+  const prev=Math.floor(time);
+  time=Math.min(fleet.duration_sim_s,time+dt*Number($('fleet-speed').value));
+  if(Math.floor(time)!==prev||time===fleet.duration_sim_s)move(time);
+  if(time>=fleet.duration_sim_s){playing=false;$('fleet-toggle').textContent='▶ Replay fleet';}
 }
 window.addEventListener('cdr:world-map',()=>{signature='';load(true);});
 window.addEventListener('cdr:replay',onFrame);
 window.addEventListener('cdr:frame',onFrame);
 window.addEventListener('cdr:robot-model',()=>{if(fleet)makeModels();});
 $('fleet-refresh').addEventListener('click',()=>load(true));
+$('fleet-toggle').addEventListener('click',()=>{
+  if(!fleet)return;
+  if(time>=fleet.duration_sim_s)move(0);
+  playing=!playing;lastWall=null;
+  $('fleet-toggle').textContent=playing?'Ⅱ Pause fleet':'▶ Resume fleet';
+});
+$('fleet-scrub').addEventListener('input',e=>{
+  if(!fleet)return;
+  playing=false;lastWall=null;move(Number(e.target.value));
+  $('fleet-toggle').textContent='▶ Resume fleet';
+});
 $('fleet-selected').addEventListener('change',e=>{selected=e.target.value;draw();});
 const source=$('mesh-provenance');
 if(source)new MutationObserver(()=>{
@@ -174,4 +219,5 @@ if(source)new MutationObserver(()=>{
 window.CDRFleet=Object.freeze({getRobots:()=>models,getData:()=>fleet,
   getSelectedRobot:()=>models[Math.max(0,fleet?.robots.findIndex(r=>r.id===selected)||0)]||null});
 if(window.__cdrReplayState?.map)load();
+requestAnimationFrame(fleetTick);
 })();
