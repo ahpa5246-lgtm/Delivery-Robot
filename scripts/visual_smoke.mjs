@@ -22,7 +22,7 @@ try {
     page.on('console', message => {
       if (message.type() === 'error') errors.push(message.text());
     });
-    const response = await page.goto(base, { waitUntil: 'networkidle' });
+    const response = await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 30000 });
     assert.equal(response.status(), 200);
     await page.waitForFunction(() => (
       document.querySelector('#gazebo-samples')?.textContent !== '—'
@@ -46,6 +46,19 @@ try {
     ), { timeout: 15000 });
     assert.equal(await page.locator('#view3d').getAttribute('aria-pressed'), 'true');
     assert.equal(await page.locator('#robot-profile option').count(), 9);
+    await page.waitForFunction(() => (
+      document.querySelector('#mesh-provenance')?.textContent.includes('ORIGINAL CAD')
+    ), { timeout: 30000 });
+    assert.ok((await page.locator('#mesh-provenance').innerText()).includes('CAD'));
+    assert.equal(await page.locator('#energy-chart').count(),1);
+    assert.equal(await page.locator('#course-chart').count(),1);
+    assert.equal(await page.locator('#current-speed').count(),1);
+    assert.equal(await page.locator('#export-csv').count(),1);
+    const referenceResponse=await page.request.get(base+'/assets/robot/rbot-wheel.stl');
+    assert.equal(referenceResponse.status(),200);
+    assert.ok((await referenceResponse.body()).length > 100000);
+    const maliciousPath=await page.request.get(base+'/assets/../../README.md');
+    assert.equal(maliciousPath.status(),404);
     assert.equal(await page.locator('#integration-list .ref-card').count(), 10);
     await page.locator('#robot-profile').selectOption('six');
     assert.ok((await page.locator('#profile-source').getAttribute('href')).includes('Delivery-Robot-ROS'));
