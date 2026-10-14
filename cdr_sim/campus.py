@@ -306,6 +306,7 @@ class ReplayOptions:
     drive_wh_per_m: float = 0.075
     reserve_soc: float = 0.20
     max_duration_s: float = 600.0
+    start_override: Point | None = None  # fleet-only staging pad, not a live robot pose
 
     def __post_init__(self):
         if self.scenario not in {"clear", "construction", "sensor_dropout", "estop"}:
@@ -322,6 +323,10 @@ class ReplayOptions:
             raise ValueError("invalid kinematics or battery")
         if self.base_power_w < 0 or self.drive_wh_per_m < 0 or self.seed < 0:
             raise ValueError("invalid energy or seed")
+        if self.start_override is not None and (
+                len(self.start_override) != 2 or
+                not all(isfinite(v) for v in self.start_override)):
+            raise ValueError("invalid fleet staging pose")
 
 
 def replay(options: ReplayOptions = ReplayOptions(), campus: Campus | None = None) -> dict:
@@ -333,7 +338,9 @@ def replay(options: ReplayOptions = ReplayOptions(), campus: Campus | None = Non
     world = campus or Campus()
     if options.destination not in world.stops or options.destination == "depot":
         raise ValueError("invalid delivery destination")
-    home, goal = world.stops["depot"], world.stops[options.destination]
+    home, goal = options.start_override or world.stops["depot"], world.stops[options.destination]
+    if not world.free(world.cell(home)) or world.clearance(home) < world.safety_margin:
+        raise ValueError("staging pose intersects known obstacle or safety margin")
     rng = random.Random(options.seed)
     position = home
     time_s = 0.0

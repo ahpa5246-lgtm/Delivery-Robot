@@ -49,6 +49,18 @@ try {
       && document.querySelector('#scene-status').textContent.includes('INTERACTIVE 3D')
     ), { timeout: 15000 });
     assert.equal(await page.locator('#view3d').getAttribute('aria-pressed'), 'true');
+    // Five actual independent agent streams, not five icons sharing one trajectory.
+    await page.waitForFunction(() => document.querySelector('#fleet-integrity')?.textContent.includes('VERIFIED')
+      && window.CDRFleet?.getRobots().length===5, {timeout:60000});
+    assert.equal(await page.locator('#fleet-robot-list .fleet-unit').count(),5);
+    const fleetData=await page.evaluate(()=>window.CDRFleet.getData());
+    assert.equal(fleetData.robot_count,5);
+    assert.equal(fleetData.separation_checked,true);
+    assert.equal(new Set(fleetData.robots.map(r=>r.pad.join(','))).size,5);
+    assert.ok(fleetData.robots.every(r=>r.frames.some(f=>f.range_scan_m.length===16)));
+    await page.locator('#fleet-selected').selectOption('R-03');
+    await page.waitForFunction(()=>document.querySelector('#fleet-robot-list .fleet-unit.selected')?.textContent.includes('R-03'));
+    await page.locator('#fleet-selected').selectOption('R-01');
     await page.screenshot({path:'experiments/ui_visual/'+viewport.name+'-initial.png',fullPage:true});
     console.log('VISUAL ENVIRONMENT STATUS',await page.locator('#scene-detail-count').innerText());
     await page.waitForFunction(() => Number(document.querySelector('#scene-detail-count')?.textContent.replaceAll(',', '')) > 100);
@@ -60,11 +72,15 @@ try {
     assert.equal(await page.locator('#lighting-caption').innerText(), 'Night — visualization');
     await page.locator('#lighting-preset').selectOption('day');
     await page.locator('#world-preset').selectOption('warehouse');
+    await page.waitForFunction(() => window.CDRFleet?.getData()?.world==='warehouse'
+      && window.CDRFleet?.getRobots()?.length===5,{timeout:60000});
     await page.waitForFunction(() => window.__cdrReplayState?.map?.world==='warehouse'
       && window.__cdrReplayState?.run?.world==='warehouse');
     assert.ok((await page.locator('#debug-world').innerText()).includes('Logistics'));
     await page.waitForFunction(() => document.querySelector('#scene-detail-mode').textContent === 'Logistics collisions');
     await page.locator('#world-preset').selectOption('campus');
+    await page.waitForFunction(() => window.CDRFleet?.getData()?.world==='campus'
+      && window.CDRFleet?.getRobots()?.length===5,{timeout:60000});
     await page.waitForFunction(() => window.__cdrReplayState?.map?.world==='campus'
       && window.__cdrReplayState?.run?.world==='campus');
     await page.waitForFunction(() => document.querySelector('#scene-detail-mode').textContent === 'Campus collision world');
@@ -117,6 +133,13 @@ try {
       page: document.documentElement.scrollWidth,
       body: document.body.scrollWidth,
     }));
+    if(size.page>size.screen+1) {
+      const offenders=await page.evaluate(()=>[...document.querySelectorAll('body *')]
+        .filter(el=>el.getBoundingClientRect().right>window.innerWidth+1)
+        .slice(0,16).map(el=>({tag:el.tagName,id:el.id,cls:typeof el.className==='string'?el.className.slice(0,60):'',
+          right:Math.round(el.getBoundingClientRect().right),scroll:el.scrollWidth})));
+      console.error('OVERFLOW ELEMENTS',JSON.stringify(offenders));
+    }
     assert.ok(size.page <= size.screen + 1, 'Unexpected horizontal overflow: ' + JSON.stringify(size));
     assert.ok(size.body <= size.screen + 1, 'Body exceeds viewport: ' + JSON.stringify(size));
     await page.locator('#timeline').evaluate(input => {

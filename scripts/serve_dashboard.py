@@ -10,6 +10,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from cdr_sim.campus import Campus, ReplayOptions, replay
+from cdr_sim.fleet import fleet_replay
 
 ROOT = Path(__file__).resolve().parents[1] / "dashboard"
 STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
@@ -26,7 +27,9 @@ STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
           "/engineering-audit.js": ("engineering-audit.js", "text/javascript; charset=utf-8"),
           "/v3.css": ("v3.css", "text/css; charset=utf-8"),
           "/v4.css": ("v4.css", "text/css; charset=utf-8"),
-          "/collision-debug.js": ("collision-debug.js", "text/javascript; charset=utf-8")}
+          "/collision-debug.js": ("collision-debug.js", "text/javascript; charset=utf-8"),
+          "/fleet-ui.js": ("fleet-ui.js", "text/javascript; charset=utf-8"),
+          "/v5.css": ("v5.css", "text/css; charset=utf-8")}
 # Asset paths are fixed and reviewed. Never allow arbitrary file system traversal.
 for _name in (
     "robot/rbot-wheel.stl", "robot/rbot-camera.stl", "robot/delivery-cad-part.stl",
@@ -61,6 +64,16 @@ def response_for(path: str) -> tuple[int, str, bytes]:
         # Never label these values as current, live or hardware measurements.
         evidence = Path(__file__).resolve().parents[1] / "experiments/gazebo_smoke/motion_summary.json"
         return 200, "application/json", evidence.read_bytes()
+    if parsed.path == "/api/fleet":
+        try:
+            query=parse_qs(parsed.query,strict_parsing=True)
+            if set(query)-{"world","seed"} or any(len(v)!=1 for v in query.values()):
+                raise ValueError("unknown or duplicate fleet option")
+            seed=int(query.get("seed",["7"])[0])
+            world=Campus(theme=query.get("world",["campus"])[0])
+            return 200,"application/json",json.dumps(fleet_replay(world,seed)).encode()
+        except (ValueError,TypeError,RuntimeError) as exc:
+            return 400,"application/json",json.dumps({"error":str(exc)}).encode()
     if parsed.path in ("/api/map", "/api/occupancy"):
         try:
             query = parse_qs(parsed.query, strict_parsing=True)

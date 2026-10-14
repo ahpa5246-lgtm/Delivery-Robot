@@ -51,12 +51,12 @@
   renderer.shadowMap.type = T.PCFSoftShadowMap;
   renderer.outputEncoding = T.sRGBEncoding;
   renderer.toneMapping = T.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.70;
+  renderer.toneMappingExposure = 0.82;
   root.appendChild(renderer.domElement);
   renderer.domElement.setAttribute('aria-label', 'Interactive three-dimensional campus and robot replay');
   const scene = new T.Scene();
   const previewScene = new T.Scene();
-  previewScene.background = new T.Color(0x17323b);
+  previewScene.background = new T.Color(0x1e2d36);
   previewScene.add(new T.HemisphereLight(0xd9f4ff,0x28404b,1.7));
   const previewLight = new T.DirectionalLight(0xffe5bf,2.2);
   previewLight.position.set(3,6,4);previewScene.add(previewLight);
@@ -64,8 +64,8 @@
   previewCamera.position.set(1.95,1.85,2.4);
   previewCamera.lookAt(0,.45,0);
   let previewRobot=null;
-  scene.background = new T.Color(0x142b3b);
-  scene.fog = new T.Fog(0x142b3b, 26, 85);
+  scene.background = new T.Color(0x405765);
+  scene.fog = new T.Fog(0x405765, 38, 110);
   const camera = new T.PerspectiveCamera(48, 1, 0.1, 170);
   const target = new T.Vector3(16,0,-10);
   let orbitAz = Math.PI*0.28, orbitElevation=0.69, orbitRadius=root.clientWidth<650?40:29;
@@ -78,18 +78,54 @@
     camera.lookAt(target);
   }
   camera.position.set(39,30,19);setPose();
-  const hemi = new T.HemisphereLight(0xcdeafa,0x243b45,0.90);scene.add(hemi);
-  const sun = new T.DirectionalLight(0xffe6bb,1.55);
+  const hemi = new T.HemisphereLight(0xfff2dd,0x35443f,1.04);scene.add(hemi);
+  const sun = new T.DirectionalLight(0xfff5df,1.65);
   sun.position.set(12,33,8);sun.castShadow=true;
-  sun.shadow.mapSize.set(1024,1024);
+  sun.shadow.mapSize.set(2048,2048);
   sun.shadow.camera.left=-30;sun.shadow.camera.right=30;
   sun.shadow.camera.top=30;sun.shadow.camera.bottom=-30;
-  sun.shadow.bias=-0.0007;scene.add(sun);
+  sun.shadow.bias=-0.00045;sun.shadow.normalBias=.025;sun.shadow.radius=2.4;scene.add(sun);
   const mat = (c, extra={})=>new T.MeshStandardMaterial({color:c, roughness:0.78, metalness:0.08, ...extra});
-  const grass=mat(0x315646), road=mat(0x3e515b), pavers=mat(0x7c8981),
-        pavement=mat(0x828c90), dark=mat(0x27323e), rubber=mat(0x141c23),
-        cyan=mat(0x68f0c7,{emissive:0x0b5b4a,emissiveIntensity:0.5}),
-        amber=mat(0xfacb83,{emissive:0x775621,emissiveIntensity:0.2}),
+  // Seeded fine-grain masonry, not a flattened gray billboard. This uses real
+  // texture variation and incident light; it creates no phantom collisions.
+  function grain(base,seed,strokes=1600){
+    const c=document.createElement('canvas');c.width=c.height=256;
+    const g=c.getContext('2d');g.fillStyle=base;g.fillRect(0,0,256,256);
+    let n=seed>>>0;
+    const rnd=()=>{n=(1664525*n+1013904223)>>>0;return n/4294967296;};
+    for(let i=0;i<strokes;i++){
+      const k=Math.floor(rnd()*37),light=rnd()>.5;
+      g.fillStyle='rgba('+(light?'244,231,214':'38,44,45')+','+
+        (k/1000+.008).toFixed(3)+')';
+      g.fillRect(rnd()*256,rnd()*256,1+rnd()*2,1+rnd()*2);
+    }
+    for(let y=0;y<256;y+=64){
+      g.fillStyle='rgba(44,48,49,.055)';g.fillRect(0,y,256,1);
+      for(let x=(y/64%2?32:0);x<256;x+=64)g.fillRect(x,y,1,64);
+    }
+    const tex=new T.CanvasTexture(c);tex.wrapS=tex.wrapT=T.RepeatWrapping;
+    tex.repeat.set(2,2);tex.anisotropy=2;tex.encoding=T.sRGBEncoding;
+    return tex;
+  }
+  const masonry=[grain('#b8b6a9',31),grain('#bdb3a0',77),
+    grain('#9db0b0',103),grain('#aab7a6',181)];
+  function chamferedRoof(parent,w,d,x,y,z,material){
+    const r=.12,shape=new T.Shape();
+    shape.moveTo(r,0);shape.lineTo(w-r,0);shape.quadraticCurveTo(w,0,w,r);
+    shape.lineTo(w,d-r);shape.quadraticCurveTo(w,d,w-r,d);
+    shape.lineTo(r,d);shape.quadraticCurveTo(0,d,0,d-r);
+    shape.lineTo(0,r);shape.quadraticCurveTo(0,0,r,0);
+    const geo=new T.ExtrudeGeometry(shape,{depth:.17,steps:1,
+      bevelEnabled:true,bevelThickness:.06,bevelSize:.055,bevelSegments:2});
+    geo.translate(-w/2,-d/2,0);
+    const roof=new T.Mesh(geo,material);roof.rotation.x=-Math.PI/2;
+    roof.position.set(x,y,z);roof.castShadow=true;roof.receiveShadow=true;
+    parent.add(roof);
+  }
+  const grass=mat(0x52684c), road=mat(0x5d6668), pavers=mat(0x97948a),
+        pavement=mat(0x9f9a8e), dark=mat(0x2c3740), rubber=mat(0x1a2228),
+        cyan=mat(0xa8bcac,{emissive:0x1f4a39,emissiveIntensity:0.13}),
+        amber=mat(0xc4a074,{emissive:0x4d3320,emissiveIntensity:0.15}),
         glass=mat(0x87c0ce,{roughness:0.2,metalness:0.22,transparent:true,opacity:0.72});
   const environment = new T.Group();scene.add(environment);
   const pathGroup=new T.Group();scene.add(pathGroup);
@@ -150,7 +186,8 @@
     // readable scale instead of a flat schematic cuboid.
     const w=x1-x0,d=y1-y0,cx=(x0+x1)/2,cz=-(y0+y1)/2;
     const height=(i===3?1.6:3.0+i*.4);
-    const stone=mat([0xc5d0c7,0xd9c6a7,0xa9bfc7,0xafc5a9][i]);
+    const stone=mat([0xb9bcb0,0xc7bba9,0xa4b5b4,0xb7c3af][i],
+      {map:masonry[i],roughness:.94,metalness:0});
     const structural=mat(0x6f8890,{roughness:.76});
     const trim=mat(0x304f62,{metalness:.40,roughness:.48});
     const glazing=mat(0x548d9b,{roughness:.16,metalness:.22,transparent:true,opacity:.83});
@@ -158,7 +195,7 @@
     const roof=mat(0x455c64);
     const front=-y0,back=-y1;
     cube(environment,w,height,d,stone,cx,height/2,cz);
-    cube(environment,w+.40,.21,d+.40,roof,cx,height+.09,cz);
+    chamferedRoof(environment,w+.38,d+.38,cx,height,cz,roof);
     // Brick plinth, projecting corners and restrained horizontal façade bands.
     for(const z of [front,back]){
       cube(environment,w+.16,.18,.12,structural,cx,.17,z);
@@ -170,6 +207,14 @@
     for(const x of [x0,x1]){
       cube(environment,.12,.20,d+.12,structural,x,.15,cz);
       cube(environment,.13,.13,d+.17,trim,x,height-.15,cz);
+    }
+    // Window lintels, cornices and recessed shadow channels create scale cues.
+    // Contact-depth lines are explicitly visual; planner building rectangles stay.
+    for(const z of [front-.10,back+.10]){
+      for(let level=0;level<(i===3?1:2);level++){
+        const yy=height*(.29+level*.34);
+        cube(environment,w-.23,.035,.065,trim,cx,yy-.48,z,false);
+      }
     }
     // Deep windows, actual frames, sills and mullions on both long elevations.
     const floorCount=i===3?1:2;
@@ -323,6 +368,8 @@
       }
     });
     pathGroup.clear();
+    if(window.CDRFleet?.getData()){pathGroup.visible=false;return;}
+    pathGroup.visible=true;
     if(!lastRun)return;
     for(let i=0;i<lastRun.routes.length;i++){
       const r=lastRun.routes[i];
@@ -344,7 +391,7 @@
     if(event?.detail?.run)lastRun=event.detail.run;
     if(event?.detail?.time!==undefined)playbackTime=event.detail.time;
     const o=trajectory(lastRun,playbackTime);
-    if(o&&robot){
+    if(o&&robot&&!window.CDRFleet?.getData()){
       const x=o.p.x_m,z=-o.p.y_m;let dx=x-lastX,dy=o.p.y_m-lastY;
       if(Math.hypot(dx,dy)>.006)robot.rotation.y=Math.atan2(dy,dx);
       robot.position.set(x,0,z);
@@ -378,10 +425,11 @@
     if(timestamp-lastGpuFrame<32)return;
     lastGpuFrame=timestamp;
     refreshSize();
-    if(cameraMode==='follow'&&robot){
+    if(cameraMode==='follow'&&(window.CDRFleet?.getSelectedRobot()||robot)){
       // Keep the camera almost vertically above the robot. Buildings must not
       // hide the tracked vehicle during a handover or final approach.
-      const focus=new T.Vector3(robot.position.x,.34,robot.position.z);
+      const followed=window.CDRFleet?.getSelectedRobot()||robot;
+      const focus=new T.Vector3(followed.position.x,.34,followed.position.z);
       target.lerp(focus,.19);
       camera.position.lerp(new T.Vector3(target.x+1.45,target.y+7.8,target.z+1.60),.20);
       camera.lookAt(target);

@@ -10,10 +10,10 @@
   const world=API.environment, scene=API.scene;
   const mat=(color,props={})=>new T.MeshStandardMaterial({color,roughness:.83,metalness:.07,...props});
   const materials={
-    wood:mat(0x98765b), metal:mat(0x586e78,{metalness:.38}),
-    foliage:mat(0x4c8e6e),leaf:mat(0x71ad7e),
+    wood:mat(0x8f7558), metal:mat(0x637378,{metalness:.32}),
+    foliage:mat(0x607b56),leaf:mat(0x84956d),
     roof:mat(0x9aabb0),glass:mat(0x89c0ce,{metalness:.25,roughness:.27}),
-    ochre:mat(0xc2a079),ground:mat(0x8e9990),
+    ochre:mat(0xbb9470),ground:mat(0x9c9585),
     detail:mat(0x3d5d63), glow:mat(0xe6f8c1,{emissive:0x3a7971,emissiveIntensity:.35})
   };
   const shared={
@@ -101,7 +101,7 @@
     // Pedestrian markings and terrain are visually flat and don't create an
     // upright collision obstacle; registered obstacles above remain authoritative.
     const backdrop=new T.Mesh(new T.PlaneGeometry(180,180),
-      new T.MeshBasicMaterial({color:theme==='warehouse'?0x20313a:0x203f3c,fog:true}));
+      new T.MeshBasicMaterial({color:theme==='warehouse'?0x36444a:0x4a6251,fog:true}));
     backdrop.rotation.x=-Math.PI/2;backdrop.position.set(16,-.374,-10);
     backdrop.receiveShadow=true;backdrop.userData.visualOnly=true;root.add(backdrop);
     const panel=document.getElementById('scene-detail-count');
@@ -112,9 +112,9 @@
   }
   function setLighting(value){
     const presets={
-      day:{sky:0x142b3b,hemisphere:1.0,sun:1.5,pos:[12,33,8]},
-      golden:{sky:0x443c43,hemisphere:.65,sun:2.15,pos:[-17,12,-7]},
-      night:{sky:0x0b1526,hemisphere:.34,sun:.38,pos:[-9,14,-14]}
+      day:{sky:0x405765,hemisphere:1.04,sun:1.65,pos:[12,33,8]},
+      golden:{sky:0x6f5d53,hemisphere:.85,sun:1.85,pos:[-17,12,-7]},
+      night:{sky:0x1c2733,hemisphere:.42,sun:.55,pos:[-9,14,-14]}
     };
     const v=presets[value]||presets.day;
     scene.background.setHex(v.sky);if(scene.fog)scene.fog.color.setHex(v.sky);

@@ -74,6 +74,26 @@ Run `python3 scripts/serve_dashboard.py` and open http://127.0.0.1:8765. See **[
 
 **Do not confuse the 3D replay with Nav2 or real-time Gazebo physics.** Motion, energy, SOC, and heading still derive from the deterministic Python mission simulator; historical Gazebo odometry is a separate measured experiment.
 
+## V5 — five-robot fleet, modeled sensing and physical material direction
+
+The browser now includes a separately timed **five-agent geometric fleet simulation**.
+Five independently planned missions use distinct collision-certified starting
+pads and an explicit inter-robot swept-disc collision guard. The renderer
+displays **five CAD-based robot instances**, five actual A* paths, and an
+operator-selectable per-agent range-scan and telemetry panel. Scrub the fleet
+timeline, pause, or run at 1× / 2× / 4×.
+
+Sensor readings are **mathematical simulations only**: ideal 16-ray planar
+LiDAR-like ranges, directional proximity, estimated wheel revolutions, and
+finite-difference acceleration and heading rates. Camera/GPS/physical IMU
+inputs are **not connected**. The model is not live ROS/Gazebo fleet autonomy.
+The interface uses restrained industrial slate and warm-neutral materials
+instead of fluorescent UI effects, while the 3D scene now has masonry
+microtexture, beveled roof contours, neutral sunlight and refined shadows.
+
+For implementation, assumptions, safety scope and remaining work, see
+[the V5 engineering and rendering notes](docs/V5_FLEET_AND_RENDERING.md).
+
 ## V4 — shared collision world and verified route geometry
 
 The university campus and logistics scene now use the same
