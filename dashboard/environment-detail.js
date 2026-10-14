@@ -57,6 +57,14 @@
     visualRoot=new T.Group();visualRoot.name='VISUAL_ONLY_CAMPUS_DETAILS';
     world.add(visualRoot);decorCount=0;lastMode=theme;
     const warehouse=theme==='warehouse';
+    // Extend the visible terrain beyond the 32x20 m survey tile. This
+    // removes the floating-board silhouette but remains purely decorative.
+    const outside=new T.Mesh(new T.PlaneGeometry(240,240),
+      mat(warehouse?0x3a4951:0x345447,{roughness:.98}));
+    outside.rotation.x=-Math.PI/2;
+    outside.position.set(16,-.374,-10);
+    outside.receiveShadow=true;outside.userData.visualOnly=true;
+    visualRoot.add(outside);
     const paths=[],curbs=[],crosswalk=[],guides=[],planter=[],bushes=[],bush2=[],
       trees=[],crowns=[],crowns2=[],fenceposts=[],rails=[],benches=[],seats=[],
       lights=[],signs=[],solar=[],bikes=[],shelves=[],boxes=[],stripes=[];
