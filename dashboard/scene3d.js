@@ -490,7 +490,7 @@
   window.addEventListener('cdr:replay',syncReplay);
   window.addEventListener('cdr:frame',syncReplay);
   window.addEventListener('resize',refreshSize);
-  window.CDR3D=Object.freeze({THREE:T,scene,environment,renderer,getRobot:()=>robot,getPreview:()=>previewRobot,getModel:()=>modelSelect.value,getWorld:()=>worldSelect.value});
+  window.CDR3D=Object.freeze({THREE:T,scene,environment,renderer,getRobot:()=>robot,getPreview:()=>previewRobot,getCamera:()=>camera,getModel:()=>modelSelect.value,getWorld:()=>worldSelect.value});
   updateProfileLink();finish3d();requestAnimationFrame(render);
   show3d(true);
 })();
