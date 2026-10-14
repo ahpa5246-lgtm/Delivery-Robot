@@ -10,6 +10,8 @@ try{
  assert.equal(await page.locator('#splat-file').count(),1);
  await page.waitForFunction(() => document.querySelector('#status')?.textContent?.includes('UPLOAD ORIGINAL 3DGS ZIP TO CODESPACES'));
  assert.ok((await page.locator('#provenance').innerText()).includes('NO GARDEN MODEL LOADED'));
+ await page.locator('#panel-toggle').click();
+ assert.equal(await page.locator('#lab-options').isVisible(),true);
  const source='https://developer.playcanvas.com/assets/toy-cat.sog';
  await page.locator('#splat-url').fill(source);
  await page.locator('#load-url').click();
@@ -22,7 +24,6 @@ try{
  }
  assert.equal(await page.locator('#lab-options').isVisible(),false);
  assert.equal(await page.locator('#viewer-quick-controls').isVisible(),true);
- await page.locator('#panel-toggle').click();
  assert.equal(await page.locator('#robot-controls').isVisible(),true);
  assert.ok((await page.locator('#provenance').innerText()).includes('GARDEN COLLISION NOT VERIFIED'));
  assert.ok(await page.locator('#viewer canvas').count()>0);
