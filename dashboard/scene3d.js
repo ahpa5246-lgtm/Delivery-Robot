@@ -51,12 +51,12 @@
   renderer.shadowMap.type = T.PCFSoftShadowMap;
   renderer.outputEncoding = T.sRGBEncoding;
   renderer.toneMapping = T.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.70;
+  renderer.toneMappingExposure = 0.92;
   root.appendChild(renderer.domElement);
   renderer.domElement.setAttribute('aria-label', 'Interactive three-dimensional campus and robot replay');
   const scene = new T.Scene();
   const previewScene = new T.Scene();
-  previewScene.background = new T.Color(0x17323b);
+  previewScene.background = new T.Color(0x1e2d36);
   previewScene.add(new T.HemisphereLight(0xd9f4ff,0x28404b,1.7));
   const previewLight = new T.DirectionalLight(0xffe5bf,2.2);
   previewLight.position.set(3,6,4);previewScene.add(previewLight);
@@ -64,8 +64,8 @@
   previewCamera.position.set(1.95,1.85,2.4);
   previewCamera.lookAt(0,.45,0);
   let previewRobot=null;
-  scene.background = new T.Color(0x142b3b);
-  scene.fog = new T.Fog(0x142b3b, 26, 85);
+  scene.background = new T.Color(0x405765);
+  scene.fog = new T.Fog(0x405765, 38, 110);
   const camera = new T.PerspectiveCamera(48, 1, 0.1, 170);
   const target = new T.Vector3(16,0,-10);
   let orbitAz = Math.PI*0.28, orbitElevation=0.69, orbitRadius=root.clientWidth<650?40:29;
@@ -78,18 +78,18 @@
     camera.lookAt(target);
   }
   camera.position.set(39,30,19);setPose();
-  const hemi = new T.HemisphereLight(0xcdeafa,0x243b45,0.90);scene.add(hemi);
-  const sun = new T.DirectionalLight(0xffe6bb,1.55);
+  const hemi = new T.HemisphereLight(0xfff2dd,0x35443f,1.23);scene.add(hemi);
+  const sun = new T.DirectionalLight(0xfff5df,2.15);
   sun.position.set(12,33,8);sun.castShadow=true;
-  sun.shadow.mapSize.set(1024,1024);
+  sun.shadow.mapSize.set(2048,2048);
   sun.shadow.camera.left=-30;sun.shadow.camera.right=30;
   sun.shadow.camera.top=30;sun.shadow.camera.bottom=-30;
-  sun.shadow.bias=-0.0007;scene.add(sun);
+  sun.shadow.bias=-0.00045;sun.shadow.normalBias=.025;sun.shadow.radius=2.4;scene.add(sun);
   const mat = (c, extra={})=>new T.MeshStandardMaterial({color:c, roughness:0.78, metalness:0.08, ...extra});
-  const grass=mat(0x315646), road=mat(0x3e515b), pavers=mat(0x7c8981),
-        pavement=mat(0x828c90), dark=mat(0x27323e), rubber=mat(0x141c23),
-        cyan=mat(0x68f0c7,{emissive:0x0b5b4a,emissiveIntensity:0.5}),
-        amber=mat(0xfacb83,{emissive:0x775621,emissiveIntensity:0.2}),
+  const grass=mat(0x52684c), road=mat(0x5d6668), pavers=mat(0x97948a),
+        pavement=mat(0x9f9a8e), dark=mat(0x2c3740), rubber=mat(0x1a2228),
+        cyan=mat(0xa8bcac,{emissive:0x1f4a39,emissiveIntensity:0.13}),
+        amber=mat(0xc4a074,{emissive:0x4d3320,emissiveIntensity:0.15}),
         glass=mat(0x87c0ce,{roughness:0.2,metalness:0.22,transparent:true,opacity:0.72});
   const environment = new T.Group();scene.add(environment);
   const pathGroup=new T.Group();scene.add(pathGroup);
@@ -381,7 +381,8 @@
     if(cameraMode==='follow'&&robot){
       // Keep the camera almost vertically above the robot. Buildings must not
       // hide the tracked vehicle during a handover or final approach.
-      const focus=new T.Vector3(robot.position.x,.34,robot.position.z);
+      const followed=window.CDRFleet?.getSelectedRobot()||robot;
+      const focus=new T.Vector3(followed.position.x,.34,followed.position.z);
       target.lerp(focus,.19);
       camera.position.lerp(new T.Vector3(target.x+1.45,target.y+7.8,target.z+1.60),.20);
       camera.lookAt(target);
