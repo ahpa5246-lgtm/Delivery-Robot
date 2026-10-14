@@ -11,15 +11,24 @@
 <script type="module" src="/robot-garden.js"></script>
 </head>
 <body>
-<header><a href="/">← Mission studio</a><span class="eyebrow">CDR-01 / DIGITAL TWIN LAB</span><a href="https://superspl.at/scene/bc0906cd" target="_blank" rel="noopener">Garden source ↗</a></header>
+<header><a href="/?view=campus">← Campus robotics simulator</a><span class="eyebrow">CDR-01 / DIGITAL TWIN LAB</span><a href="https://superspl.at/scene/bc0906cd" target="_blank" rel="noopener">Garden source ↗</a></header>
 <main>
-<div class="heading"><div><span class="eyebrow">ONE 3D ENGINE · REAL ROBOT MESH</span><h1>Robot inside a captured world<span class="accent">.</span></h1><p>Gaussian splats and a controllable robot are rendered in the same PlayCanvas scene.</p></div><strong class="state" id="status">WAITING FOR SPLAT FILE</strong></div>
+<div class="heading"><div><span class="eyebrow">ONE 3D ENGINE · REAL ROBOT MESH</span><h1>Robot inside the real Garden<span class="accent">.</span></h1><p>Gaussian splats and a controllable robot are rendered in the same PlayCanvas scene.</p></div><strong class="state" id="status">WAITING FOR SPLAT FILE</strong></div>
 <section class="workspace">
 <div class="viewer-col">
  <div id="viewer" aria-label="Unified interactive Gaussian Splatting and robot scene"><div class="empty"><strong>Real Garden and delivery robot</strong><p>Upload the original multi-file LOD ZIP to <code>assets/gaussian-garden.zip</code> in Codespaces, then refresh. The actual Garden splats and the robot will load into one scene.</p><a target="_blank" rel="noopener" href="https://superspl.at/scene/bc0906cd">Sign in to SuperSplat and download Garden ↗</a></div></div>
+ <div class="viewer-quick-controls" id="viewer-quick-controls" aria-label="Robot manual drive controls" hidden>
+  <span>CDR-01 · MANUAL PREVIEW</span>
+  <button id="quick-forward" type="button" aria-label="Move robot forward">↑</button>
+  <button id="quick-left" type="button" aria-label="Turn robot left">↶</button>
+  <button id="quick-right" type="button" aria-label="Turn robot right">↷</button>
+  <button id="quick-back" type="button" aria-label="Move robot backward">↓</button>
+  <button id="quick-focus" type="button">Show robot</button>
+  <button id="panel-toggle" type="button" aria-controls="lab-options" aria-expanded="false">Settings</button>
+ </div>
  <div id="provenance">NO GARDEN MODEL LOADED · NO GARDEN PHYSICS VALIDATION</div>
 </div>
-<aside>
+<aside id="lab-options" hidden>
  <section><span class="eyebrow">01 / LOAD REAL SCENE</span><h2>Garden Gaussian capture</h2>
    <p><strong>Already have the original 113 MB Garden LOD ZIP?</strong> Upload it using Codespaces Explorer to <code>assets/gaussian-garden.zip</code> and refresh this page. The server streams the original <code>lod-meta.json</code> and WebP tiles out of the ZIP; no extraction or second, larger file is required just to render the Garden.</p>
    <p>The following picker is only for other single-file .sog/.ply/.spz scenes:</p>
@@ -33,6 +42,7 @@
    <div class="fields"><label>X <input id="origin-x" type="number" step="0.1" value="0"></label><label>Y (floor) <input id="origin-y" type="number" step="0.1" value="0"></label><label>Z <input id="origin-z" type="number" step="0.1" value="0"></label><label>Scale <input id="robot-scale" type="number" min="0.01" max="5" step="0.05" value="1"></label><label>Yaw ° <input id="robot-yaw" type="number" step="5" value="0"></label></div>
    <p class="warning">UNREGISTERED: no surveyed garden landmarks or validated collision mesh. Coordinates cannot yet be used as real-world ground truth.</p>
    <button id="place" type="button">Place robot at these coordinates</button>
+   <button id="place-camera" type="button">Show robot in camera view (visual preview)</button>
    <div class="drive"><button id="drive-forward">↑ Forward</button><button id="drive-left">← Left</button><button id="drive-right">Right →</button><button id="drive-back">↓ Backward</button></div>
  </section>
  <section id="playback-controls" hidden><span class="eyebrow">03 / SOURCE-LABELED REPLAY</span><h2>Robot motion data</h2>

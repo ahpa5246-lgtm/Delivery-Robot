@@ -15,6 +15,8 @@ class GardenRobotTests(unittest.TestCase):
         self.assertIn('id="viewer"', s)
         self.assertIn('id="splat-file"', s)
         self.assertIn('id="odom-file"', s)
+        self.assertIn('id="quick-focus"', s)
+        self.assertIn('id="lab-options" hidden', s)
         self.assertIn("same PlayCanvas scene", s)
         self.assertNotIn("<iframe", s)
 
@@ -25,6 +27,8 @@ class GardenRobotTests(unittest.TestCase):
         s = data.decode()
         self.assertIn("import { createViewer }", s)
         self.assertIn("viewer.app", s)
+        self.assertIn("ui:false", s)
+        self.assertIn("placeNearView()", s)
         self.assertIn("app.root.addChild(base)", s)
         self.assertNotIn("frame.setAttribute", (ROOT/"dashboard/garden-splat.js").read_text())
         self.assertIn("SPATIAL REGISTRATION / GARDEN COLLISION NOT VERIFIED", s)

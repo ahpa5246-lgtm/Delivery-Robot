@@ -26,3 +26,30 @@ small{display:block;color:#8ba8b4;line-height:1.5;font-size:10px;margin-top:12px
 [hidden]{display:none!important}footer{font-size:11px;color:#809da8;margin-top:22px}
 @media(max-width:980px){.workspace{grid-template-columns:1fr}.heading{flex-wrap:wrap}#viewer{height:65vh;min-height:450px}}
 @media(max-width:490px){header{flex-wrap:wrap}#viewer{height:55vh;min-height:350px}}
+
+/* Own-scene presentation, no external SuperSplat website/sidebar.
+   Small, first-party robot controls float over the visible garden scene. */
+.workspace {grid-template-columns:minmax(0,1fr)}
+.workspace:has(#lab-options:not([hidden])) {grid-template-columns:minmax(0,1fr) minmax(280px,340px)}
+.viewer-col {position:relative;min-width:0}
+#viewer {height:min(79vh,930px);min-height:520px}
+.viewer-quick-controls{
+ position:absolute;z-index:30;bottom:58px;left:50%;transform:translateX(-50%);
+ width:min(94%,740px);display:flex;flex-wrap:wrap;justify-content:center;align-items:center;
+ gap:7px;padding:10px;border-radius:13px;border:1px solid #679d90;
+ background:#051519ea;color:#e0f3ea;box-shadow:0 15px 45px #0009;
+ backdrop-filter:blur(12px)
+}
+.viewer-quick-controls span{font-size:10px;font-weight:750;letter-spacing:.045em;margin-right:4px}
+.viewer-quick-controls button{margin:0;padding:8px 12px;min-height:38px;font-size:12px}
+#place-camera{margin-top:8px}
+@media(max-width:990px) {
+ .workspace:has(#lab-options:not([hidden])) {grid-template-columns:1fr}
+ #viewer {height:70vh;min-height:470px}
+}
+@media(max-width:530px) {
+ #viewer {height:65vh;min-height:440px}
+ .viewer-quick-controls{width:96%;padding:7px;bottom:51px;gap:5px}
+ .viewer-quick-controls span{flex:1 1 100%;text-align:center}
+ .viewer-quick-controls button{flex:1 1 auto;padding:7px}
+}

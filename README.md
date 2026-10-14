@@ -156,3 +156,5 @@ The captured garden is a real-world photographic scene rendered in the browser,
 but is a **visual preview only**: robot trajectories and Gazebo physics remain
 in independent synthetic environments. Use `/?view=campus` to start in the
 original engineering simulator or `/?view=map` to start in the 2D map.
+
+The Garden mode now opens the *robot-inside-Garden* engine at `/robot-garden` directly, rather than embedding the public SuperSplat site and its sidebar. Use Show robot in the manual controls if you move the camera. It places the robot inside the camera view only; terrain contact and Gazebo collision physics are not validated.

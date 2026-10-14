@@ -2,11 +2,38 @@
    All pose playback is explicitly labeled and unregistered until surveyed. */
 import { createViewer } from '@playcanvas/supersplat-viewer/viewer';
 import { defaultSettings } from '@playcanvas/supersplat-viewer/settings';
-import { Entity, Color, StandardMaterial, Vec3 } from 'playcanvas';
+import { Entity, Color, StandardMaterial } from 'playcanvas';
 
 const $=id=>document.getElementById(id);
 let viewer=null,robot=null,sourceUrl=null,trajectory=null,timer=0,playing=false,startAt=0;
 let manualPose={x:0,z:0,yaw:0};
+const quickIds=['quick-forward','quick-left','quick-right','quick-back'];
+const baseIds=['drive-forward','drive-left','drive-right','drive-back'];
+quickIds.forEach((id,i)=>$(id)?.addEventListener('click',()=>$(baseIds[i])?.click()));
+const panelToggle=$('panel-toggle'), optionsPanel=$('lab-options');
+panelToggle?.addEventListener('click',()=>{
+  optionsPanel.hidden=!optionsPanel.hidden;
+  panelToggle.setAttribute('aria-expanded',String(!optionsPanel.hidden));
+});
+function placeNearView(){
+ if(!robot||!viewer)return;
+ // The default splat origin is not guaranteed to be on the Garden floor.
+ // Place the mesh where a person can see it, in the same camera coordinate
+ // frame. This is visual preview placement, NOT registered physical contact.
+ const camera=viewer.app.root.findByName('camera');
+ if(!camera){status('CAMERA NOT FOUND · CHECK COORDINATES IN SETTINGS');return;}
+ const world=camera.getPosition().clone().add(camera.forward.clone().mulScalar(3.5));
+ $('origin-x').value=world.x.toFixed(3);
+ $('origin-y').value=(world.y-0.35).toFixed(3);
+ $('origin-z').value=world.z.toFixed(3);
+ manualPose={x:0,z:0,yaw:0};
+ applyPose(0,0,0);
+ $('pose-readout').textContent='ROBOT IN CAMERA VIEW · GROUND NOT REGISTERED';
+ provenance('REAL GARDEN SPLAT + CDR-01 MESH IN ONE RENDERER · CAMERA PREVIEW POSITION / PHYSICS NOT VALIDATED');
+ status('ROBOT IN GARDEN VIEW · VISUAL PREVIEW');
+}
+$('quick-focus')?.addEventListener('click',placeNearView);
+$('place-camera')?.addEventListener('click',placeNearView);
 const GARDEN_META_URL='/garden-assets/lod-meta.json';
 const GARDEN_META_NAME='lod-meta.json';
 const poseInputs=['origin-x','origin-y','origin-z','robot-scale','robot-yaw'];
@@ -71,15 +98,18 @@ function stop(){playing=false;cancelAnimationFrame(timer);$('play').disabled=!tr
 async function load(source,filename){
  stop();status('LOADING GAUSSIAN SCENE…');
  $('robot-controls').hidden=true;$('playback-controls').hidden=true;
+ $('viewer-quick-controls').hidden=true;
  if(viewer){viewer.destroy();viewer=null;robot=null;}
  try{
   viewer=await createViewer({container:$('viewer'),settings:defaultSettings(),
-    contentUrl:source,contentFilename:filename,renderer:'webgl',ui:true,aa:true});
+    contentUrl:source,contentFilename:filename,renderer:'webgl',ui:false,aa:true});
   viewer.events.on('progress:changed',p=>status('LOADING 3DGS '+p+'%'));
   const ready=()=>{
     robot=buildRobot(viewer.app);initialPlacement();
+    placeNearView();
+    $('viewer-quick-controls').hidden=false;
     $('robot-controls').hidden=false;$('playback-controls').hidden=false;
-    status('ROBOT AND SPLAT IN ONE 3D SCENE');
+    status('ROBOT IN GARDEN VIEW · VISUAL PREVIEW');
     provenance('REAL 3DGS + CDR ROBOT IN SAME PLAYCANVAS ENGINE · SPATIAL REGISTRATION / GARDEN COLLISION NOT VERIFIED');
     viewer.app.renderNextFrame=true;
   };
