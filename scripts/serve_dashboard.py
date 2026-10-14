@@ -174,8 +174,10 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("X-Frame-Options", "DENY")
-        if urlsplit(self.path).path == "/robot-garden":
+        # Only the first-party Garden renderer can be framed, by this same origin.
+        is_garden_lab = urlsplit(self.path).path == "/robot-garden"
+        self.send_header("X-Frame-Options", "SAMEORIGIN" if is_garden_lab else "DENY")
+        if is_garden_lab:
             # CDN modules are pinned to versions. Only this experimental lab
             # can load the PlayCanvas viewer and local Gaussian asset blobs.
             policy = ("default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
@@ -183,7 +185,7 @@ class Handler(BaseHTTPRequestHandler):
                       "connect-src 'self' blob: https:; "
                       "img-src 'self' data: blob: https:; "
                       "font-src 'self' data: https://cdn.jsdelivr.net; "
-                      "worker-src 'self' blob:; object-src 'none'; frame-ancestors 'none'")
+                      "worker-src 'self' blob:; object-src 'none'; frame-ancestors 'self'")
         else:
             policy = ("default-src 'self'; script-src 'self'; style-src 'self'; "
                       "img-src 'self' data:; connect-src 'self'; frame-src 'self'; "
