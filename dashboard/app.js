@@ -144,6 +144,10 @@ function updateReadout() {
   const feed=$('events');feed.replaceChildren();
   const entries=run.events.filter(e=>e.time_s<=state.simTime);
   $('event-count').textContent=entries.length+' EVENTS';
+  // Only the source Python trajectory drives the visual replay.
+  // No scene model may feed ground-truth position or simulated energy back to the planner.
+  window.__cdrReplayState={map:state.map,run:state.run,time:state.simTime};
+  window.dispatchEvent(new CustomEvent('cdr:frame',{detail:{run:state.run,time:state.simTime}}));
   drawTraces();
   for(const e of [...entries].reverse()){
     const item=document.createElement('div');item.className='event'+(/SAFE|REPLAN|REJECT/.test(e.state)?' warning':'');
@@ -179,6 +183,8 @@ async function fetchRun() {
     const run=await response.json();
     if(!response.ok)throw new Error(run.error||'Simulation failed');
     state.run=run;state.simTime=0;state.playing=true;state.lastWallTime=0;
+    window.__cdrReplayState={map:state.map,run:state.run,time:0};
+    window.dispatchEvent(new CustomEvent('cdr:replay',{detail:{run,time:0}}));
     $('play').textContent='Ⅱ';$('total').textContent=mins(run.duration_sim_s);
     updateReadout();draw();
   }catch(err){
@@ -215,6 +221,7 @@ canvas.addEventListener('click',(e)=>{
 (async()=>{
   try{
     const response=await fetch('/api/map');if(!response.ok)throw Error('Map API unavailable');
-    state.map=await response.json();await loadGazeboEvidence();await fetchRun();requestAnimationFrame(tick);
+    state.map=await response.json();window.__cdrReplayState={map:state.map,run:null,time:0};
+    await loadGazeboEvidence();await fetchRun();requestAnimationFrame(tick);
   }catch(err){$('status').textContent='OFFLINE';$('reason').textContent=err.message;}
 })();
