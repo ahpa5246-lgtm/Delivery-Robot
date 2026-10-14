@@ -19,14 +19,14 @@
   const reusable={box:new T.BoxGeometry(1,1,1),cyl:new T.CylinderGeometry(1,1,1,10),
     cone:new T.ConeGeometry(1,1,7),sphere:new T.IcosahedronGeometry(1,1)};
   let visualRoot=null,lastMode=null,themeMode='clear',clockMode='day',decorCount=0;
-  const mx=new T.Matrix4(),p=new T.Vector3(),q=new T.Quaternion(),scale=new T.Vector3();
+  const mx=new T.Matrix4(),p=new T.Vector3(),q=new T.Quaternion(),scale=new T.Vector3(),worldUp=new T.Vector3(0,1,0);
   const seedRandom=(seed)=>()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
   function batch(group,geom,material,entries){
     if(!entries.length)return;
     const mesh=new T.InstancedMesh(geom,material,entries.length);
     entries.forEach((e,i)=>{
       const [x,y,z,sx,sy,sz,rot=0]=e;
-      p.set(x,y,z);q.setFromAxisAngle(T.Object3D.DEFAULT_UP,rot);
+      p.set(x,y,z);q.setFromAxisAngle(worldUp,rot);
       scale.set(sx,sy,sz);mx.compose(p,q,scale);mesh.setMatrixAt(i,mx);
     });
     mesh.instanceMatrix.needsUpdate=true;
