@@ -17,5 +17,14 @@
       ]
     }
   },
-  "postCreateCommand": "bash -lc 'source /opt/ros/jazzy/setup.bash && python3 -m unittest discover -s tests'"
+  "postCreateCommand": "bash -lc 'source /opt/ros/jazzy/setup.bash && python3 -m unittest discover -s tests'",
+  "forwardPorts": [
+    8765
+  ],
+  "portsAttributes": {
+    "8765": {
+      "label": "CDR-01 Garden + Gazebo Replay",
+      "onAutoForward": "notify"
+    }
+  }
 }

@@ -1,5 +1,6 @@
 """Gazebo *flat-contact* Garden proxy, real message extraction and provenance."""
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -70,6 +71,22 @@ class GardenPhysicsTests(unittest.TestCase):
             self.assertFalse(info["terrain_collision_verified"])
             self.assertEqual(info["garden_obstacle_collisions"],"NOT_MODELED")
             self.assertEqual(len(info["world_sha256"]),64)
+
+    def test_codespaces_launcher_is_syntax_checked_and_source_labeled(self):
+        root = Path(__file__).resolve().parents[1]
+        launch = root / "scripts/start_codespaces_full.sh"
+        subprocess.run(["bash", "-n", str(launch)], check=True)
+        help_output = subprocess.run(
+            ["bash", str(launch), "--help"], capture_output=True, text=True,
+            check=True,
+        ).stdout
+        self.assertIn("original 113 mb", help_output.lower())
+        self.assertIn("8765", help_output)
+        content = launch.read_text(encoding="utf-8")
+        self.assertIn("EXPECTED_SOURCE", content)
+        self.assertIn("garden_status()", content)
+        self.assertIn("scripts/run_garden_gazebo.sh", content)
+        self.assertIn("exec python3 scripts/serve_dashboard.py", content)
 
     def test_ros2_watchdog_and_real_stop_acceptance_present(self):
         root=Path(__file__).resolve().parents[1]
