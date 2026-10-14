@@ -6,7 +6,9 @@
   <meta name="theme-color" content="#0b111c">
   <title>CDR-01 — Campus Robotics Control Room</title>
   <link rel="stylesheet" href="/style.css">
+  <script src="/vendor/three.min.js" defer></script>
   <script src="/app.js" defer></script>
+  <script src="/scene3d.js" defer></script>
 </head>
 <body>
 <div class="shell">
@@ -28,12 +30,35 @@
     </section>
     <div class="workspace">
       <section class="map-panel" aria-label="Campus mission replay">
-        <div class="panel-top"><div><span class="panel-kicker">01 / DIGITAL TWIN</span><h2>Campus overview</h2></div><div class="legend"><span><i class="legend-path"></i> Route</span><span><i class="legend-robot"></i> CDR-01</span><span><i class="legend-zone"></i> Restricted</span></div></div>
-        <div class="map-wrap"><canvas id="map" width="1152" height="720" role="img" aria-label="Campus schematic with buildings, paths, robot, and delivery destination"></canvas><div class="map-overlay">MAP COORDINATES <strong>LOCAL XY</strong><br>32 × 20 METRES <span>·</span> NOT TO SCALE</div><div class="map-badge">SCRIPTED 2D MODEL <span class="accent">●</span></div></div>
+        <div class="panel-top"><div><span class="panel-kicker">01 / IMMERSIVE MISSION STUDIO</span><h2>Campus mission simulation</h2></div><div class="legend"><span><i class="legend-path"></i> Route</span><span><i class="legend-robot"></i> CDR-01</span><span><i class="legend-zone"></i> Restricted</span></div></div>
+        <div class="scene-toolbar" aria-label="Mission scene settings">
+          <div class="view-switch"><button id="view3d" type="button" aria-pressed="true">3D WORLD</button><button id="view2d" type="button" aria-pressed="false">2D MAP</button></div>
+          <div class="scene-options">
+            <label for="robot-profile">Visual robot</label>
+            <select id="robot-profile" aria-label="Visual robot design; does not change simulated kinematics">
+              <option value="cdr">CDR-01 Delivery</option>
+              <option value="six">Six-Wheel Delivery</option>
+              <option value="mecanum">Mecanum Carrier</option>
+              <option value="rbot">rbot AMR</option>
+              <option value="lino">Lino 4WD</option>
+              <option value="clearpath">Outdoor Rover</option>
+              <option value="tb4">TurtleBot4 Concept</option>
+              <option value="palash">Warehouse AMR</option>
+              <option value="tb3">TurtleBot3 Concept</option>
+            </select>
+            <label for="world-preset">Scene</label><select id="world-preset"><option value="campus">Campus</option><option value="warehouse">Logistics</option></select>
+          </div>
+        </div>
+        <div class="map-wrap" id="stage-viewport">
+          <div id="scene3d" role="img" aria-label="Interactive three dimensional university campus and robot"></div>
+          <canvas id="map" width="1152" height="720" role="img" aria-label="2D campus map with buildings, paths, robot, and delivery destination"></canvas>
+          <div class="scene-3d-bar"><span id="scene-status">LOADING 3D SCENE</span><div class="camera-buttons"><button data-camera="orbit" class="active" type="button">Orbit</button><button data-camera="follow" type="button">Follow</button><button data-camera="top" type="button">Top</button></div></div>
+          <div class="map-overlay">MAP COORDINATES <strong>LOCAL XY</strong><br>32 × 20 METRES <span>·</span> NOT TO SCALE</div><div class="map-badge">SCRIPTED NAVIGATION <span class="accent">●</span></div></div>
+        <div class="asset-note">Robot variants are original <strong>illustrative 3D concepts</strong> inspired by open-source robotics projects; all share the existing CDR-01 <strong>2D kinematic playback</strong>, not Nav2 or live Gazebo physics. <a id="profile-source" href="https://github.com/ahpa5246-lgtm/Delivery-Robot" target="_blank" rel="noopener noreferrer">Source reference ↗</a></div>
         <div class="playback">
           <button id="play" title="Pause or resume replay" aria-label="Pause or resume replay">Ⅱ</button><span class="time" id="elapsed">00:00</span><input id="timeline" aria-label="Replay position" type="range" min="0" max="100" value="0"><span class="time muted" id="total">00:00</span><select id="speed" aria-label="Playback speed"><option value="1">1×</option><option value="4" selected>4×</option><option value="12">12×</option><option value="30">30×</option></select>
         </div>
-        <div class="notice"><span class="notice-symbol">ⓘ</span><span>This view replays a deterministic <strong>2D kinematic model</strong>. It is not live robot telemetry, Gazebo contact dynamics, or safety certification.</span></div>
+        <div class="notice"><span class="notice-symbol">ⓘ</span><span>The 3D robot is animated from a <strong>deterministic 2D trajectory</strong> (not Gazebo contact physics). Only the separately labeled Gazebo archive contains Gazebo odometry. Robot variants are visual demonstrations, not tested configurations.</span></div>
         <section class="trace-panel" aria-label="Two-dimensional model telemetry traces">
           <div class="row-title"><div><span class="panel-kicker">02 / REPLAY TELEMETRY</span><h2>Motion and battery profile</h2></div><span class="evidence-tag">2D MODEL</span></div>
           <div class="trace-legend"><span class="trace-speed">● Modeled velocity (m/s)</span><span class="trace-soc">● Modeled battery SOC (%)</span></div>
