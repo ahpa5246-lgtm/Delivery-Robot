@@ -26,8 +26,11 @@ try{
  console.log('DOWNLOAD_BUTTON_COUNT',count);
  if(!count){console.log('DOWNLOAD_CONTROL_NOT_FOUND');process.exitCode=3}
  else{
-  await choices.first().click({timeout:15000});
-  await page.waitForTimeout(2000);
+  await choices.first().evaluate(el=>el.click());
+  console.log('POST_BUTTON_CLICK_URL',page.url());
+  await page.waitForTimeout(3500);
+  console.log('POST_BUTTON_CLICK_URL_AFTER_WAIT',page.url());
+  console.log('DOM_AFTER_CLICK',(await page.evaluate(()=>document.body?.innerText||'' )).slice(0,2000));
   console.log('DIALOG_CONTENT',(await page.locator('[role="dialog"],dialog').allTextContents()).map(x=>x.slice(0,2200)));
   const buttons=await page.locator('button,[role="button"],a').evaluateAll(xs=>xs.map(x=>({tag:x.tagName,text:x.textContent?.trim().slice(0,100),href:x.getAttribute('href')})).filter(x=>/PLY|SOG|Download|Original/i.test(x.text)).slice(0,30));
   console.log('DOWNLOAD_TARGETS',JSON.stringify(buttons));
