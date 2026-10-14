@@ -26,3 +26,50 @@
 @media(min-width:801px) and (max-width:1230px){
   .insights .gazebo-panel{grid-column:1 / -1}
 }
+
+
+/* Immersive scene explorer. No UI metadata here represents Gazebo measurements. */
+[hidden]{display:none!important}
+.scene-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:0 1px 13px}
+.view-switch{display:flex;align-items:center;gap:3px;padding:4px;background:#0c1a28;border:1px solid #334c58;border-radius:10px}
+.view-switch button,.camera-buttons button{appearance:none;border:0;border-radius:7px;background:transparent;color:#97b2bc;padding:10px 13px;font-size:10px;letter-spacing:.035em;font-weight:800;cursor:pointer;transition:background .14s,color .14s}
+.view-switch button[aria-pressed=true],.camera-buttons button.active{background:#1d6657;color:#ecfff6}
+.scene-options{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap}
+.scene-options label{font-size:9px;font-weight:750;color:#a1b2be;letter-spacing:.08em;text-transform:uppercase}
+.scene-options select{border:1px solid #365363;border-radius:7px;background:#102334;color:#eaf5f4;height:35px;padding:0 8px;font-size:11px;max-width:186px}
+#stage-viewport{position:relative;aspect-ratio:1.63;min-height:320px;background:#142c3b;isolation:isolate}
+#scene3d{position:absolute;inset:0;overflow:hidden;touch-action:none}
+#scene3d canvas{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
+#scene3d canvas:active{cursor:grabbing}
+#stage-viewport #map{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto}
+.scene-3d-bar{position:absolute;left:15px;bottom:14px;right:15px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;pointer-events:none}
+#scene-status{font-size:9px;letter-spacing:.09em;color:#d8efe7;padding:8px 10px;border-radius:5px;background:#132d39dc;max-width:57%;line-height:1.4}
+.camera-buttons{pointer-events:auto;display:flex;gap:3px;padding:3px;border:1px solid #5d838c8a;border-radius:7px;background:#112b3acc}
+.camera-buttons button{padding:8px 10px}
+#stage-viewport:not(.show3d) .scene-3d-bar{display:none}
+#stage-viewport.show3d .map-overlay{display:none}
+#stage-viewport.show3d .map-badge{background:#173a3dc4;border-radius:6px;padding:7px 9px;color:#d1f5e5}
+.asset-note{color:#a9bfc9;font-size:10px;line-height:1.65;border-left:2px solid #547d83;padding:7px 10px;margin-top:12px;background:#11222d}
+.asset-note strong{color:#d3e5df}
+.asset-note a{color:#78e9c4;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:1400px){
+ .scene-toolbar{align-items:flex-start}
+ .scene-options{justify-content:flex-start}
+}
+@media(max-width:800px){
+ #stage-viewport{aspect-ratio:1.4;min-height:330px}
+ .scene-toolbar{gap:10px}
+ .scene-options{width:100%;display:grid;grid-template-columns:auto minmax(125px,1fr) auto minmax(110px,1fr)}
+ .scene-options select{max-width:none;width:100%}
+ .camera-buttons button{font-size:10px}
+ #scene-status{max-width:47%;font-size:8px}
+}
+@media(max-width:470px){
+ #stage-viewport{aspect-ratio:1;min-height:300px}
+ .scene-options{grid-template-columns:1fr 1fr;column-gap:8px}
+ .scene-options label{grid-row:1}
+ .scene-options select{grid-row:2}
+ .camera-buttons button{padding:6px}
+ .scene-3d-bar{left:7px;right:7px;bottom:8px}
+ #scene-status{font-size:8px;max-width:52%}
+}
