@@ -36,7 +36,7 @@ jobs:
       - name: Campus replay and dashboard assets smoke
         run: |
           python scripts/run_campus_demo.py --seed 7 --scenario construction --output experiments/ci_campus.json
-          for script in dashboard/app.js dashboard/scene3d.js dashboard/cad-enhancement.js dashboard/analytics.js dashboard/environment-detail.js dashboard/engineering-audit.js dashboard/collision-debug.js; do node --check "$script"; done
+          for script in dashboard/app.js dashboard/scene3d.js dashboard/cad-enhancement.js dashboard/analytics.js dashboard/environment-detail.js dashboard/engineering-audit.js dashboard/collision-debug.js dashboard/garden-splat.js; do node --check "$script"; done
           python -m py_compile scripts/run_campus_demo.py scripts/serve_dashboard.py cdr_sim/campus.py
       - name: Execute 100-seed simulation baseline
         run: |
