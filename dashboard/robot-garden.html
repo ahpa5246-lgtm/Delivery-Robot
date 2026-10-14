@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CDR-01 — Robot inside Gaussian Garden</title>
+<link rel="stylesheet" href="/robot-garden.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@playcanvas/supersplat-viewer@1.37.0/dist/viewer.css">
+<script type="importmap">
+{"imports":{"playcanvas":"https://cdn.jsdelivr.net/npm/playcanvas@2.23.0/build/playcanvas.mjs","playcanvas/":"https://cdn.jsdelivr.net/npm/playcanvas@2.23.0/","@playcanvas/supersplat-viewer/viewer":"https://cdn.jsdelivr.net/npm/@playcanvas/supersplat-viewer@1.37.0/dist/viewer.js","@playcanvas/supersplat-viewer/settings":"https://cdn.jsdelivr.net/npm/@playcanvas/supersplat-viewer@1.37.0/dist/settings.js"}}
+</script>
+<script type="module" src="/robot-garden.js"></script>
+</head>
+<body>
+<header><a href="/">← Mission studio</a><span class="eyebrow">CDR-01 / DIGITAL TWIN LAB</span><a href="https://superspl.at/scene/bc0906cd" target="_blank" rel="noopener">Garden source ↗</a></header>
+<main>
+<div class="heading"><div><span class="eyebrow">ONE 3D ENGINE · REAL ROBOT MESH</span><h1>Robot inside a captured world<span class="accent">.</span></h1><p>Gaussian splats and a controllable robot are rendered in the same PlayCanvas scene.</p></div><strong class="state" id="status">WAITING FOR SPLAT FILE</strong></div>
+<section class="workspace">
+<div class="viewer-col">
+ <div id="viewer" aria-label="Unified interactive Gaussian Splatting and robot scene"><div class="empty"><strong>Real Garden and delivery robot</strong><p>Upload the original multi-file LOD ZIP to <code>assets/gaussian-garden.zip</code> in Codespaces, then refresh. The actual Garden splats and the robot will load into one scene.</p><a target="_blank" rel="noopener" href="https://superspl.at/scene/bc0906cd">Sign in to SuperSplat and download Garden ↗</a></div></div>
+ <div id="provenance">NO GARDEN MODEL LOADED · NO GARDEN PHYSICS VALIDATION</div>
+</div>
+<aside>
+ <section><span class="eyebrow">01 / LOAD REAL SCENE</span><h2>Garden Gaussian capture</h2>
+   <p><strong>Already have the original 113 MB Garden LOD ZIP?</strong> Upload it using Codespaces Explorer to <code>assets/gaussian-garden.zip</code> and refresh this page. The server streams the original <code>lod-meta.json</code> and WebP tiles out of the ZIP; no extraction or second, larger file is required just to render the Garden.</p>
+   <p>The following picker is only for other single-file .sog/.ply/.spz scenes:</p>
+   <label class="file">Choose Gaussian file<input id="splat-file" type="file" accept=".sog,.ply,.spz,.json"></label>
+   <label>Or direct HTTPS file URL <input id="splat-url" type="url" placeholder="https://…/garden.sog"></label>
+   <button id="load-url" type="button">Load provided 3DGS URL</button>
+   <small>Original: Mip-NeRF 360 Garden, transkatgirl · CC BY 4.0. No bytes are uploaded to our server.</small>
+ </section>
+ <section id="robot-controls" hidden><span class="eyebrow">02 / ACTUAL SCENE ENTITY</span><h2>CDR-01 robot</h2>
+   <p>The robot is a PlayCanvas 3D entity sharing the splat camera and render scene. Set its location and size; scene registration is not validated yet.</p>
+   <div class="fields"><label>X <input id="origin-x" type="number" step="0.1" value="0"></label><label>Y (floor) <input id="origin-y" type="number" step="0.1" value="0"></label><label>Z <input id="origin-z" type="number" step="0.1" value="0"></label><label>Scale <input id="robot-scale" type="number" min="0.01" max="5" step="0.05" value="1"></label><label>Yaw ° <input id="robot-yaw" type="number" step="5" value="0"></label></div>
+   <p class="warning">UNREGISTERED: no surveyed garden landmarks or validated collision mesh. Coordinates cannot yet be used as real-world ground truth.</p>
+   <button id="place" type="button">Place robot at these coordinates</button>
+   <div class="drive"><button id="drive-forward">↑ Forward</button><button id="drive-left">← Left</button><button id="drive-right">Right →</button><button id="drive-back">↓ Backward</button></div>
+ </section>
+ <section id="playback-controls" hidden><span class="eyebrow">03 / SOURCE-LABELED REPLAY</span><h2>Robot motion data</h2>
+   <button id="load-scripted" type="button">Load scripted Python campus run</button>
+   <p>Scripted campus trajectory is <b>NOT</b> a Garden/Gazebo physics result. Shown only after explicit selection.</p>
+   <label class="file">Import recorded Gazebo odometry CSV<input id="odom-file" type="file" accept=".csv,text/csv"></label>
+   <small>Required columns: time_s, x_m, y_m, yaw_rad. Imported odometry is not independently verified and does not mean the Garden has valid collision geometry.</small>
+   <div class="row"><button id="play" type="button" disabled>Play</button><button id="pause" type="button" disabled>Pause</button><button id="reset" type="button" disabled>Reset</button></div>
+   <div id="pose-readout">NO TRAJECTORY · MANUAL VIEW</div>
+ </section>
+</aside>
+</section>
+<footer>PlayCanvas / SuperSplat Viewer (MIT) · Garden capture (CC BY 4.0) · Visual co-rendering is not physics validation.</footer>
+</main>
+</body></html>
