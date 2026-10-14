@@ -7,7 +7,8 @@ This directory contains actual upstream-authored triangulated CAD and Collada as
 | `robot/rbot-wheel.stl`, `robot/rbot-camera.stl` | [rlxai/rbot](https://github.com/rlxai/rbot), `src/robot/rlai_meshes/meshes/wheel.stl` and `depth_camera_housing.stl` | Apache-2.0 |
 | `robot/delivery-cad-part.stl` | [Pouya-Mansournia/Delivery-Robot-ROS](https://github.com/Pouya-Mansournia/Delivery-Robot-ROS), `src/delivery_robot_description/meshes/visual/full_0029.stl` | MIT |
 | `world/warehouse-shelf.dae`, `world/warehouse-lamp.dae`, `world/warehouse-cargo.dae`, `world/warehouse-roof.dae` and associated `../materials/textures` | [motomechatronics/aws_robomaker_small_warehouse_world](https://github.com/motomechatronics/aws_robomaker_small_warehouse_world), corresponding `models/aws_robomaker_warehouse_*/meshes/*_visual.DAE` and `materials/textures` | MIT-0 |
-| `world/cafe-table.dae` | [ROBOTIS-GIT/turtlebot3_simulations](https://github.com/ROBOTIS-GIT/turtlebot3_simulations), `turtlebot3_gazebo/models/turtlebot3_house/cafe_table/meshes/cafe_table.dae` | Apache-2.0 |
+| `world/clearpath-office.dae` | [clearpathrobotics/clearpath_simulator](https://github.com/clearpathrobotics/clearpath_simulator), `clearpath_gz/meshes/office/office.dae` | BSD-3-Clause |
+| `world/cafe-table.dae` with `world/Maple.jpg` and `world/Wood_Floor_Dark.jpg` | [ROBOTIS-GIT/turtlebot3_simulations](https://github.com/ROBOTIS-GIT/turtlebot3_simulations), `turtlebot3_gazebo/models/turtlebot3_house/cafe_table/meshes/cafe_table.dae` | Apache-2.0 |
 | `../vendor/STLLoader.js` and `../vendor/ColladaLoader.js` | [mrdoob/three.js](https://github.com/mrdoob/three.js/tree/r147/examples/js/loaders), release `r147` | MIT |
 
 The source projects' licenses are retained in this repository under:
@@ -15,11 +16,12 @@ The source projects' licenses are retained in this repository under:
 - `integrations/upstream_samples/pouya-sixwheel/LICENSE`
 - `integrations/upstream_samples/aws-warehouse/LICENSE`
 - `integrations/upstream_samples/turtlebot3/LICENSE`
+- `integrations/upstream_samples/clearpath-outdoor/LICENSE`
 - `dashboard/vendor/THREE_LICENSE.txt`
 
 **Implementation notes**
 
-All external mesh files are allowlisted in `scripts/serve_dashboard.py`, served locally with correct MIME types, and loaded with self-hosted Three.js loaders. The Collada material textures preserve the relative image hierarchy expected by their original assets. The 3D world adds genuine geometric prop meshes to the original campus scene; it remains a **visualization** of the Python deterministic 2D replay. A successful image fetch is not a Gazebo physics result.
+All external mesh files are allowlisted in `scripts/serve_dashboard.py`, served locally with correct MIME types, and loaded with self-hosted Three.js loaders. The Collada material textures preserve the relative image hierarchy expected by their original assets. The Clearpath architectural CAD is used as a visual replacement for the East Wing placeholder, retaining the planner's fixed original obstacle footprint. Its large external material images are intentionally replaced in-browser with neutral pixels, preserving geometry without broken dependencies. The 3D world adds genuine geometric prop meshes to the original campus scene; it remains a **visualization** of the Python deterministic 2D replay. A successful image fetch is not a Gazebo physics result.
 
 The original CDR-01 and other selectable robot base silhouettes continue to be illustrative models; the imported STL wheel and camera geometry are **true upstream CAD sub-components**, not complete external robot assemblies. We deliberately do not claim a full imported CAD assembly when a usable licensed complete assembly is not available within the asset size budget. This should not be represented in demonstrations as a 1:1 mechanical model.
 
