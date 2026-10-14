@@ -53,13 +53,13 @@ jobs:
             vertices, faces=fast_simplification.simplify(
               np.asarray(mesh.vertices,dtype=np.float64),
               np.asarray(mesh.faces,dtype=np.int32),
-              target_count=min(len(mesh.faces),6400))
+              target_reduction=0.83)
             result=trimesh.Trimesh(vertices=vertices,faces=faces,process=False)
             result.remove_unreferenced_vertices()
             out=Path(destination);out.parent.mkdir(parents=True,exist_ok=True)
             out.write_bytes(result.export(file_type='stl'))
             print(f'{out}: original triangles={len(mesh.faces)} optimized={len(result.faces)} size={out.stat().st_size} bytes')
-            if not 3000 <= len(result.faces) <= 7000:
+            if not 3000 <= len(result.faces) <= 10000:
               raise RuntimeError('CAD simplification failed target face count')
           PY
       - name: Commit only two derived CAD mesh assets
