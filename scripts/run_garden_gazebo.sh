@@ -10,9 +10,13 @@ gz sdf -k simulation/garden_physics_proxy.sdf > "$OUT/sdf_validation.txt"
 gz sim -s -r -v 2 simulation/garden_physics_proxy.sdf > "$OUT/gazebo_server.log" 2>&1 &
 SIM_PID=$!
 RECORD_PID=''
+BRIDGE_PID=''
+WATCHDOG_PID=''
 cleanup(){
-  # Stop the entire disposable Gazebo world after this scripted run.
+  # The simulator is disposable; shutdown is a guaranteed final safeguard.
   if [[ -n "$RECORD_PID" ]];then kill "$RECORD_PID" 2>/dev/null || true;fi
+  if [[ -n "$WATCHDOG_PID" ]];then kill "$WATCHDOG_PID" 2>/dev/null || true;fi
+  if [[ -n "$BRIDGE_PID" ]];then kill "$BRIDGE_PID" 2>/dev/null || true;fi
   kill "$SIM_PID" 2>/dev/null || true
 }
 trap cleanup EXIT INT TERM
@@ -24,16 +28,19 @@ gz topic -l | grep -q '^/model/cdr01/odometry$' || { echo 'ERROR: Gazebo odometr
 timeout 27 gz topic -e -t /model/cdr01/odometry > "$OUT/odometry_raw.txt" 2>&1 &
 RECORD_PID=$!
 sleep 2
-# Explicit 4 s speed-limited command in a disposable simulation; always zero.
-for n in $(seq 1 40);do
-  gz topic -t /model/cdr01/cmd_vel -m gz.msgs.Twist -p 'linear: {x: 0.20}' >/dev/null
-  sleep .1
-done
-for n in $(seq 1 20);do
-  gz topic -t /model/cdr01/cmd_vel -m gz.msgs.Twist -p 'linear: {x: 0.0}' >/dev/null
-  sleep .1
-done
-sleep 2
+# Gazebo DiffDrive retains a velocity if direct gz topic commands stop.
+# Route ALL commands through ROS 2 + watchdog at 20Hz; timeout forces zeros.
+source /opt/ros/jazzy/setup.bash
+ros2 launch ros_gz_bridge ros_gz_bridge.launch.py \\
+  bridge_name:=cdr01_garden_bridge \\
+  config_file:="$(pwd)/simulation/ros_gz_bridge.yaml" \\
+  > "$OUT/ros_bridge.log" 2>&1 &
+BRIDGE_PID=$!
+python3 scripts/ros_velocity_watchdog.py > "$OUT/watchdog.log" 2>&1 &
+WATCHDOG_PID=$!
+sleep 6
+python3 scripts/drive_garden_ros2.py --drive-seconds 3 --speed-mps 0.2 --zero-seconds 4
+sleep 3
 kill "$RECORD_PID" 2>/dev/null || true
 wait "$RECORD_PID" 2>/dev/null || true
 RECORD_PID=''
