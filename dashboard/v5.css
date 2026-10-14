@@ -104,3 +104,15 @@ main{max-width:1830px}
 .workspace-nav a:hover,.workspace-nav a:focus-visible{background:#293943;color:#eee9df;border-color:#56666d}
 .workspace-nav a.active{background:#34453f;border-color:#52695c;color:#f0efe5}
 @media(max-width:780px){.workspace-nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}.workspace-nav a{white-space:nowrap;padding:8px 10px}}
+
+
+/* The desktop masthead's minimum content widths should not force mobile's
+ * viewport wider than 390px when the status pill and heading are side by side. */
+@media(max-width:600px){
+ .masthead{flex-direction:column;align-items:flex-start;gap:12px}
+ .masthead .brand{width:100%;min-width:0}
+ .masthead .mast-actions{align-self:flex-start;flex-direction:row;align-items:center;justify-content:flex-start;flex-wrap:wrap;max-width:100%;gap:8px}
+ .masthead .pill{max-width:100%;white-space:normal}
+ .fleet-deck-top,.fleet-head-right,.fleet-transport{min-width:0}
+ .fleet-deck,.fleet-card,.fleet-summary,.fleet-job,.fleet-detail{min-width:0}
+}
