@@ -105,3 +105,6 @@ main{max-width:1900px}
  .audit-head p{font-size:10px}
  .audit-bottom>div{padding:12px}
 }
+
+.scene-tip{padding:9px 2px 1px;font-size:10px;color:#a5c0c5;line-height:1.5}
+@media(max-width:490px){.scene-3d-bar .camera-buttons{flex-wrap:wrap;justify-content:flex-end;max-width:230px}.camera-buttons button{font-size:9px}}
