@@ -271,8 +271,10 @@
       cyl(g,.27,.27,.07,dark,0,.4,0);
       cyl(g,.17,.17,.06,cyan,0,.46,0);
     }else{
-      cube(g,bodyW,.12,bodyD,dark,0,.28,0);
-      cube(g,bodyW*.94,height,bodyD*.92,basecolor,0,.38+height*.4,0);
+      const driveFrame=cube(g,bodyW,.12,bodyD,dark,0,.28,0);
+      driveFrame.name='primitive-drive-frame';
+      const placeholderShell=cube(g,bodyW*.94,height,bodyD*.92,basecolor,0,.38+height*.4,0);
+      placeholderShell.name='primitive-chassis-body';
       cube(g,bodyW*.68,.19,bodyD*.78,dark,-.02,.38+height+.05,0);
       cube(g,bodyW*.63,.21,bodyD*.72,mat(0xe7edf0),-.02,.53+height,0);
       cube(g,.05,.16,.38,glass,bodyW*.47,.48+height,0);
