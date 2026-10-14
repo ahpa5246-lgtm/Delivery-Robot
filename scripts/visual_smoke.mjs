@@ -50,6 +50,10 @@ try {
       document.querySelector('#mesh-provenance')?.textContent.includes('ORIGINAL CAD')
     ), { timeout: 30000 });
     assert.ok((await page.locator('#mesh-provenance').innerText()).includes('CAD'));
+    await page.waitForFunction(() => (
+      !!window.CDR3D?.environment?.getObjectByName('licensed-office')
+    ), { timeout: 30000 });
+    assert.equal(await page.locator('.cad-status-bar').count(),1);
     assert.equal(await page.locator('#energy-chart').count(),1);
     assert.equal(await page.locator('#course-chart').count(),1);
     assert.equal(await page.locator('#current-speed').count(),1);
