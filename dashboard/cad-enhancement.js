@@ -88,7 +88,13 @@
       const pos=[0,.50,0],geom=found[shell];
       const body=meshFor(shell,geom,profile==='mecanum'?.95:1.05,pos,[0,0,0]);
       robot.add(body);
-      if(preview)preview.add(meshFor(shell,geom,profile==='mecanum'?.95:1.05,pos));
+      const placeholder=robot.getObjectByName('primitive-chassis-body');
+      if(placeholder)placeholder.visible=false;
+      if(preview){
+        preview.add(meshFor(shell,geom,profile==='mecanum'?.95:1.05,pos));
+        const previewPlaceholder=preview.getObjectByName('primitive-chassis-body');
+        if(previewPlaceholder)previewPlaceholder.visible=false;
+      }
       loaded.add(shell);
     }
     if(found.wheel){
