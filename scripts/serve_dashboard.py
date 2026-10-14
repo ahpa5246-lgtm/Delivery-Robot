@@ -14,6 +14,8 @@ from cdr_sim.campus import Campus, ReplayOptions, replay
 ROOT = Path(__file__).resolve().parents[1] / "dashboard"
 STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
           "/app.js": ("app.js", "text/javascript; charset=utf-8"),
+          "/scene3d.js": ("scene3d.js", "text/javascript; charset=utf-8"),
+          "/vendor/three.min.js": ("vendor/three.min.js", "text/javascript; charset=utf-8"),
           "/style.css": ("style.css", "text/css; charset=utf-8")}
 
 
@@ -22,6 +24,9 @@ def response_for(path: str) -> tuple[int, str, bytes]:
     if parsed.path in STATIC:
         filename, media_type = STATIC[parsed.path]
         return 200, media_type, (ROOT / filename).read_bytes()
+    if parsed.path == "/api/references":
+        catalog = Path(__file__).resolve().parents[1] / "integrations/reference_catalog.json"
+        return 200, "application/json", catalog.read_bytes()
     if parsed.path == "/api/gazebo-evidence":
         # Archived physics-engine odometry from an identified historical CI run.
         # Never label these values as current, live or hardware measurements.

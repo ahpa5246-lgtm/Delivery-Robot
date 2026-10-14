@@ -1,0 +1,4 @@
+Repository: https://github.com/turtlebot/turtlebot4_simulator
+Source ref: jazzy
+Original path: turtlebot4_gz_bringup/worlds/depot.sdf
+Status: attributed REFERENCE SDF fixture; dependencies and Gazebo version may not match our runtime.

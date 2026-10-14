@@ -1,0 +1,4 @@
+Repository: https://github.com/motomechatronics/aws_robomaker_small_warehouse_world
+Source ref: main
+Original path: models/aws_robomaker_warehouse_ShelfD_01/model.sdf
+Status: attributed REFERENCE SDF fixture; dependencies and Gazebo version may not match our runtime.

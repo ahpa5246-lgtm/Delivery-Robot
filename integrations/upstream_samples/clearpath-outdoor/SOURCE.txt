@@ -1,0 +1,4 @@
+Repository: https://github.com/clearpathrobotics/clearpath_simulator
+Source ref: jazzy
+Original path: clearpath_gz/worlds/construction.sdf
+Status: attributed REFERENCE fixture; not a stand-alone runnable Gazebo or ROS package.

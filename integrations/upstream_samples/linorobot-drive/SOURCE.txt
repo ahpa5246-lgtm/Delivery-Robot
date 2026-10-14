@@ -1,0 +1,4 @@
+Repository: https://github.com/linorobot/linorobot2
+Source ref: jazzy
+Original path: linorobot2_description/urdf/4wd_properties.urdf.xacro
+Status: attributed REFERENCE fixture; not a stand-alone runnable Gazebo or ROS package.

@@ -1,0 +1,4 @@
+Repository: https://github.com/ROBOTIS-GIT/turtlebot3_simulations
+Source ref: main
+Original path: turtlebot3_gazebo/models/turtlebot3_burger/model.sdf
+Status: attributed REFERENCE SDF fixture; dependencies and Gazebo version may not match our runtime.

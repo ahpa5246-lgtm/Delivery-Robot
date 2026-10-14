@@ -1,0 +1,117 @@
+{
+  "schema": "cdr-reference-catalog-v1",
+  "scope": "Source-guided integrations only: all visuals use original primitive meshes except vendored Three.js. No unverified ROS packages or foreign SDF worlds are silently installed.",
+  "simulator_truth": "Dashboard 3D positions are interpolated from cdr_sim.campus deterministic 2D frames; Gazebo archival values are displayed in a separate panel; no Nav2 or sensor streaming.",
+  "source_repositories": [
+    {
+      "id": 1,
+      "url": "https://github.com/Pouya-Mansournia/Delivery-Robot-ROS",
+      "repo": "Pouya-Mansournia/Delivery-Robot-ROS",
+      "license": "MIT",
+      "branch": "main",
+      "role": "six-wheel delivery CAD source",
+      "active": "six-wheel visual concept; upstream STL import is optional",
+      "mode": "concept",
+      "mesh": "src/delivery_robot_description/meshes/visual/full_0010.stl"
+    },
+    {
+      "id": 2,
+      "url": "https://github.com/mohmedatwa/delivery_robot",
+      "repo": "mohmedatwa/delivery_robot",
+      "license": "MIT",
+      "branch": "main",
+      "role": "holonomic Mecanum delivery/navigation and web interface",
+      "active": "mecanum visual concept; no ROS navigation copied",
+      "mode": "concept",
+      "mesh": "delivery_description/meshes/mecanum_wheel_right.STL"
+    },
+    {
+      "id": 3,
+      "url": "https://github.com/rlxai/rbot",
+      "repo": "rlxai/rbot",
+      "license": "Apache-2.0",
+      "branch": "main",
+      "role": "Jazzy/Harmonic Nav2/Sensors/control stack",
+      "active": "rbot visual concept and ROS2 interoperability blueprint, not installed",
+      "mode": "concept",
+      "mesh": "src/robot/rlai_meshes/meshes/chassis.stl"
+    },
+    {
+      "id": 4,
+      "url": "https://github.com/linorobot/linorobot2",
+      "repo": "linorobot/linorobot2",
+      "license": "Apache-2.0",
+      "branch": "jazzy",
+      "role": "modular 2WD/4WD/mecanum locomotion reference",
+      "active": "4WD visual concept; wheel model still CDR-01 kinematic",
+      "mode": "concept",
+      "mesh": "linorobot2_description/meshes/base.dae"
+    },
+    {
+      "id": 5,
+      "url": "https://github.com/clearpathrobotics/clearpath_simulator",
+      "repo": "clearpathrobotics/clearpath_simulator",
+      "license": "BSD-3-Clause",
+      "branch": "jazzy",
+      "role": "outdoor terrain scenes and mobile robot sim",
+      "active": "outdoor rover visual concept and landscaped campus theme",
+      "mode": "concept",
+      "mesh": "clearpath_gz/meshes/accessories/base_station.stl"
+    },
+    {
+      "id": 6,
+      "url": "https://github.com/turtlebot/turtlebot4_simulator",
+      "repo": "turtlebot/turtlebot4_simulator",
+      "license": "Apache-2.0",
+      "branch": "jazzy",
+      "role": "Jazzy/Harmonic official compact robot example",
+      "active": "TurtleBot4 silhouette concept",
+      "mode": "concept",
+      "mesh": "turtlebot4_gz_bringup/worlds/depot.sdf"
+    },
+    {
+      "id": 7,
+      "url": "https://github.com/PalashMendhe/robotics-amr-ws",
+      "repo": "PalashMendhe/robotics-amr-ws",
+      "license": "MIT",
+      "branch": "master",
+      "role": "warehouse AMR cargo workflow/Nav2 and stations",
+      "active": "warehouse AMR silhouette concept and staged logistics scene",
+      "mode": "concept",
+      "mesh": "src/robot_description/worlds/large_warehouse.sdf"
+    },
+    {
+      "id": 8,
+      "url": "https://github.com/ROBOTIS-GIT/turtlebot3_simulations",
+      "repo": "ROBOTIS-GIT/turtlebot3_simulations",
+      "license": "Apache-2.0",
+      "branch": "main",
+      "role": "compact mobile robot simulation model references",
+      "active": "TurtleBot3 silhouette concept",
+      "mode": "concept",
+      "mesh": "turtlebot3_gazebo/models/turtlebot3_burger/model.sdf"
+    },
+    {
+      "id": 9,
+      "url": "https://github.com/motomechatronics/aws_robomaker_small_warehouse_world",
+      "repo": "motomechatronics/aws_robomaker_small_warehouse_world",
+      "license": "MIT-0",
+      "branch": "main",
+      "role": "warehouse fixtures, cargo props and SDF examples",
+      "active": "warehouse visual theme, originally authored geometry; Classic SDF not loaded into Harmonic",
+      "mode": "concept",
+      "mesh": "models/aws_robomaker_warehouse_ShelfD_01/model.sdf"
+    },
+    {
+      "id": 10,
+      "url": "https://github.com/mrdoob/three.js",
+      "repo": "mrdoob/three.js",
+      "license": "MIT",
+      "branch": "r147",
+      "role": "real-time browser 3D rendering engine",
+      "active": "vendored r147 three.min.js used in dashboard/scene3d.js",
+      "mode": "vendored-runtime",
+      "mesh": "build/three.min.js"
+    }
+  ]
+}

@@ -66,7 +66,15 @@ python scripts/generate_gazebo_world.py
 
 **Next verification:** Nav2 / localization / LiDAR integration, independent ground-truth-versus-odometry benchmarking, motor torque / contact / charging models and complete delivery workflow. ROS 2 Jazzy/Gazebo startup, commanded odometry, bridged odometry and ROS watchdog timeout have already passed narrow real-simulator smoke/acceptance checks. No claims of real-world deployment or certified human safety have been established.
 
-## Campus navigation and control-room demo (new offline subsystem)
+## Interactive 3D mission studio (source-guided upgrade)
+
+The local dashboard now includes a **WebGL 3D campus scene** using a locally bundled MIT-licensed Three.js engine. It provides orbit, overhead and follow cameras, a robot model inspector, a 3D/2D view switch, outdoor campus and logistics scene variants, and nine selectable **visual robot designs**. The browser scene follows the existing deterministic **2D replay**, not ROS2/Gazebo physics. Simulated values remain clearly labeled separately from historical Gazebo odometry.
+
+Nine third-party ROS/Gazebo SDF/Xacro reference files, their source attribution and licenses, and a ten-project integration catalog have been added under `integrations/`. Only Three.js executes in the new web viewer; the SDF and Xacro files are compatibility references **not silently deployed as functional robot stacks**. See [integration matrix and test gates](docs/OPEN_SOURCE_INTEGRATION.md).
+
+Run with `python scripts/serve_dashboard.py`, open `http://127.0.0.1:8765` and select **3D WORLD**. Scroll to zoom and drag to rotate. Click **Follow** to see the moving robot; expand **OPEN-SOURCE ENGINEERING LIBRARY** for links and license information.
+
+## Campus navigation and control-room demo (offline subsystem)
 
 A campus-map path planner, mission replay and responsive local monitoring dashboard
 are now implemented *in addition* to the earlier planar and Gazebo work. This

@@ -144,6 +144,10 @@ function updateReadout() {
   const feed=$('events');feed.replaceChildren();
   const entries=run.events.filter(e=>e.time_s<=state.simTime);
   $('event-count').textContent=entries.length+' EVENTS';
+  // Only the source Python trajectory drives the visual replay.
+  // No scene model may feed ground-truth position or simulated energy back to the planner.
+  window.__cdrReplayState={map:state.map,run:state.run,time:state.simTime};
+  window.dispatchEvent(new CustomEvent('cdr:frame',{detail:{run:state.run,time:state.simTime}}));
   drawTraces();
   for(const e of [...entries].reverse()){
     const item=document.createElement('div');item.className='event'+(/SAFE|REPLAN|REJECT/.test(e.state)?' warning':'');
@@ -151,6 +155,34 @@ function updateReadout() {
     const time=document.createElement('time');time.textContent=mins(e.time_s);
     const description=document.createElement('p');description.textContent=e.detail;
     item.append(time,title,description);feed.append(item);
+  }
+}
+async function loadReferences() {
+  const host=$('integration-list');
+  if(!host) return;
+  try {
+    const response=await fetch('/api/references');
+    if(!response.ok)throw Error('Source registry not available');
+    const registry=await response.json();
+    if(registry.schema!=='cdr-reference-catalog-v1'
+       || !Array.isArray(registry.source_repositories)
+       || registry.source_repositories.length!==10) throw Error('Invalid source registry');
+    host.replaceChildren();
+    for(const source of registry.source_repositories){
+      const card=document.createElement('article');card.className='ref-card';
+      const top=document.createElement('div');top.className='ref-card-head';
+      const link=document.createElement('a');
+      link.href=source.url;link.target='_blank';link.rel='noopener noreferrer';
+      link.textContent=source.repo.split('/')[1]+' ↗';
+      const tag=document.createElement('span');tag.textContent=source.license;
+      top.append(link,tag);
+      const purpose=document.createElement('p');purpose.textContent=source.role;
+      const usage=document.createElement('small');
+      usage.textContent=source.active;
+      card.append(top,purpose,usage);host.append(card);
+    }
+  }catch(err){
+    host.textContent='Reference catalog unavailable: '+err.message;
   }
 }
 async function loadGazeboEvidence() {
@@ -179,6 +211,8 @@ async function fetchRun() {
     const run=await response.json();
     if(!response.ok)throw new Error(run.error||'Simulation failed');
     state.run=run;state.simTime=0;state.playing=true;state.lastWallTime=0;
+    window.__cdrReplayState={map:state.map,run:state.run,time:0};
+    window.dispatchEvent(new CustomEvent('cdr:replay',{detail:{run,time:0}}));
     $('play').textContent='Ⅱ';$('total').textContent=mins(run.duration_sim_s);
     updateReadout();draw();
   }catch(err){
@@ -215,6 +249,7 @@ canvas.addEventListener('click',(e)=>{
 (async()=>{
   try{
     const response=await fetch('/api/map');if(!response.ok)throw Error('Map API unavailable');
-    state.map=await response.json();await loadGazeboEvidence();await fetchRun();requestAnimationFrame(tick);
+    state.map=await response.json();window.__cdrReplayState={map:state.map,run:null,time:0};
+    await Promise.all([loadGazeboEvidence(),loadReferences()]);await fetchRun();requestAnimationFrame(tick);
   }catch(err){$('status').textContent='OFFLINE';$('reason').textContent=err.message;}
 })();

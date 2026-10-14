@@ -1,0 +1,4 @@
+Repository: https://github.com/mohmedatwa/delivery_robot
+Source ref: main
+Original path: delivery_description/urdf/delivery_mobile_base.xacro
+Status: attributed REFERENCE fixture; not a stand-alone runnable Gazebo or ROS package.
