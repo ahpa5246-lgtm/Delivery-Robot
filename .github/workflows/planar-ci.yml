@@ -15,6 +15,9 @@ on:
       - 'tests/**'
       - 'scripts/run_benchmark.py'
   workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
 jobs:
   planar:
     runs-on: ubuntu-24.04
@@ -32,7 +35,7 @@ jobs:
       - name: Campus replay and dashboard assets smoke
         run: |
           python scripts/run_campus_demo.py --seed 7 --scenario construction --output experiments/ci_campus.json
-          node --check dashboard/app.js
+          for script in dashboard/app.js dashboard/scene3d.js dashboard/cad-enhancement.js dashboard/analytics.js dashboard/environment-detail.js dashboard/engineering-audit.js; do node --check "$script"; done
           python -m py_compile scripts/run_campus_demo.py scripts/serve_dashboard.py cdr_sim/campus.py
       - name: Execute 100-seed simulation baseline
         run: |
