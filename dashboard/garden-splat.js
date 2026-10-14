@@ -52,7 +52,7 @@
   if(![d.x,d.y,d.z,d.yaw,d.distance].every(Number.isFinite))return;
   $('garden-pose-xz').textContent=d.x.toFixed(2)+' / '+d.z.toFixed(2);
   $('garden-pose-yaw').textContent=d.yaw.toFixed(1)+'°';
-  $('garden-travel').textContent=d.distance.toFixed(2)+' units';
+  $('garden-travel').textContent=d.distance.toFixed(2)+(d.source==='manual'?' units':' m');
   $('garden-ground-mode').textContent=
     d.source==='imported'?'GAZEBO REPLAY · FLAT':d.anchor?'VISUAL PLANE':'NOT SET';
   $('garden-calibration').textContent=

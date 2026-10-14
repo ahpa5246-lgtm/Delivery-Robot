@@ -61,8 +61,8 @@ try{
     garden_source_sha256:exported.source_sha256,
     samples:3,
     frames:[{time_s:0,x_m:0,y_m:0,yaw_rad:0},
-            {time_s:.5,x_m:.12,y_m:0,yaw_rad:0},
-            {time_s:1,x_m:.25,y_m:0,yaw_rad:0}]
+            {time_s:1,x_m:.12,y_m:0,yaw_rad:0},
+            {time_s:2,x_m:.25,y_m:0,yaw_rad:0}]
    })
  }));
  await page.locator('#load-garden-gazebo').click();
@@ -77,6 +77,24 @@ try{
  }
  assert.ok((await page.locator('#provenance').innerText()).includes('NO GARDEN PHYSICS'));
  assert.equal(await page.locator('#play').isEnabled(),true);
+ await page.locator('#play').click();
+ await page.waitForFunction(()=>{
+   const m=document.querySelector('#pose-readout')?.textContent?.match(/· ([0-9.]+)s ·/);
+   return m && Number(m[1])>=0.3;
+ },{timeout:8000});
+ await page.locator('#pause').click();
+ const paused=await page.locator('#pose-readout').innerText();
+ await page.waitForTimeout(250);
+ assert.equal(await page.locator('#pose-readout').innerText(),paused,'Pause must freeze replay');
+ const pausedTime=Number(paused.match(/· ([0-9.]+)s ·/)[1]);
+ await page.locator('#play').click();
+ await page.waitForFunction((t)=>{
+   const m=document.querySelector('#pose-readout')?.textContent?.match(/· ([0-9.]+)s ·/);
+   return m && Number(m[1])>=t+0.25;
+ },pausedTime,{timeout:8000});
+ assert.match(await page.locator('#pose-readout').innerText(),/m path/);
+ await page.locator('#reset').click();
+ assert.match(await page.locator('#pose-readout').innerText(),/RESET/);
  console.log('GARDEN_CALIBRATION_EXPORT_AND_SOURCE_LABELED_REPLAY_CONTRACT_OK');
  console.log('SPLAT_SCENE_LOAD_OK_GROUND_PICK_REQUIRED');
  console.log('ROBOT_AND_SPLAT_SCENE_VALIDATED_IN_BROWSER');
