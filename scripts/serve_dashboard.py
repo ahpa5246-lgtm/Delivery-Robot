@@ -26,7 +26,9 @@ STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
           "/engineering-audit.js": ("engineering-audit.js", "text/javascript; charset=utf-8"),
           "/v3.css": ("v3.css", "text/css; charset=utf-8"),
           "/v4.css": ("v4.css", "text/css; charset=utf-8"),
-          "/collision-debug.js": ("collision-debug.js", "text/javascript; charset=utf-8")}
+          "/collision-debug.js": ("collision-debug.js", "text/javascript; charset=utf-8"),
+          "/garden-splat.js": ("garden-splat.js", "text/javascript; charset=utf-8"),
+          "/garden-splat.css": ("garden-splat.css", "text/css; charset=utf-8")}
 # Asset paths are fixed and reviewed. Never allow arbitrary file system traversal.
 for _name in (
     "robot/rbot-wheel.stl", "robot/rbot-camera.stl", "robot/delivery-cad-part.stl",
@@ -118,7 +120,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("X-Frame-Options", "DENY")
         self.send_header("Content-Security-Policy",
                          "default-src 'self'; script-src 'self'; style-src 'self'; "
-                         "img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'")
+                         "img-src 'self' data:; connect-src 'self'; frame-src https://superspl.at; "
+                         "object-src 'none'; frame-ancestors 'none'")
         self.end_headers()
         self.wfile.write(body)
 

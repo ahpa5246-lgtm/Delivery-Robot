@@ -138,3 +138,13 @@ The API uses localhost only and **cannot command motors**.
 - [Nav2 first-time robot setup for Gazebo](https://docs.nav2.org/jazzy/configuration_and_development/first_time_robot_setup_guide/gazebo/)
 - [ros2_control integration with Gazebo](https://control.ros.org/jazzy/doc/gz_ros2_control/doc/index.html)
 - [Gazebo / ROS 2 bridge](https://gazebosim.org/docs/harmonic/ros2_integration/)
+
+
+## Real photographed 3D environment (Gaussian Splatting)
+
+Select **REAL GARDEN · 3DGS** in the dashboard to explore a genuine captured
+[Mip-NeRF 360 Garden](https://superspl.at/scene/bc0906cd) (transkatgirl;
+CC BY 4.0). The remote scene is rendered interactively in the browser, without
+changing any robotics planner, Gazebo model or claimed experiment results.
+**Robot physics and telemetry are not registered to this real garden yet.**
+See [precise integration scope and next steps](docs/GAUSSIAN_GARDEN.md).

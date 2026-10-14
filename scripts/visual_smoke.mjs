@@ -172,6 +172,33 @@ try {
     });
     assert.equal(await page.locator('#status').innerText(), 'PAUSED SAFE');
     assert.ok((await page.locator('#reason').innerText()).includes('ESTOP_LATCHED'));
+    // Load the *real* public Garden URL in a network-stubbed iframe to verify
+    // navigation, browser CSP, attribution and graceful return. A stub is not
+    // evidence that an external splat has rendered or that robot poses align.
+    await page.route('https://superspl.at/**', route => route.fulfill({
+      status: 200, contentType: 'text/html',
+      body: '<!doctype html><html><body>SuperSplat garden viewer fixture</body></html>'
+    }));
+    assert.equal(await page.locator('#garden-frame').getAttribute('src'), null);
+    await page.locator('#view-garden').click();
+    assert.equal(await page.locator('#view-garden').getAttribute('aria-pressed'), 'true');
+    assert.equal(await page.locator('#view3d').getAttribute('aria-pressed'), 'false');
+    assert.equal(await page.locator('#garden-disclosure').isVisible(), true);
+    assert.equal(await page.locator('#garden-splat').isVisible(), true);
+    assert.equal(await page.locator('#scene3d').isVisible(), false);
+    assert.equal(await page.locator('#garden-frame').getAttribute('src'),
+      'https://superspl.at/scene/bc0906cd?aa');
+    assert.ok((await page.frameLocator('#garden-frame').locator('body').innerText())
+      .includes('garden viewer fixture'), 'Allowed cross-origin frame must load');
+    assert.ok((await page.locator('.garden-credit').innerText()).includes('CC BY 4.0'));
+    await page.screenshot({ path: 'experiments/ui_visual/'+viewport.name+'-garden-shell.png',
+      fullPage: true });
+    await page.locator('#view2d').click();
+    assert.equal(await page.locator('#garden-splat').isVisible(), false);
+    assert.equal(await page.locator('#map').isVisible(), true);
+    await page.locator('#view3d').click();
+    assert.equal(await page.locator('#scene3d').isVisible(), true);
+    assert.equal(await page.locator('#garden-disclosure').isVisible(), false);
     assert.deepEqual(errors, [], 'Unexpected browser errors');
     console.log(JSON.stringify({ viewport: viewport.name, canvas: 'rendered', horizontalOverflow: false, gazeboOdomDistanceM: 4.399, gazebosSamples: 397, estop: 'PAUSED_SAFE', jsErrors: errors.length }));
     await page.close();

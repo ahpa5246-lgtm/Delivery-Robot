@@ -1,0 +1,28 @@
+/* Real captured environment: a separately attributed cross-origin SuperSplat view. */
+#garden-splat { display: none; position: absolute; inset: 0; z-index: 2; background: #090f19; }
+#stage-viewport.garden-active #garden-splat { display: block; }
+#garden-splat iframe { width: 100%; height: 100%; border: 0; display: block; background: #090f19; }
+#stage-viewport.garden-active .world-inspector,
+#stage-viewport.garden-active .robot-inspector-label,
+#stage-viewport.garden-active .scene-3d-bar,
+#stage-viewport.garden-active .map-overlay,
+#stage-viewport.garden-active .map-badge { display: none; }
+.garden-credit { position: absolute; bottom: 12px; left: 12px; right: 12px;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;
+  pointer-events: none; color: #eaf7f8; font-size: 10px; font-weight: 650;
+  text-shadow: 0 1px 4px #000; }
+.garden-credit span, .garden-credit a { background: #06131bd9; border: 1px solid #739b9d75; padding: 7px 9px; border-radius: 6px; }
+.garden-credit a { color: #c5fbe2; pointer-events: auto; text-decoration: none; }
+.garden-disclosure { color: #c6d5dc; font-size: 11px; line-height: 1.75; margin: 12px 0 0;
+  padding: 12px 14px; background: #112534; border: 1px solid #355a61; border-radius: 8px; }
+.garden-disclosure[hidden] { display: none; }
+.garden-disclosure a { color: #9cf5d2; }
+.map-panel.garden-selected .cad-status-bar,
+.map-panel.garden-selected .scene-tip,
+.map-panel.garden-selected .asset-note { display: none; }
+#view-garden { white-space: nowrap; }
+@media (max-width: 700px) {
+  .view-switch { flex-wrap: wrap; }
+  .garden-credit { font-size: 9px; }
+  #stage-viewport.garden-active { min-height: 360px; }
+}
