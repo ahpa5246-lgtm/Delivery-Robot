@@ -45,6 +45,20 @@ class DashboardAPITests(unittest.TestCase):
         for path in ("/../../README.md", "/.git/config", "/api/unknown"):
             self.assertEqual(response_for(path)[0], 404)
 
+    def test_cinematic_scene_resources_are_allowlisted(self):
+        for path, expected_type in (
+            ("/environment-detail.js", "text/javascript"),
+            ("/engineering-audit.js", "text/javascript"),
+            ("/v3.css", "text/css"),
+        ):
+            with self.subTest(path=path):
+                code, media_type, contents = response_for(path)
+                self.assertEqual(code, 200)
+                self.assertIn(expected_type, media_type)
+                self.assertGreater(len(contents), 1000)
+        for path in ("/environment-detail.js/../README.md", "/assets/../../../../etc/passwd"):
+            self.assertEqual(response_for(path)[0], 404)
+
     def test_static_files(self):
         for path in ("/", "/app.js", "/style.css"):
             code, media_type, payload = response_for(path)
