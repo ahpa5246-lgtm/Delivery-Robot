@@ -1,191 +1,132 @@
-/* Visual-only campus enrichment, never alters Gazebo, physics or occupancy.
- * All geometry is authored here; CAD from licensed sources stays in cad-enhancement.js.
- * Batch instanced geometry for low GPU draw-call count.
+/* V4: one authoritative fixture list from /api/map. Every solid at robot height
+ * corresponds to a planner-inflated AABB. Facade decorations/treetops and
+ * ground paving are nonblocking render-only geometry. Do not create arbitrary
+ * scenery independent of the collision map.
  */
 (() => {
   'use strict';
-  const T=window.THREE,api=window.CDR3D;
-  if(!T||!api)return;
-  const world=api.environment,scene=api.scene;
-  const mat=(c,opts={})=>new T.MeshStandardMaterial({color:c,roughness:.85,metalness:.03,...opts});
-  const palette={
-    grass:mat(0x3c6752),path:mat(0x868f88),kerb:mat(0xc7c7ad),
-    asphalt:mat(0x52616a),marking:mat(0xe7e4d8),copper:mat(0xaf8567),
-    steel:mat(0x516775,{metalness:.54,roughness:.42}),foliage:mat(0x40775d),
-    olive:mat(0x678763),mint:mat(0x76a68a),soil:mat(0x473d34),
-    brick:mat(0x7c6c5e),wood:mat(0x9f7a52),cream:mat(0xe1ceb0),
-    glow:mat(0xd9f4f0,{emissive:0x4d9482,emissiveIntensity:.52})
+  const T=window.THREE, API=window.CDR3D;
+  if(!T||!API)return;
+  const world=API.environment, scene=API.scene;
+  const mat=(color,props={})=>new T.MeshStandardMaterial({color,roughness:.83,metalness:.07,...props});
+  const materials={
+    wood:mat(0x98765b), metal:mat(0x586e78,{metalness:.38}),
+    foliage:mat(0x4c8e6e),leaf:mat(0x71ad7e),
+    roof:mat(0x9aabb0),glass:mat(0x89c0ce,{metalness:.25,roughness:.27}),
+    ochre:mat(0xc2a079),ground:mat(0x8e9990),
+    detail:mat(0x3d5d63), glow:mat(0xe6f8c1,{emissive:0x3a7971,emissiveIntensity:.35})
   };
-  const reusable={box:new T.BoxGeometry(1,1,1),cyl:new T.CylinderGeometry(1,1,1,10),
-    cone:new T.ConeGeometry(1,1,7),sphere:new T.IcosahedronGeometry(1,1)};
-  let visualRoot=null,lastMode=null,themeMode='clear',clockMode='day',decorCount=0;
-  const mx=new T.Matrix4(),p=new T.Vector3(),q=new T.Quaternion(),scale=new T.Vector3(),worldUp=new T.Vector3(0,1,0);
-  const seedRandom=(seed)=>()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
-  function batch(group,geom,material,entries){
-    if(!entries.length)return;
-    const mesh=new T.InstancedMesh(geom,material,entries.length);
-    entries.forEach((e,i)=>{
-      const [x,y,z,sx,sy,sz,rot=0]=e;
-      p.set(x,y,z);q.setFromAxisAngle(worldUp,rot);
-      scale.set(sx,sy,sz);mx.compose(p,q,scale);mesh.setMatrixAt(i,mx);
+  const shared={
+    box:new T.BoxGeometry(1,1,1),
+    cyl:new T.CylinderGeometry(.5,.5,1,12),
+    canopy:new T.IcosahedronGeometry(.5,1)
+  };
+  const mtx=new T.Matrix4(),pos=new T.Vector3(),quat=new T.Quaternion(),size=new T.Vector3();
+  const up=new T.Vector3(0,1,0);
+  let root=null,detailCount=0;
+  function batch(kind, material, objects) {
+    if(!objects.length)return;
+    const mesh=new T.InstancedMesh(shared[kind],material,objects.length);
+    objects.forEach((o,i)=>{
+      const [x,y,z,sx,sy,sz,rot=0]=o;
+      pos.set(x,y,z);quat.setFromAxisAngle(up,rot);size.set(sx,sy,sz);
+      mtx.compose(pos,quat,size);mesh.setMatrixAt(i,mtx);
     });
     mesh.instanceMatrix.needsUpdate=true;
-    mesh.castShadow=false;mesh.receiveShadow=true;mesh.frustumCulled=false;
-    mesh.userData.visualOnly=true;group.add(mesh);decorCount+=entries.length;
+    mesh.receiveShadow=true;mesh.castShadow=false;
+    mesh.userData={visualOnly:false,collisionReference:'world/campus_layout.json'};
+    root.add(mesh);detailCount+=objects.length;
   }
-  function texturedPavement(){
-    const canvas=document.createElement('canvas');canvas.width=256;canvas.height=256;
-    const c=canvas.getContext('2d');c.fillStyle='#868c87';c.fillRect(0,0,256,256);
-    // Pattern is a subtle material, not fake simulated pavement data.
-    const rnd=seedRandom(709);
-    for(let y=0;y<256;y+=32)for(let x=0;x<256;x+=64){
-      const offset=(y/32)%2?32:0;
-      const b=Math.floor(rnd()*22);
-      c.fillStyle='rgb('+(125+b)+','+(135+b)+','+(130+b)+')';
-      c.fillRect(x+offset+1,y+1,62,30);
+  function build(map,theme){
+    if(root){world.remove(root);root.traverse(o=>{if(o.isInstancedMesh)o.dispose?.()});}
+    root=new T.Group();root.name='AUTHORITATIVE_WORLD_FIXTURES_V4';world.add(root);
+    detailCount=0;
+    const group={};
+    function add(g,x,y,z,sx,sy,sz,rot=0){
+      (group[g]??=[]).push([x,y,z,sx,sy,sz,rot]);
     }
-    const texture=new T.CanvasTexture(canvas);
-    texture.wrapS=texture.wrapT=T.RepeatWrapping;texture.repeat.set(8,5);
-    texture.anisotropy=2;
-    return mat(0xffffff,{map:texture,roughness:.96});
-  }
-  function build(data,theme){
-    if(visualRoot){
-      world.remove(visualRoot);
-      visualRoot.traverse(o=>{if(o.isInstancedMesh)o.dispose?.()});
-    }
-    visualRoot=new T.Group();visualRoot.name='VISUAL_ONLY_CAMPUS_DETAILS';
-    world.add(visualRoot);decorCount=0;lastMode=theme;
-    const warehouse=theme==='warehouse';
-    // Extend the visible terrain beyond the 32x20 m survey tile. This
-    // removes the floating-board silhouette but remains purely decorative.
-    const outside=new T.Mesh(new T.PlaneGeometry(240,240),
-      new T.MeshBasicMaterial({color:warehouse?0x1b2933:0x1b3938,fog:true}));
-    outside.rotation.x=-Math.PI/2;
-    outside.position.set(16,-.374,-10);
-    outside.receiveShadow=true;outside.userData.visualOnly=true;
-    visualRoot.add(outside);
-    const paths=[],curbs=[],crosswalk=[],guides=[],planter=[],bushes=[],bush2=[],
-      trees=[],crowns=[],crowns2=[],fenceposts=[],rails=[],benches=[],seats=[],
-      lights=[],signs=[],solar=[],bikes=[],shelves=[],boxes=[],stripes=[];
-    // Printed paving texture on actual walkways, kerb seams along walkways.
-    const paving=texturedPavement();
-    const strips=[];
-    for(const y of [7,14])strips.push([16,.044,-y,32,0.06,1.66]);
-    for(const x of [6.5,16,26])strips.push([x,.047,-10,1.57,.06,20]);
-    batch(visualRoot,reusable.box,paving,strips);
-    for(const y of [7,14]){
-      for(const offset of [-.95,.95])curbs.push([16,.085,-y+offset,32,.12,.07]);
-      for(let x=1;x<31;x+=2.8){
-        crosswalk.push([x,.083,-y,0.6,.008,.08]);
-      }
-    }
-    for(const x of [6.5,16,26]){
-      for(const off of [-.9,.9])curbs.push([x+off,.083,-10,.07,.12,20]);
-    }
-    if(!warehouse){
-      // Landscaped boundary along the perimeter, away from actual robot route.
-      for(const x of [1.0,3.1,5.2,8.2,10.3,12.4,14.5,18,20.2,22.4,24.6,28.1,30.4]){
-        for(const y of [0.65,19.2]){
-          planter.push([x,.14,-y,1.05,.24,.54]);
-          for(let j=0;j<3;j++){
-            bushes.push([x+(j-1)*.26,.36,-y,0.27,.32,.26]);
-          }
+    const fixtures=map.fixtures||[];
+    for(const f of fixtures){
+      const [x0,y0,x1,y1]=f.footprint_m;
+      const cx=(x0+x1)/2,cy=(y0+y1)/2, w=x1-x0,d=y1-y0,z=-cy;
+      if(f.kind==='tree'){
+        add('trunk',cx,.71,z,.17,1.42,.17);
+        // Foliage starts safely above the vehicle's modeled cargo roof.
+        for(let i=0;i<7;i++){
+          const a=2*Math.PI*i/7;
+          add('leaves',cx+.31*Math.cos(a),1.90+(i%2)*.20,z+.31*Math.sin(a),
+            .90,.94,.90);
         }
-      }
-      // Trees in planters and organic canopies, no primitive sphere foliage.
-      const places=[[2.1,2.1],[4.6,17.8],[9.1,18.8],[13.1,1.2],[19.1,18.5],
-        [23.4,1.3],[29.8,2.8],[29.4,17.8],[2.3,11.8],[18.6,4.4]];
-      places.forEach(([x,y],i)=>{
-        const z=-y;
-        trees.push([x,.83,z,.11,1.67,.11]);
-        crowns.push([x,1.80,z,.72,.88,.73,0]);
-        crowns2.push([x+.31,2.06,z-.21,.53,.64,.54,i*.6]);
-        crowns2.push([x-.30,1.80,z+.24,.51,.62,.48,i*.9]);
-        planter.push([x,.12,z,1.38,.22,1.38]);
-      });
-      // Soft tree trunk under cone leaves and irregular clumps.
-      const lampSites=[[1,1],[1,10],[1,18.7],[31,1],[31,10],[31,19],
-        [9.9,1],[21.3,1],[9.9,18.8],[21.3,18.8]];
-      lampSites.forEach(([x,y])=>{
-        lights.push([x,1.24,-y,.065,2.48,.065]);
-        signs.push([x,2.52,-y,.42,.12,.24]);
-      });
-      for(const [x,y] of [[3.8,5.1],[12.7,17.3],[20.2,15.5],[28.9,12.4]]){
-        benches.push([x,.47,-y,1.45,.12,.40]);
-        seats.push([x,.74,-y-.22,1.45,.43,.12]);
-      }
-      // Accessible entrance markings; appearance does not assert compliance.
-      for(let x=2.0;x<5.5;x+=.35)stripes.push([x,.085,-2.6,.12,.01,.8]);
-      // Cycle parking stands made from steel posts and rails.
-      for(let i=0;i<4;i++){
-        const x=17.7+i*.48; bikes.push([x,.34,-2,.06,.68,.06]);
-      }
-      for(const x of [0.35,31.65])for(let y=.9;y<20;y+=1.25){
-        fenceposts.push([x,.49,-y,.05,.97,.05]);
-      }
-      for(const y of [-.35,-19.65])for(let x=0.7;x<32;x+=1.3)
-        fenceposts.push([x,.49,y,.05,.97,.05]);
-      rails.push([.35,.72,-10,.05,.05,19.1],[31.65,.72,-10,.05,.05,19.1],
-        [16,.72,-.35,30.8,.05,.05],[16,.72,-19.65,30.8,.05,.05]);
-      // CAD façades remain; rooftop solar detail gives each building individuality.
-      for(const b of data.buildings.slice(0,3)){
-        const [x0,y0,x1,y1]=b,x=(x0+x1)/2,z=-(y0+y1)/2;
-        solar.push([x,3.68,z,Math.max(.6,x1-x0-1.25),.06,1.2]);
-      }
-    }else{
-      // Shipment/loading architecture without copying old Gazebo Classic scripts.
-      for(const y of [2,18])for(const x of [3,7,11,19,23,27]){
-        boxes.push([x,.48,-y,.88,.96,.89]);
-        boxes.push([x+.7,.27,-y,.56,.54,.57]);
-      }
-      for(let x=2;x<32;x+=3.0){
-        shelves.push([x,1.05,-3.2,1.5,2,.40]);
-        shelves.push([x,1.05,-17.1,1.5,2,.40]);
+      }else if(f.kind==='bench'){
+        for(const x of [x0+.16,x1-.16])add('metal',x,.28,z,.06,.56,d*.72);
+        for(let k=0;k<5;k++)add('wood',cx,.55,-y0-.14-k*.055,w*.89,.09,.047);
+        for(let k=0;k<3;k++)add('wood',cx,.76+k*.16,-y1-.04,w*.88,.105,.06);
+      }else if(f.kind==='table'){
+        add('wood',cx,.76,z,w*.91,.085,d*.91);
+        for(const x of [x0+.16,x1-.16])for(const y of [y0+.16,y1-.16])
+          add('metal',x,.37,-y,.055,.74,.055);
+        for(let k=0;k<4;k++){
+          const a=k*Math.PI/2;
+          add('metal',cx+Math.cos(a)*w*.43,.40,z+Math.sin(a)*d*.43,
+            .20,.05,.20);
+        }
+      }else if(f.kind==='light'){
+        add('metal',cx,1.40,z,.08,2.80,.08);
+        add('glass',cx,2.83,z,.28,.09,.26);
+        add('glow',cx,2.77,z,.24,.035,.23);
+      }else if(f.kind==='bike_rack'){
+        for(let i=0;i<5;i++){
+          const x=x0+.15+i*(w-.30)/4;
+          add('metal',x,.31,z,.055,.63,.055);
+          add('metal',x,.62,z,.09,.055,d*.65);
+        }
+      }else if(f.kind==='shelf'){
+        for(const x of [x0+.05,x1-.05])for(const y of [y0+.05,y1-.05])
+          add('metal',x,1.06,-y,.08,2.12,.08);
+        for(const h of [.30,1.10,1.95])
+          add('wood',cx,h,z,w,.08,d);
+        for(let i=0;i<3;i++)add('ochre',x0+.26+i*(w-.52)/3,.66,z,.23,.43,d*.55);
+      }else if(f.kind==='cargo'){
+        add('ochre',cx,.40,z,w,.8,d);
+        add('wood',cx,.85,z,w*.87,.09,d*.86);
+        for(const x of [x0+.16,x1-.16])add('metal',x,.50,z,.025,.5,d*.80);
       }
     }
-    batch(visualRoot,reusable.box,palette.kerb,curbs);
-    batch(visualRoot,reusable.box,palette.marking,crosswalk);
-    batch(visualRoot,reusable.box,palette.brick,planter);
-    batch(visualRoot,reusable.box,palette.wood,benches);
-    batch(visualRoot,reusable.box,palette.steel,seats);
-    batch(visualRoot,reusable.box,palette.steel,lights);
-    batch(visualRoot,reusable.box,palette.glow,signs);
-    batch(visualRoot,reusable.box,palette.steel,fenceposts);
-    batch(visualRoot,reusable.box,palette.steel,rails);
-    batch(visualRoot,reusable.box,palette.marking,stripes);
-    batch(visualRoot,reusable.box,palette.steel,bikes);
-    batch(visualRoot,reusable.box,mat(0x28627b,{metalness:.35,roughness:.25}),solar);
-    batch(visualRoot,reusable.cyl,palette.wood,trees);
-    batch(visualRoot,reusable.sphere,palette.foliage,crowns);
-    batch(visualRoot,reusable.sphere,palette.olive,crowns2);
-    batch(visualRoot,reusable.sphere,palette.mint,bushes);
-    batch(visualRoot,reusable.box,palette.copper,boxes);
-    batch(visualRoot,reusable.box,palette.steel,shelves);
-    visualRoot.userData={visualOnly:true,decorativeInstances:decorCount};
-    document.getElementById('scene-detail-count').textContent=decorCount.toLocaleString();
-    document.getElementById('scene-detail-mode').textContent=warehouse?'Logistics detail':'Campus landscape';
+    const materialFor={trunk:materials.wood,leaves:materials.foliage,
+      wood:materials.wood,metal:materials.metal,glass:materials.glass,
+      glow:materials.glow,ochre:materials.ochre};
+    for(const [kind,objects] of Object.entries(group)){
+      batch(kind==='trunk'?'cyl':kind==='leaves'?'canopy':'box',materialFor[kind],objects);
+    }
+    // Pedestrian markings and terrain are visually flat and don't create an
+    // upright collision obstacle; registered obstacles above remain authoritative.
+    const backdrop=new T.Mesh(new T.PlaneGeometry(180,180),
+      new T.MeshBasicMaterial({color:theme==='warehouse'?0x20313a:0x203f3c,fog:true}));
+    backdrop.rotation.x=-Math.PI/2;backdrop.position.set(16,-.374,-10);
+    backdrop.receiveShadow=true;backdrop.userData.visualOnly=true;root.add(backdrop);
+    const panel=document.getElementById('scene-detail-count');
+    if(panel)panel.textContent=detailCount.toLocaleString();
+    document.getElementById('scene-detail-mode').textContent=
+      theme==='warehouse'?'Logistics collisions':'Campus collision world';
+    root.userData={collisionObjects:map.collision_objects,theme,visualInstances:detailCount};
   }
   function setLighting(value){
-    clockMode=value;
-    const sceneLight=scene.children.filter(o=>o.isHemisphereLight||o.isDirectionalLight);
-    const hemi=sceneLight.find(o=>o.isHemisphereLight),sun=sceneLight.find(o=>o.isDirectionalLight);
     const presets={
-      day:{back:0x142b3b,fog:0x142b3b,h:1.0,s:1.5,dir:[12,33,8]},
-      golden:{back:0x443c43,fog:0x443c43,h:.65,s:2.15,dir:[-17,12,-7]},
-      night:{back:0x0b1526,fog:0x0b1526,h:.34,s:.38,dir:[-9,14,-14]}
+      day:{sky:0x142b3b,hemisphere:1.0,sun:1.5,pos:[12,33,8]},
+      golden:{sky:0x443c43,hemisphere:.65,sun:2.15,pos:[-17,12,-7]},
+      night:{sky:0x0b1526,hemisphere:.34,sun:.38,pos:[-9,14,-14]}
     };
-    const p=presets[value]||presets.day;
-    scene.background.setHex(p.back);if(scene.fog)scene.fog.color.setHex(p.fog);
-    if(hemi)hemi.intensity=p.h;
-    if(sun){sun.intensity=p.s;sun.position.set(...p.dir);}
+    const v=presets[value]||presets.day;
+    scene.background.setHex(v.sky);if(scene.fog)scene.fog.color.setHex(v.sky);
+    const hemi=scene.children.find(o=>o.isHemisphereLight),
+          sun=scene.children.find(o=>o.isDirectionalLight);
+    if(hemi)hemi.intensity=v.hemisphere;
+    if(sun){sun.intensity=v.sun;sun.position.set(...v.pos);}
     document.getElementById('lighting-caption').textContent=
       value==='night'?'Night — visualization':value==='golden'?'Evening — visualization':'Day — visualization';
   }
-  const select=document.getElementById('lighting-preset');
-  select?.addEventListener('change',e=>setLighting(e.target.value));
+  document.getElementById('lighting-preset')?.addEventListener('change',e=>setLighting(e.target.value));
   window.addEventListener('cdr:environment',e=>build(e.detail.map,e.detail.theme));
-  const current=window.__cdrReplayState?.map;
-  if(current)build(current,document.getElementById('world-preset').value);
-  setLighting(select?.value||'day');
+  if(window.__cdrReplayState?.map)build(window.__cdrReplayState.map,API.getWorld());
+  setLighting(document.getElementById('lighting-preset')?.value||'day');
 })();
