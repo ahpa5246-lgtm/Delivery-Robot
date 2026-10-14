@@ -74,6 +74,27 @@ Run `python3 scripts/serve_dashboard.py` and open http://127.0.0.1:8765. See **[
 
 **Do not confuse the 3D replay with Nav2 or real-time Gazebo physics.** Motion, energy, SOC, and heading still derive from the deterministic Python mission simulator; historical Gazebo odometry is a separate measured experiment.
 
+## V4 — shared collision world and verified route geometry
+
+The university campus and logistics scene now use the same
+[`world/campus_layout.json`](world/campus_layout.json) footprint catalog for
+**Python A* routing, robot-inflated occupancy cells, Three.js collision overlays,
+licensed CAD furniture placement, and generated Gazebo SDF collision boxes**.
+Unlike earlier versions, the viewer no longer creates arbitrary solid objects
+outside the navigation world's registered footprint list.
+
+The browser includes a **Navigation integrity** panel below the 3D model:
+path validity, nearest modeled clearance, fixture count, collision intersections,
+blocked cells, optional collision proxies, occupancy grid, and robot safety radius.
+The scene selector changes both the displayed world and the actual selected
+offline planner model, rather than merely changing the scenery.
+
+This is a deterministic two-dimensional geometry/replay model with imported
+real 3D assets and generated Gazebo *static collision proxies*, **not** a proven
+end-to-end Nav2 autonomous robot, hardware collision detector, or validated
+three-dimensional dynamic contact model. See the
+[V4 engineering design and limitations](docs/V4_SHARED_WORLD.md).
+
 ## V3 campus world and engineering instrumentation
 
 The dashboard has a new visual-only campus scenery layer (paving detail, landscape planting, boundary fixtures, crosswalks, logistics items), **Day / Sunset / Night** lighting profiles, a street-level camera, and click-to-route station markers within its interactive WebGL scene. It retains the existing source-licensed CAD/Collada geometry and proven 2D fallback.
