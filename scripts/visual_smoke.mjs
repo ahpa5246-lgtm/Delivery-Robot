@@ -15,6 +15,25 @@ const viewports = [
 await mkdir('experiments/ui_visual', { recursive: true });
 const browser = await chromium.launch({ headless: true });
 try {
+  // Early mobile layout gate: diagnose overflow before the expensive 3-viewport
+  // full integration suite, so a regression fails quickly and identifies causes.
+  const mobileProbe = await browser.newPage({viewport:{width:390,height:844}});
+  await mobileProbe.goto(base+'/?view=campus', {waitUntil:'domcontentloaded',timeout:30000});
+  const mobileWidth = await mobileProbe.evaluate(() => ({
+    viewport: innerWidth,
+    document: document.documentElement.scrollWidth,
+    offenders: Array.from(document.body.querySelectorAll('*')).filter(el => {
+      const rect=el.getBoundingClientRect();
+      return rect.right > innerWidth + 1 && rect.width > 0;
+    }).slice(0,10).map(el=>({
+      tag:el.tagName,id:el.id,css:el.className?.toString().slice(0,80),
+      width:Math.round(el.getBoundingClientRect().width),
+      right:Math.round(el.getBoundingClientRect().right)
+    }))
+  }));
+  await mobileProbe.close();
+  assert.ok(mobileWidth.document <= mobileWidth.viewport+1,
+    'Early mobile horizontal overflow: '+JSON.stringify(mobileWidth));
   for (const viewport of viewports) {
     const page = await browser.newPage({ viewport, deviceScaleFactor: 1 });
     const errors = [];
