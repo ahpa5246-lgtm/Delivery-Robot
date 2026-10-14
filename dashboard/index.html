@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="/command-center.css">
   <link rel="stylesheet" href="/v3.css">
   <link rel="stylesheet" href="/v4.css">
+  <link rel="stylesheet" href="/v5.css">
   <script src="/vendor/three.min.js" defer></script>
   <script src="/vendor/STLLoader.js" defer></script>
   <script src="/vendor/ColladaLoader.js" defer></script>
@@ -19,6 +20,7 @@
   <script src="/environment-detail.js" defer></script>
   <script src="/engineering-audit.js" defer></script>
   <script src="/collision-debug.js" defer></script>
+  <script src="/fleet-ui.js" defer></script>
 </head>
 <body>
 <div class="shell">
@@ -29,8 +31,8 @@
   </aside>
   <main>
     <header class="masthead">
-      <div class="brand"><span class="eyebrow">CDR / CAMPUS DELIVERY ROBOTICS</span><h1>Robotics command center<span class="period">.</span></h1><p>Campus delivery research <span class="slash">/</span> Interactive visualization &amp; measured evidence</p></div>
-      <div class="mast-actions"><span class="pill"><span class="live-dot"></span> LOCAL SIMULATOR</span><span class="clock" id="clock">SIM — 00:00</span></div>
+      <div class="brand"><span class="eyebrow">CAMPUS ROBOTICS / DIGITAL TWIN</span><h1>Fleet operations</h1><p>Campus delivery research <span class="slash">/</span> Interactive visualization &amp; measured evidence</p></div>
+      <div class="mast-actions"><span class="pill"><span class="live-dot"></span> OFFLINE SIMULATION</span><span class="clock" id="clock">SIM — 00:00</span></div>
     </header>
     <section class="mission-bar" aria-label="Mission parameters">
       <div class="control"><label for="destination">DESTINATION</label><select id="destination"><option value="library">Central Library</option><option value="engineering">Engineering Faculty</option><option value="student_center">Student Center</option></select></div>
@@ -40,7 +42,7 @@
     </section>
     <div class="workspace">
       <section class="map-panel" id="mission-studio" aria-label="Campus mission replay">
-        <div class="panel-top"><div><span class="panel-kicker">01 / IMMERSIVE MISSION STUDIO</span><h2>Campus mission simulation</h2></div><div class="legend"><span><i class="legend-path"></i> Route</span><span><i class="legend-robot"></i> CDR-01</span><span><i class="legend-zone"></i> Restricted</span></div></div>
+        <div class="panel-top"><div><span class="panel-kicker">01 / IMMERSIVE MISSION STUDIO</span><h2>Campus environment &amp; fleet</h2></div><div class="legend"><span><i class="legend-path"></i> Route</span><span><i class="legend-robot"></i> 5 CDR robots</span><span><i class="legend-zone"></i> Restricted</span></div></div>
         <div class="scene-toolbar" aria-label="Mission scene settings">
           <div class="view-switch"><button id="view3d" type="button" aria-pressed="true">3D WORLD</button><button id="view2d" type="button" aria-pressed="false">2D MAP</button></div>
           <div class="scene-options">
@@ -70,7 +72,19 @@
           <div class="map-overlay">MAP COORDINATES <strong>LOCAL XY</strong><br>32 × 20 METRES <span>·</span> NOT TO SCALE</div><div class="map-badge">SCRIPTED NAVIGATION <span class="accent">●</span></div></div>
         <div class="cad-status-bar"><span class="cad-source-dot"></span><strong id="mesh-provenance" aria-live="polite">Loading original CAD models…</strong><span class="cad-source-caption">Source-licensed CAD + deterministic path overlay</span></div>
         <div class="scene-tip">Rotate: drag · Zoom: scroll · Click a labeled destination marker to run a simulated route. Solid fixtures use the planner collision map. Facade ornament and ground markings remain decorative.</div>
-        <div class="asset-note">Robot variants are original <strong>illustrative 3D concepts</strong> with licensed real CAD components from open-source robotics projects; all share the existing CDR-01 <strong>2D kinematic playback</strong>, not Nav2 or live Gazebo physics. <a id="profile-source" href="https://github.com/ahpa5246-lgtm/Delivery-Robot" target="_blank" rel="noopener noreferrer">Source reference ↗</a></div>
+        <div class="asset-note">Robot variants are <strong>research 3D concepts</strong> with licensed real CAD components from open-source robotics projects; all share the existing CDR-01 <strong>2D kinematic playback</strong>, not Nav2 or live Gazebo physics. <a id="profile-source" href="https://github.com/ahpa5246-lgtm/Delivery-Robot" target="_blank" rel="noopener noreferrer">Source reference ↗</a></div>
+        <section class="fleet-deck" id="fleet-section" aria-label="Five robot fleet simulation">
+          <div class="fleet-deck-top"><div><span class="panel-kicker">02 / MULTI-ROBOT DISPATCH</span><h2>Five-robot fleet</h2><p>Independent offline missions with geometric proximity reservations. Never hardware telemetry.</p></div>
+            <div class="fleet-head-right"><span id="fleet-integrity" class="fleet-verdict">LOADING MODEL</span><button type="button" id="fleet-refresh" class="fleet-refresh">↻ Refresh fleet run</button></div></div>
+          <div class="fleet-body">
+            <div class="fleet-card"><div class="fleet-subhead"><h3>Fleet manifest</h3><span id="fleet-clock">SIM + 00:00</span></div><div id="fleet-robot-list" class="fleet-robot-list" aria-live="polite"></div></div>
+            <div class="fleet-card"><div class="fleet-subhead"><h3>Dispatch overview</h3><span>MODEL GENERATED</span></div><div id="fleet-summary" class="fleet-summary"></div><div id="fleet-queue" class="fleet-queue"></div></div>
+            <div class="fleet-card fleet-sensor-card"><div class="fleet-subhead"><h3>Geometric sensing</h3><label for="fleet-selected" class="sr-only">Selected robot</label><select id="fleet-selected" aria-label="Select robot for sensor diagnostics"><option value="R-01">R-01</option><option value="R-02">R-02</option><option value="R-03">R-03</option><option value="R-04">R-04</option><option value="R-05">R-05</option></select></div>
+              <canvas id="fleet-range" width="360" height="210" role="img" aria-label="16 ray simulated 2D range scan against map obstacles"></canvas><div id="fleet-detail" class="fleet-detail"></div>
+              <p class="fleet-sensor-note">16 ideal 2D geometry rays · proximity derived · RGB-D, GPS and physical IMU not connected</p>
+            </div>
+          </div>
+        </section>
         <section class="collision-panel" aria-label="V4 navigation integrity and collision diagnostics" id="collision-panel">
           <div class="collision-panel-heading">
             <div><span class="panel-kicker">V4 / COMMON COLLISION WORLD</span><h2>Navigation integrity</h2><p>Offline inflated occupancy and continuous XY robot-footprint validation. Not Gazebo contact physics.</p></div>
