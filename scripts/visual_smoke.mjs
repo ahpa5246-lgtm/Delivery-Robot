@@ -122,7 +122,17 @@ try {
     await page.screenshot({ path: 'experiments/ui_visual/' + viewport.name + '.png', fullPage: true });
     if (viewport.name === 'desktop') {
       await page.locator('[data-camera=follow]').click();
-      await page.waitForTimeout(950);
+      await page.waitForTimeout(1250);
+      const visibleRobot = await page.evaluate(() => {
+        const robot = window.CDR3D.getRobot(), camera = window.CDR3D.getCamera();
+        robot.updateWorldMatrix(true, false);
+        camera.updateWorldMatrix(true, false);
+        const projection = new THREE.Vector3().setFromMatrixPosition(robot.matrixWorld).project(camera);
+        return {x:projection.x,y:projection.y,z:projection.z};
+      });
+      assert.ok(Math.abs(visibleRobot.x)<.68 && Math.abs(visibleRobot.y)<.68
+        && visibleRobot.z>-1 && visibleRobot.z<1,
+        'Follow camera should keep robot in view: '+JSON.stringify(visibleRobot));
       await page.screenshot({ path: 'experiments/ui_visual/desktop-follow-robot.png', fullPage: true });
       await page.locator('[data-camera=orbit]').click();
     }
