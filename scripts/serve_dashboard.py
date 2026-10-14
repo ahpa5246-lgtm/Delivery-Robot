@@ -14,6 +14,8 @@ from cdr_sim.campus import Campus, ReplayOptions, replay
 ROOT = Path(__file__).resolve().parents[1] / "dashboard"
 STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
           "/app.js": ("app.js", "text/javascript; charset=utf-8"),
+          "/scene3d.js": ("scene3d.js", "text/javascript; charset=utf-8"),
+          "/vendor/three.min.js": ("vendor/three.min.js", "text/javascript; charset=utf-8"),
           "/style.css": ("style.css", "text/css; charset=utf-8")}
 
 
