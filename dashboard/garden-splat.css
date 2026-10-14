@@ -1,106 +1,38 @@
-/* Real captured environment: a separately attributed cross-origin SuperSplat view. */
-#garden-splat { display: none; position: absolute; inset: 0; z-index: 2; background: #090f19; }
-#stage-viewport.garden-active #garden-splat { display: block; }
-#garden-splat iframe { width: 100%; height: 100%; border: 0; display: block; background: #090f19; }
+/* Embedded first-party PlayCanvas 3DGS viewport, with the full engineering
+   dashboard still visible. No external SuperSplat web page is embedded. */
+#garden-splat {display:none;position:absolute;inset:0;z-index:4;background:#071416}
+#garden-splat[hidden]{display:none!important}
+#stage-viewport.garden-active #garden-splat{display:block}
+#garden-engine{width:100%;height:100%;display:block;border:0;background:#061015}
+#stage-viewport.garden-active #scene3d,
+#stage-viewport.garden-active #map,
 #stage-viewport.garden-active .world-inspector,
 #stage-viewport.garden-active .robot-inspector-label,
 #stage-viewport.garden-active .scene-3d-bar,
 #stage-viewport.garden-active .map-overlay,
-#stage-viewport.garden-active .map-badge { display: none; }
-.garden-credit { position: absolute; bottom: 12px; left: 12px; right: 12px;
-  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;
-  pointer-events: none; color: #eaf7f8; font-size: 10px; font-weight: 650;
-  text-shadow: 0 1px 4px #000; }
-.garden-credit span, .garden-credit a { background: #06131bd9; border: 1px solid #739b9d75; padding: 7px 9px; border-radius: 6px; }
-.garden-credit a { color: #c5fbe2; pointer-events: auto; text-decoration: none; }
-.garden-disclosure { color: #c6d5dc; font-size: 11px; line-height: 1.75; margin: 12px 0 0;
-  padding: 12px 14px; background: #112534; border: 1px solid #355a61; border-radius: 8px; }
-.garden-disclosure[hidden] { display: none; }
-.garden-disclosure a { color: #9cf5d2; }
-.map-panel.garden-selected .cad-status-bar,
-.map-panel.garden-selected .scene-tip,
-.map-panel.garden-selected .asset-note { display: none; }
-#view-garden { white-space: nowrap; }
-@media (max-width: 700px) {
-  .view-switch { flex-wrap: wrap; }
-  .garden-credit { font-size: 9px; }
-  #stage-viewport.garden-active { min-height: 360px; }
+#stage-viewport.garden-active .map-badge{display:none!important}
+#stage-viewport.garden-active{height:min(72vh,790px);min-height:530px;aspect-ratio:auto}
+.garden-dashboard-note{margin-top:14px;background:#0d2629;border:1px solid #376967;border-radius:10px;
+ color:#d6e7e4;padding:14px 18px;font-size:12px}
+.garden-dashboard-note[hidden],.garden-disclosure[hidden]{display:none!important}
+.garden-dashboard-note>strong{display:block;font-size:11px;color:#9aeac6;letter-spacing:.07em}
+.garden-dashboard-note>span{display:block;margin:8px 0;color:#d7e1df}
+.garden-live-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:12px 0}
+.garden-live-metrics>div{padding:10px;background:#122d33;border:1px solid #2d5255;border-radius:7px}
+.garden-live-metrics small{display:block;font-size:9px;color:#93b6b7;line-height:1.45}
+.garden-live-metrics strong{display:block;font-size:15px;margin-top:4px;font-variant-numeric:tabular-nums}
+.garden-dashboard-note p{margin:9px 0 0;color:#adc5c4;line-height:1.6}
+.garden-disclosure{color:#adccd1;font-size:11px;margin:12px 0;padding:11px;
+ background:#10232c;border-left:2px solid #76c5aa}
+.garden-disclosure a{color:#b0efc8}
+#view-garden[aria-pressed=true]{background:#a9e5cc;color:#08251d}
+@media(max-width:700px){
+ #stage-viewport.garden-active{height:62vh;min-height:420px}
+ .garden-live-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .scene-toolbar,.view-switch,.scene-options{max-width:100%;min-width:0}
+ .view-switch{display:flex;flex-wrap:wrap;gap:4px}
+ .view-switch button{flex:1 1 110px;min-width:0;white-space:normal;overflow-wrap:anywhere;padding:9px}
 }
-
-/* Photoreal garden is now the default visual experience. */
-body.garden-mode { background: #080d13; }
-body.garden-mode main { max-width: 1900px; padding-top: 24px; }
-body.garden-mode .mission-bar,
-body.garden-mode .workspace > aside,
-body.garden-mode .reference-library,
-body.garden-mode footer,
-body.garden-mode .legend,
-body.garden-mode .scene-options,
-body.garden-mode .playback,
-body.garden-mode .collision-panel,
-body.garden-mode .cad-status-bar,
-body.garden-mode .scene-tip,
-body.garden-mode .asset-note { display: none; }
-body.garden-mode .map-panel { padding: 20px; background: #0c151e;
-  border-color: #3d5058; box-shadow: 0 22px 90px #0008; }
-body.garden-mode .map-panel>.panel-top { padding: 0 4px 16px; }
-body.garden-mode #stage-viewport { min-height: 530px; height: min(78vh,950px);
-  aspect-ratio: auto; border: 1px solid #536770; border-radius: 14px; }
-body.garden-mode .garden-disclosure { margin: 14px 2px 0; background: #101d25; }
-#view-garden[aria-pressed=true] {
-  background: linear-gradient(120deg,#d7f0e2,#8ad9b7); color: #0a291d;
-}
-.garden-scene-heading { pointer-events: none; position: absolute; z-index: 3;
-  top: clamp(24px,3vw,48px); left: clamp(20px,3vw,48px); color: #fff;
-  text-shadow: 0 2px 18px #000d; display: flex; flex-direction: column; gap: 8px; }
-.garden-overline { color: #d9f1e5; font-size: 10px; font-weight: 800; letter-spacing: .20em; }
-.garden-scene-heading strong { line-height: .97; font-weight: 800; letter-spacing: -.075em;
-  font-size: clamp(52px,8vw,118px); }
-.garden-accent { color: #a0edc7; }
-.garden-scene-subtitle { max-width: 340px; font-size: 12px; line-height: 1.5; }
-#stage-viewport.garden-active .garden-credit { z-index: 4; bottom: 18px;
-  left: clamp(12px,2vw,26px); right: clamp(12px,2vw,26px); }
-#stage-viewport.garden-active .garden-credit span,
-#stage-viewport.garden-active .garden-credit a { background: #06131be8;
-  border: 1px solid #64887f80; padding: 10px 13px; border-radius: 9px; backdrop-filter: blur(9px); }
-@media(max-width:700px) {
- body.garden-mode .map-panel { padding: 11px; }
- body.garden-mode #stage-viewport { min-height: 420px; height: 65vh; }
- .garden-scene-heading { top: 22px; left: 18px; }
- .garden-scene-heading strong { font-size: 56px; }
- .garden-scene-subtitle { max-width: 200px; font-size: 10px; }
- .garden-overline { font-size: 8px; }
-}
-
-/* Keep all three scene modes within small phone viewports. */
-@media(max-width:700px) {
-  .scene-toolbar, .view-switch, .scene-options {
-    box-sizing: border-box; max-width: 100%; width: 100%; min-width: 0;
-  }
-  .view-switch { display: flex; flex-wrap: wrap; gap: 4px; }
-  .view-switch button { flex: 1 1 110px; min-width: 0; white-space: normal;
-    overflow-wrap: anywhere; padding: 9px 8px; line-height: 1.2; }
-  .scene-options label, .scene-options select { min-width: 0; max-width: 100%; }
-}
-@media(max-width:470px) {
-  .scene-options { grid-template-columns: repeat(2,minmax(0,1fr)); }
-}
-
-/* Compact masthead: long project title and simulation status need separate
-   rows on narrow screens rather than contributing to page min-content width. */
-@media(max-width:800px) {
-  .masthead { display: flex; flex-wrap: wrap; min-width: 0; }
-  .masthead .brand { flex: 1 1 100%; width: 100%; min-width: 0; overflow-wrap: anywhere; }
-  .masthead .mast-actions { flex: 1 1 100%; width: 100%;
-    align-items: center; flex-direction: row; justify-content: flex-start;
-    gap: 10px; min-width: 0; }
-  .masthead .brand h1 { overflow-wrap: anywhere; }
-}
-
-/* Explicit route to the unified rendering lab, distinct from third-party iframe. */
-.robot-lab-cta { display:inline-flex; align-items:center; justify-content:center;
-  flex:0 1 auto; min-width:0; padding:10px 14px; border-radius:9px; border:1px solid #8bccb1;
-  background:#172c2d; color:#cef8df; text-decoration:none; font-size:11px;
-  font-weight:850; letter-spacing:.01em; white-space:normal; text-align:center; }
-.robot-lab-cta:hover{background:#285044}
-@media(max-width:700px){.robot-lab-cta{flex:1 1 100%;width:100%;}}
+.robot-lab-cta{display:inline-flex;align-items:center;padding:9px 12px;
+ font-size:11px;font-weight:800;border:1px solid #67aa94;border-radius:8px;color:#b9f6db;
+ text-decoration:none}
