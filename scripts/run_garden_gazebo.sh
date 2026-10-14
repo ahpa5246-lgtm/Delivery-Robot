@@ -30,7 +30,10 @@ RECORD_PID=$!
 sleep 2
 # Gazebo DiffDrive retains a velocity if direct gz topic commands stop.
 # Route ALL commands through ROS 2 + watchdog at 20Hz; timeout forces zeros.
+# ROS-generated setup script assumes some unset AMENT vars; source without nounset.
+set +u
 source /opt/ros/jazzy/setup.bash
+set -u
 ros2 launch ros_gz_bridge ros_gz_bridge.launch.py \
   bridge_name:=cdr01_garden_bridge \
   config_file:="$(pwd)/simulation/ros_gz_bridge.yaml" \
