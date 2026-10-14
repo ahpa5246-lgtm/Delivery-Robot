@@ -40,6 +40,16 @@ try {
       return changes > 50;
     });
     assert.ok(canvasIsDrawn, 'Campus canvas must render non-empty map');
+    await page.waitForFunction(() => (
+      document.querySelector('#scene3d canvas')
+      && document.querySelector('#scene-status').textContent.includes('INTERACTIVE 3D')
+    ), { timeout: 15000 });
+    assert.equal(await page.locator('#view3d').getAttribute('aria-pressed'), 'true');
+    assert.equal(await page.locator('#robot-profile option').count(), 9);
+    assert.equal(await page.locator('#integration-list .ref-card').count(), 10);
+    await page.locator('#robot-profile').selectOption('six');
+    assert.ok((await page.locator('#profile-source').getAttribute('href')).includes('Delivery-Robot-ROS'));
+    await page.locator('#robot-profile').selectOption('cdr');
     const size = await page.evaluate(() => ({
       screen: window.innerWidth,
       page: document.documentElement.scrollWidth,
@@ -59,6 +69,12 @@ try {
     });
     assert.ok(chartRendered, 'Telemetry chart should render actual frame values');
     await page.screenshot({ path: 'experiments/ui_visual/' + viewport.name + '.png', fullPage: true });
+    if (viewport.name === 'desktop') {
+      await page.locator('[data-camera=follow]').click();
+      await page.waitForTimeout(950);
+      await page.screenshot({ path: 'experiments/ui_visual/desktop-follow-robot.png', fullPage: true });
+      await page.locator('[data-camera=orbit]').click();
+    }
     await page.locator('#scenario').selectOption('estop');
     const freshRun = page.waitForResponse(r => r.url().includes('/api/run?') && r.url().includes('scenario=estop'));
     await page.locator('#run').click();
