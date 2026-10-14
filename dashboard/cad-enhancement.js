@@ -140,6 +140,7 @@
      for(const [k,loc] of locs.entries()){
        const obj=fitObject(source.scene,scale,loc,k*.72);
        if(obj) {
+         obj.name='licensed-'+name;
          environment.add(obj);
          if(name==='office') {
            // The new architectural mesh replaces the east-wing placeholder,
