@@ -368,6 +368,8 @@
       }
     });
     pathGroup.clear();
+    if(window.CDRFleet?.getData()){pathGroup.visible=false;return;}
+    pathGroup.visible=true;
     if(!lastRun)return;
     for(let i=0;i<lastRun.routes.length;i++){
       const r=lastRun.routes[i];
@@ -389,7 +391,7 @@
     if(event?.detail?.run)lastRun=event.detail.run;
     if(event?.detail?.time!==undefined)playbackTime=event.detail.time;
     const o=trajectory(lastRun,playbackTime);
-    if(o&&robot){
+    if(o&&robot&&!window.CDRFleet?.getData()){
       const x=o.p.x_m,z=-o.p.y_m;let dx=x-lastX,dy=o.p.y_m-lastY;
       if(Math.hypot(dx,dy)>.006)robot.rotation.y=Math.atan2(dy,dx);
       robot.position.set(x,0,z);
@@ -423,7 +425,7 @@
     if(timestamp-lastGpuFrame<32)return;
     lastGpuFrame=timestamp;
     refreshSize();
-    if(cameraMode==='follow'&&robot){
+    if(cameraMode==='follow'&&(window.CDRFleet?.getSelectedRobot()||robot)){
       // Keep the camera almost vertically above the robot. Buildings must not
       // hide the tracked vehicle during a handover or final approach.
       const followed=window.CDRFleet?.getSelectedRobot()||robot;
