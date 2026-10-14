@@ -43,11 +43,11 @@
  };
  const cadMaterial=(tone)=>new THREE.MeshStandardMaterial({color:tone,metalness:.47,roughness:.42,side:THREE.DoubleSide});
  const COLORS={wheel:0x222a34,camera:0x1b5c76,delivery:0xe6a86a};
- function meshFor(type, target, group, position, rotation=[0,0,0]){
+ function meshFor(type, target, dimension, position, rotation=[0,0,0]){
    const m=new THREE.Mesh(target.geometry,cadMaterial(COLORS[type]||0x759fb0));
    const box=target.geometry.boundingBox;
    const bounds=box.getSize(new THREE.Vector3());
-   const factor=group/Math.max(.0001,bounds.x,bounds.y,bounds.z);
+   const factor=dimension/Math.max(.0001,bounds.x,bounds.y,bounds.z);
    m.scale.setScalar(factor);
    m.position.set(...position);m.rotation.set(...rotation);
    m.castShadow=true;m.receiveShadow=true;
@@ -69,23 +69,23 @@
       // underlying simple wheel as fallback in case asset decoding fails.
       for(const x of positions)for(const side of [-1,1]){
         const pos=[x,.20,side*(profile==='clearpath'?.43:.385)];
-        const detail=meshFor('wheel',found.wheel,radius,robot,pos,[0,Math.PI/2,0]);
+        const detail=meshFor('wheel',found.wheel,radius,pos,[0,Math.PI/2,0]);
         robot.add(detail);
         // Also include genuine mesh in the independent inspection viewport.
-        if(preview)preview.add(meshFor('wheel',found.wheel,radius,preview,pos,[0,Math.PI/2,0]));
+        if(preview)preview.add(meshFor('wheel',found.wheel,radius,pos,[0,Math.PI/2,0]));
       }
       loaded.add('wheel');
     }
     if(found.camera){
       const pos=[.25,.88,0];
-      robot.add(meshFor('camera',found.camera,.19,robot,pos));
-      if(preview)preview.add(meshFor('camera',found.camera,.19,preview,pos));
+      robot.add(meshFor('camera',found.camera,.19,pos));
+      if(preview)preview.add(meshFor('camera',found.camera,.19,pos));
       loaded.add('camera');
     }
     if(found.delivery){
       const pos=[0,.56,.11];
-      robot.add(meshFor('delivery',found.delivery,.29,robot,pos));
-      if(preview)preview.add(meshFor('delivery',found.delivery,.29,preview,pos));
+      robot.add(meshFor('delivery',found.delivery,.29,pos));
+      if(preview)preview.add(meshFor('delivery',found.delivery,.29,pos));
       loaded.add('delivery');
     }
     showStatus();
