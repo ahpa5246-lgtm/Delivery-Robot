@@ -1,0 +1,4 @@
+Repository: https://github.com/PalashMendhe/robotics-amr-ws
+Source ref: master
+Original path: src/robot_description/worlds/large_warehouse.sdf
+Status: attributed REFERENCE SDF fixture; dependencies and Gazebo version may not match our runtime.
