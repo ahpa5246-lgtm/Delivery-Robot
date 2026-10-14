@@ -37,6 +37,8 @@ class RealGardenTests(unittest.TestCase):
         self.assertIn("frame.setAttribute('src', frame.dataset.src)", js)
         self.assertIn("campus3d.hidden = true", js)
         self.assertIn("disclosure.hidden = false", js)
+        self.assertIn("gardenButton.click()", js)
+        self.assertIn("requestedView !== 'campus'", js)
 
 
 if __name__ == "__main__":

@@ -26,7 +26,7 @@ try {
       if (response.status() >= 400)
         errors.push('HTTP '+response.status()+' '+response.url());
     });
-    const response = await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    const response = await page.goto(base+'/?view=campus', { waitUntil: 'domcontentloaded', timeout: 30000 });
     assert.equal(response.status(), 200);
     await page.waitForFunction(() => (
       document.querySelector('#gazebo-samples')?.textContent !== '—'
@@ -199,6 +199,20 @@ try {
     await page.locator('#view3d').click();
     assert.equal(await page.locator('#scene3d').isVisible(), true);
     assert.equal(await page.locator('#garden-disclosure').isVisible(), false);
+    // In the normal entrypoint, the real Garden opens by default.
+    // Stub the remote scene only for stability; this is not a render-quality test.
+    await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.waitForFunction(() => document.body.classList.contains('garden-mode'));
+    assert.equal(await page.locator('#view-garden').getAttribute('aria-pressed'), 'true');
+    assert.equal(await page.locator('#mission-studio .panel-top h2').innerText(),
+      'The real Garden, reconstructed in 3D');
+    assert.equal(await page.locator('.mission-bar').isVisible(), false);
+    assert.equal(await page.locator('#garden-splat').isVisible(), true);
+    assert.equal(await page.locator('#garden-disclosure').isVisible(), true);
+    await page.screenshot({ path: 'experiments/ui_visual/'+viewport.name+'-garden-default.png', fullPage: true });
+    await page.locator('#view3d').click();
+    assert.equal(await page.locator('.mission-bar').isVisible(), true);
+    assert.equal(await page.locator('#scene3d').isVisible(), true);
     assert.deepEqual(errors, [], 'Unexpected browser errors');
     console.log(JSON.stringify({ viewport: viewport.name, canvas: 'rendered', horizontalOverflow: false, gazeboOdomDistanceM: 4.399, gazebosSamples: 397, estop: 'PAUSED_SAFE', jsErrors: errors.length }));
     await page.close();
