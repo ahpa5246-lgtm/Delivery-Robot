@@ -19,7 +19,7 @@
 <div class="shell">
   <aside class="rail" aria-label="Navigation">
     <div class="monogram">C<span>·</span></div>
-    <div class="rail-icons"><span class="rail-active" title="Mission simulation">◈</span><span title="Diagnostic maps">▦</span><span title="Telemetry">◉</span><span title="Safety">⬡</span></div>
+    <nav class="rail-icons" aria-label="Jump to sections"><a class="rail-active" href="#mission-studio" aria-label="Mission visualization" title="Mission visualization">◈</a><a href="#analytics-section" aria-label="Mission analytics" title="Mission analytics">▦</a><a href="#telemetry-section" aria-label="Telemetry plots" title="Telemetry plots">◉</a><a href="#sensor-section" aria-label="Sensor diagnostics" title="Sensor diagnostics">⬡</a></nav>
     <div class="rail-bottom">01</div>
   </aside>
   <main>
@@ -34,7 +34,7 @@
       <button id="run" class="primary" type="button"><span>▶</span> RUN SIMULATION</button>
     </section>
     <div class="workspace">
-      <section class="map-panel" aria-label="Campus mission replay">
+      <section class="map-panel" id="mission-studio" aria-label="Campus mission replay">
         <div class="panel-top"><div><span class="panel-kicker">01 / IMMERSIVE MISSION STUDIO</span><h2>Campus mission simulation</h2></div><div class="legend"><span><i class="legend-path"></i> Route</span><span><i class="legend-robot"></i> CDR-01</span><span><i class="legend-zone"></i> Restricted</span></div></div>
         <div class="scene-toolbar" aria-label="Mission scene settings">
           <div class="view-switch"><button id="view3d" type="button" aria-pressed="true">3D WORLD</button><button id="view2d" type="button" aria-pressed="false">2D MAP</button></div>
@@ -66,7 +66,7 @@
           <button id="play" title="Pause or resume replay" aria-label="Pause or resume replay">Ⅱ</button><span class="time" id="elapsed">00:00</span><input id="timeline" aria-label="Replay position" type="range" min="0" max="100" value="0"><span class="time muted" id="total">00:00</span><select id="speed" aria-label="Playback speed"><option value="1">1×</option><option value="4" selected>4×</option><option value="12">12×</option><option value="30">30×</option></select>
         </div>
         <div class="notice"><span class="notice-symbol">ⓘ</span><span>The 3D robot is animated from a <strong>deterministic 2D trajectory</strong> (not Gazebo contact physics). Only the separately labeled Gazebo archive contains Gazebo odometry. Robot variants are visual demonstrations, not tested configurations.</span></div>
-        <section class="trace-panel" aria-label="Two-dimensional model telemetry traces">
+        <section class="trace-panel" id="telemetry-section" aria-label="Two-dimensional model telemetry traces">
           <div class="row-title"><div><span class="panel-kicker">02 / REPLAY TELEMETRY</span><h2>Motion and battery profile</h2></div><span class="evidence-tag">2D MODEL</span></div>
           <div class="trace-legend"><span class="trace-speed">● Modeled velocity (m/s)</span><span class="trace-soc">● Modeled battery SOC (%)</span></div>
           <canvas id="trace" width="1152" height="290" role="img" aria-label="Speed and battery state of charge over simulated mission time"></canvas>
@@ -74,7 +74,7 @@
         </section>
       </section>
       <aside class="insights">
-        <div class="operations-heading">
+        <div class="operations-heading" id="analytics-section">
           <div><span class="panel-kicker">02 / OPERATIONS INTELLIGENCE</span><h2>Mission analytics</h2><p>Timeline-linked readings from the executed offline simulator. Gazebo experiments appear separately.</p></div>
           <div class="operations-actions"><span class="evidence-tag">MODELED · NOT HARDWARE</span><button id="export-csv" type="button" class="export-button">↓ EXPORT TELEMETRY CSV</button></div>
         </div>
@@ -103,7 +103,7 @@
           <canvas id="course-chart" role="img" aria-label="Course heading over simulation time"></canvas>
           <div id="phase-distribution" class="phase-distribution" aria-label="Mission phase distribution"></div>
         </section>
-        <section class="sensor-panel">
+        <section class="sensor-panel" id="sensor-section">
           <div class="row-title"><div><span class="panel-kicker">06 / SENSOR INTEGRITY</span><h2>Data source health</h2></div><span class="evidence-tag">NO HARDWARE LINK</span></div>
           <div class="sensor-rows">
             <div><span>LiDAR / range scan</span><strong>NOT CONNECTED</strong></div>
