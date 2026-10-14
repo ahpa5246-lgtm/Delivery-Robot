@@ -60,7 +60,7 @@
     // Extend the visible terrain beyond the 32x20 m survey tile. This
     // removes the floating-board silhouette but remains purely decorative.
     const outside=new T.Mesh(new T.PlaneGeometry(240,240),
-      mat(warehouse?0x3a4951:0x345447,{roughness:.98}));
+      new T.MeshBasicMaterial({color:warehouse?0x1b2933:0x1b3938,fog:true}));
     outside.rotation.x=-Math.PI/2;
     outside.position.set(16,-.374,-10);
     outside.receiveShadow=true;outside.userData.visualOnly=true;
