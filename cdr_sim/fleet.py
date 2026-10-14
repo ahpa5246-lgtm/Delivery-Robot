@@ -154,6 +154,11 @@ def fleet_replay(world: Campus | None=None, seed: int=7) -> dict:
             a["pose"]=new
             source=_pose(a["mission"]["frames"],a["elapsed"])
             ranges=_scan(new[0],new[1],a["heading"],world) if t%2==0 else []
+            previous=a["frames"][-1] if a["frames"] else None
+            old_heading=previous["heading_rad"] if previous else a["heading"]
+            yaw_delta=atan2(sin(a["heading"]-old_heading),
+                             cos(a["heading"]-old_heading))
+            old_speed=previous["speed_mps"] if previous else 0.
             record={
                 "time_s":t,"x_m":round(new[0],3),"y_m":round(new[1],3),
                 "heading_rad":round(a["heading"],4),"speed_mps":round(delta/STEP_S,3),
@@ -161,6 +166,13 @@ def fleet_replay(world: Campus | None=None, seed: int=7) -> dict:
                 "distance_m_estimated":round(source["distance_m"],3),
                 "status":modes[k] if t else "STANDBY",
                 "range_scan_m":ranges,
+                "front_proximity_m":ranges[0] if ranges else None,
+                "left_proximity_m":ranges[4] if ranges else None,
+                "rear_proximity_m":ranges[8] if ranges else None,
+                "right_proximity_m":ranges[12] if ranges else None,
+                "imu_yaw_rate_estimate_rad_s":round(yaw_delta/STEP_S,4),
+                "acceleration_estimate_mps2":round((delta/STEP_S-old_speed)/STEP_S,4),
+                "wheel_revolutions_estimated":round(source["distance_m"]/(2*pi*.17),3),
                 "nearest_static_clearance_m":round(world.clearance(new),3)
             }
             a["frames"].append(record)
@@ -184,7 +196,9 @@ def fleet_replay(world: Campus | None=None, seed: int=7) -> dict:
         "sensor_model":{"lidar":"16 ideal 2D geometric rays against static footprints",
                         "proximity":"nearest static footprint, modeled",
                         "wheel_odometry":"derived from replay displacement",
-                        "imu":"heading derived from XY displacement",
+                        "imu":"modeled yaw rate and acceleration from XY frames",
+                        "wheel_encoders":"estimated turns from path length and assumed 0.17 m wheel radius",
+                        "ultrasonic":"front/side/rear values derived from ideal 2D rays",
                         "rgbd":"NOT CONNECTED","gps":"NOT CONNECTED"},
         "robots":[{"id":a["id"],"destination":a["destination"],"pad":a["pad"],
                    "mission_status":a["mission"]["status"],
