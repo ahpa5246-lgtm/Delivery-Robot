@@ -111,3 +111,9 @@ footer{border-top:1px solid #263c4a;padding-top:19px}
  #trace{aspect-ratio:2}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+
+.operations-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.export-button{appearance:none;background:#173b4b;border:1px solid #3b7182;border-radius:8px;color:#bffbe9;padding:11px 15px;font-size:11px;font-weight:750;letter-spacing:.04em;cursor:pointer;transition:background .2s}
+.export-button:hover{background:#226273;color:#fff}
+.export-button:focus-visible{outline:2px solid #8ffce3;outline-offset:2px}
+@media(max-width:650px){.operations-actions{width:100%}.operations-actions .evidence-tag{font-size:9px}.export-button{font-size:10px;padding:9px}}
