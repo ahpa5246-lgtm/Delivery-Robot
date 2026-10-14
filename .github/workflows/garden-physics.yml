@@ -6,6 +6,8 @@ on:
       - 'scripts/generate_garden_gazebo.py'
       - 'scripts/export_garden_odometry.py'
       - 'scripts/run_garden_gazebo.sh'
+      - 'scripts/drive_garden_ros2.py'
+      - 'scripts/ros_velocity_watchdog.py'
       - 'tests/test_garden_physics.py'
       - 'world/garden_calibration_example.json'
       - '.github/workflows/garden-physics.yml'

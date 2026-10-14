@@ -71,6 +71,14 @@ class GardenPhysicsTests(unittest.TestCase):
             self.assertEqual(info["garden_obstacle_collisions"],"NOT_MODELED")
             self.assertEqual(len(info["world_sha256"]),64)
 
+    def test_ros2_watchdog_and_real_stop_acceptance_present(self):
+        root=Path(__file__).resolve().parents[1]
+        script=(root/"scripts/run_garden_gazebo.sh").read_text()
+        self.assertIn("ros_velocity_watchdog.py",script)
+        self.assertIn("drive_garden_ros2.py",script)
+        self.assertIn("stopped_at_end",script)
+        self.assertNotIn("gz topic -t /model/cdr01/cmd_vel",script)
+
     def test_parser_rejects_fake_empty_stream_and_extracts_metrics(self):
         messages = (gazebo_message(5,0,0,0,1)+
                     gazebo_message(6,.2,0,0,1)+

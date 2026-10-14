@@ -76,3 +76,13 @@ can Garden obstacles and grass contact be claimed as physically simulated.
 
 No cloud machine and no GPU is needed to *view previously recorded runs*.
 Live new Gazebo commands still require an active simulation process.
+
+## Stop-response acceptance through ROS 2
+
+The first actual Gazebo run revealed that a direct `gz topic` zero command
+did not stop DiffDrive. The simulation now publishes to
+`/robot1/cmd_vel_requested` through the existing `ros_velocity_watchdog.py`
+and `ros_gz_bridge`. The watchdog publishes zeros repeatedly after input
+expires. A recording passes only when Gazebo odometry shows both displacement
+of at least 0.10 m and final-two-second mean speed at or below 0.08 m/s.
+This is software-only, not a physical safety-rated stop.
