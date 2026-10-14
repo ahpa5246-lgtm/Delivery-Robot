@@ -16,9 +16,11 @@ page.on('response',r=>{
 });
 try {
  await page.goto('https://superspl.at/scene/bc0906cd?aa',{waitUntil:'domcontentloaded',timeout:45000});
- await page.waitForTimeout(18000);
+ await page.waitForTimeout(25000);
  console.log('PUBLIC_GARDEN_RESOURCES='+JSON.stringify([...records.values()].slice(0,60),null,2));
  console.log('IFRAMES='+JSON.stringify(await page.locator('iframe').evaluateAll(a=>a.map(x=>x.src))));
+ console.log('FRAMES='+JSON.stringify(page.frames().map(f=>({url:f.url(),name:f.name()}))));
+ for (const f of page.frames()) { try { console.log('FRAME_BODY='+JSON.stringify({url:f.url(),body:(await f.locator('body').innerText({timeout:4000})).slice(0,1200)})); } catch(e) {console.log('FRAME_ERROR',e.message)} }
  console.log('DOWNLOAD_LINKS='+JSON.stringify(await page.locator('a').evaluateAll(a=>a.filter(x=>/download/i.test(x.textContent)).map(x=>({text:x.textContent?.trim(),url:x.href.slice(0,200)})))));
 }catch(e){console.error('DISCOVERY_FAILURE',e.message);process.exitCode=1}
 finally{await browser.close();}
