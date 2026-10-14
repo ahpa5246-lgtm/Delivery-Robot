@@ -186,7 +186,7 @@ class Handler(BaseHTTPRequestHandler):
                       "worker-src 'self' blob:; object-src 'none'; frame-ancestors 'none'")
         else:
             policy = ("default-src 'self'; script-src 'self'; style-src 'self'; "
-                      "img-src 'self' data:; connect-src 'self'; frame-src https://superspl.at; "
+                      "img-src 'self' data:; connect-src 'self'; frame-src 'self'; "
                       "object-src 'none'; frame-ancestors 'none'")
         self.send_header("Content-Security-Policy", policy)
         self.end_headers()

@@ -36,3 +36,15 @@
 .robot-lab-cta{display:inline-flex;align-items:center;padding:9px 12px;
  font-size:11px;font-weight:800;border:1px solid #67aa94;border-radius:8px;color:#b9f6db;
  text-decoration:none}
+
+/* Retain small-viewport layout fixes from original mission studio. */
+@media(max-width:800px) {
+ .masthead{display:flex;flex-wrap:wrap;min-width:0}
+ .masthead .brand{flex:1 1 100%;width:100%;min-width:0;overflow-wrap:anywhere}
+ .masthead .mast-actions{flex:1 1 100%;width:100%;min-width:0;flex-direction:row;gap:10px}
+ .masthead .brand h1{overflow-wrap:anywhere}
+}
+@media(max-width:470px){
+ .scene-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .scene-options label,.scene-options select{min-width:0;max-width:100%}
+}
