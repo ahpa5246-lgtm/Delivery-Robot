@@ -71,3 +71,17 @@ body.garden-mode .garden-disclosure { margin: 14px 2px 0; background: #101d25; }
  .garden-scene-subtitle { max-width: 200px; font-size: 10px; }
  .garden-overline { font-size: 8px; }
 }
+
+/* Keep all three scene modes within small phone viewports. */
+@media(max-width:700px) {
+  .scene-toolbar, .view-switch, .scene-options {
+    box-sizing: border-box; max-width: 100%; width: 100%; min-width: 0;
+  }
+  .view-switch { display: flex; flex-wrap: wrap; gap: 4px; }
+  .view-switch button { flex: 1 1 110px; min-width: 0; white-space: normal;
+    overflow-wrap: anywhere; padding: 9px 8px; line-height: 1.2; }
+  .scene-options label, .scene-options select { min-width: 0; max-width: 100%; }
+}
+@media(max-width:470px) {
+  .scene-options { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
