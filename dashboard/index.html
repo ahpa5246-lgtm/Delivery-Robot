@@ -76,6 +76,13 @@
         <section class="fleet-deck" id="fleet-section" aria-label="Five robot fleet simulation">
           <div class="fleet-deck-top"><div><span class="panel-kicker">02 / MULTI-ROBOT DISPATCH</span><h2>Five-robot fleet</h2><p>Independent offline missions with geometric proximity reservations. Never hardware telemetry.</p></div>
             <div class="fleet-head-right"><span id="fleet-integrity" class="fleet-verdict">LOADING MODEL</span><button type="button" id="fleet-refresh" class="fleet-refresh">↻ Refresh fleet run</button></div></div>
+          <div class="fleet-transport">
+            <button id="fleet-toggle" type="button" aria-label="Pause or resume five-robot simulation">Ⅱ Pause fleet</button>
+            <span id="fleet-playhead">00:00</span>
+            <input id="fleet-scrub" type="range" min="0" max="100" step="1" value="0" aria-label="Scrub five-robot simulation time">
+            <span id="fleet-end">—</span>
+            <select id="fleet-speed" aria-label="Fleet simulation replay speed"><option value="1">1×</option><option value="2" selected>2×</option><option value="4">4×</option></select>
+          </div>
           <div class="fleet-body">
             <div class="fleet-card"><div class="fleet-subhead"><h3>Fleet manifest</h3><span id="fleet-clock">SIM + 00:00</span></div><div id="fleet-robot-list" class="fleet-robot-list" aria-live="polite"></div></div>
             <div class="fleet-card"><div class="fleet-subhead"><h3>Dispatch overview</h3><span>MODEL GENERATED</span></div><div id="fleet-summary" class="fleet-summary"></div><div id="fleet-queue" class="fleet-queue"></div></div>
