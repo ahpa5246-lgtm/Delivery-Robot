@@ -133,6 +133,13 @@ try {
       page: document.documentElement.scrollWidth,
       body: document.body.scrollWidth,
     }));
+    if(size.page>size.screen+1) {
+      const offenders=await page.evaluate(()=>[...document.querySelectorAll('body *')]
+        .filter(el=>el.getBoundingClientRect().right>window.innerWidth+1)
+        .slice(0,16).map(el=>({tag:el.tagName,id:el.id,cls:typeof el.className==='string'?el.className.slice(0,60):'',
+          right:Math.round(el.getBoundingClientRect().right),scroll:el.scrollWidth})));
+      console.error('OVERFLOW ELEMENTS',JSON.stringify(offenders));
+    }
     assert.ok(size.page <= size.screen + 1, 'Unexpected horizontal overflow: ' + JSON.stringify(size));
     assert.ok(size.body <= size.screen + 1, 'Body exceeds viewport: ' + JSON.stringify(size));
     await page.locator('#timeline').evaluate(input => {
