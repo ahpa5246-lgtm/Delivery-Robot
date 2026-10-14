@@ -1,0 +1,28 @@
+name: Download creator-licensed Garden Gaussian asset
+on:
+  push:
+    branches: [feature/real-garden-robot-simulation]
+    paths: ['scripts/download_garden_asset.mjs','.github/workflows/download-garden.yml']
+  workflow_dispatch:
+jobs:
+  download:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Fetch publicly downloadable Garden file
+        run: node scripts/download_garden_asset.mjs
+      - name: Archive actual editable Garden model, never video
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gaussian-garden-original-ccby4
+          path: assets/gaussian-garden-download/*
+          retention-days: 7
+          if-no-files-found: warn
