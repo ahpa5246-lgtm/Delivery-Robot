@@ -85,3 +85,14 @@ body.garden-mode .garden-disclosure { margin: 14px 2px 0; background: #101d25; }
 @media(max-width:470px) {
   .scene-options { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
+
+/* Compact masthead: long project title and simulation status need separate
+   rows on narrow screens rather than contributing to page min-content width. */
+@media(max-width:800px) {
+  .masthead { display: flex; flex-wrap: wrap; min-width: 0; }
+  .masthead .brand { flex: 1 1 100%; width: 100%; min-width: 0; overflow-wrap: anywhere; }
+  .masthead .mast-actions { flex: 1 1 100%; width: 100%;
+    align-items: center; flex-direction: row; justify-content: flex-start;
+    gap: 10px; min-width: 0; }
+  .masthead .brand h1 { overflow-wrap: anywhere; }
+}
