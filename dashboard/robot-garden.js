@@ -131,7 +131,7 @@ function buildRobot(app){
 function previewRobotAtCamera(){
  if(!robot||!viewer)return;
  const cam=viewer.app.root.findByName('camera');
- if(!cam)return;
+ if(!cam){status('CAMERA NOT READY · USE PLACE ON LAWN');return;}
  const p=cam.getPosition(),forward=cam.forward;
  // Do not pretend the preview is grounded: it hovers near the camera
  // until the operator selects a visible lawn/paving point.
