@@ -2,7 +2,7 @@
 import math
 import struct
 import unittest
-from scripts.export_lichtblick_3d import pose, pose_stamped, path_message, ros_time
+from scripts.export_lichtblick_3d import pose, pose_stamped, path_message, ros_time, tf_message
 
 
 class TestLichtblick3D(unittest.TestCase):
@@ -24,6 +24,15 @@ class TestLichtblick3D(unittest.TestCase):
         self.assertEqual(struct.unpack("<I", binary[12:16])[0], 4)
         self.assertEqual(binary[16:20], b"odom")
         self.assertEqual(len(binary), 20 + 56)
+
+    def test_tf_frame_and_transform(self):
+        frame = {"time_s": 1.5, "x_m": 3.0, "y_m": -2.0, "yaw_rad": 0.0}
+        binary = tf_message(frame, 4)
+        self.assertEqual(struct.unpack("<I", binary[:4])[0], 1)
+        self.assertEqual(struct.unpack("<III", binary[4:16]), (4, 1, 500000000))
+        self.assertEqual(binary[20:24], b"odom")
+        self.assertEqual(binary[28:37], b"base_link")
+        self.assertEqual(struct.unpack("<7d", binary[37:93]), (3, -2, 0, 0, 0, 0, 1))
 
     def test_path_pose_count(self):
         frames = [
