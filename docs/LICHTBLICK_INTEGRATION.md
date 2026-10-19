@@ -1,0 +1,55 @@
+# Lichtblick integration — phase 1: recorded Gazebo odometry
+
+Reference: https://github.com/Lichtblick-Suite/lichtblick
+
+This is a **small integration**, not a fork or replacement of the existing dashboard.
+Lichtblick is a separate open-source visualization tool. Its source license and
+third-party dependency licenses must be reviewed before redistribution.
+
+## Export a real simulation recording
+
+Generate a Garden flat-proxy Gazebo run using the documented project workflow:
+
+```bash
+bash scripts/run_garden_gazebo.sh assets/garden-calibration.json
+```
+
+Then convert the recorded odometry:
+
+```bash
+python -m pip install mcap
+python scripts/export_lichtblick_mcap.py experiments/garden_gazebo/latest_run.json --output experiments/garden_gazebo/cdr01.mcap
+```
+
+Open the `.mcap` file in Lichtblick (browser or desktop). Add **Raw Messages** for
+`/cdr01/garden_gazebo/odometry` and **Plot** panels for `x_m`, `y_m`,
+and `yaw_rad` using the message-path selector.
+
+This export stores JSON-schema messages. It does **not** yet publish ROS 2
+`nav_msgs/Odometry`, `tf2_msgs/TFMessage`, or `sensor_msgs/PointCloud2`.
+Consequently the 3D panel will **not automatically render a robot pose** from
+this custom topic. Native ROS message conversion and a TF/URDF bridge are the
+next integration milestone. Never label the exported messages as physical
+measurements, real Garden terrain collisions, or live telemetry.
+
+The exporter rejects recordings lacking the established Gazebo source and
+flat-proxy provenance, mismatched sample counts, invalid numeric data, and
+non-monotonic timestamps. It does not synthesize missing odometry.
+
+## Validation
+
+```bash
+python -m unittest tests.test_lichtblick_mcap -v
+```
+
+Integration acceptance remains **pending** until the converter has been run
+against a real recorded file and its output opened in Lichtblick. No claim of
+an end-to-end tested integration is made by this document.
+
+## Next milestones
+
+1. Verify real MCAP export and visual plotting in Lichtblick.
+2. Add ROS 2 native message schema, coordinate frames and URDF for the 3D view.
+3. Add an opt-in read-only WebSocket bridge for live Gazebo topics.
+4. Build a CDR mission-status custom panel with source labels.
+5. Compare desktop/mobile screenshots and interaction latency with Foxglove.
