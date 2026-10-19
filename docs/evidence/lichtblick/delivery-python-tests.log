@@ -1,0 +1,113 @@
+test_architecture_and_original_materials (test_cad_assets.ImportedGeometryTests.test_architecture_and_original_materials) ... ok
+test_documented_licenses_and_authorship (test_cad_assets.ImportedGeometryTests.test_documented_licenses_and_authorship) ... ok
+test_new_scripts_and_styles_are_served (test_cad_assets.ImportedGeometryTests.test_new_scripts_and_styles_are_served) ... ok
+test_no_arbitrary_local_file_path (test_cad_assets.ImportedGeometryTests.test_no_arbitrary_local_file_path) ... ok
+test_original_cad_parts_are_served_and_nonempty (test_cad_assets.ImportedGeometryTests.test_original_cad_parts_are_served_and_nonempty) ... ok
+test_battery_reservation_refuses_mission (test_campus.CampusPlannerTests.test_battery_reservation_refuses_mission) ... ok
+test_construction_replan_destination_matrix (test_campus.CampusPlannerTests.test_construction_replan_destination_matrix) ... ok
+test_dynamic_replanning_across_seeds (test_campus.CampusPlannerTests.test_dynamic_replanning_across_seeds) ... ok
+test_goal_inside_building_rejected (test_campus.CampusPlannerTests.test_goal_inside_building_rejected) ... ok
+test_handover_needs_authorization (test_campus.CampusPlannerTests.test_handover_needs_authorization) ... ok
+test_inflation_blocks_narrow_gap (test_campus.CampusPlannerTests.test_inflation_blocks_narrow_gap) ... ok
+test_invalid_options (test_campus.CampusPlannerTests.test_invalid_options) ... ok
+test_no_diagonal_corner_cutting (test_campus.CampusPlannerTests.test_no_diagonal_corner_cutting) ... ok
+test_normal_delivery_returns_to_dock (test_campus.CampusPlannerTests.test_normal_delivery_returns_to_dock) ... ok
+test_reproducibility (test_campus.CampusPlannerTests.test_reproducibility) ... ok
+test_return_corridor_loss_stops_safely (test_campus.CampusPlannerTests.test_return_corridor_loss_stops_safely) ... ok
+test_routes_between_all_stops (test_campus.CampusPlannerTests.test_routes_between_all_stops) ... ok
+test_stress_nominal_50_seeds (test_campus.CampusPlannerTests.test_stress_nominal_50_seeds) ... ok
+test_telemetry_invariants (test_campus.CampusPlannerTests.test_telemetry_invariants) ... ok
+test_unsafe_scenarios_stop (test_campus.CampusPlannerTests.test_unsafe_scenarios_stop) ... ok
+test_bounding_boxes_match_2d_occupancy (test_campus_world.CampusSDFTests.test_bounding_boxes_match_2d_occupancy) ... ok
+test_destination_markers_are_visual_only (test_campus_world.CampusSDFTests.test_destination_markers_are_visual_only) ... ok
+test_differential_robot_stays_25_kg_and_starts_at_depot (test_campus_world.CampusSDFTests.test_differential_robot_stays_25_kg_and_starts_at_depot) ... ok
+test_every_visible_solid_fixture_has_gazebo_collision_from_manifest (test_campus_world.CampusSDFTests.test_every_visible_solid_fixture_has_gazebo_collision_from_manifest) ... ok
+test_ground_spans_map (test_campus_world.CampusSDFTests.test_ground_spans_map) ... ok
+test_archived_gazebo_evidence_is_real_simulator_output (test_dashboard_api.DashboardAPITests.test_archived_gazebo_evidence_is_real_simulator_output) ... ok
+test_cinematic_scene_resources_are_allowlisted (test_dashboard_api.DashboardAPITests.test_cinematic_scene_resources_are_allowlisted) ... ok
+test_denied_handover (test_dashboard_api.DashboardAPITests.test_denied_handover) ... ok
+test_file_path_traversal_is_blocked (test_dashboard_api.DashboardAPITests.test_file_path_traversal_is_blocked) ... ok
+test_input_validation (test_dashboard_api.DashboardAPITests.test_input_validation) ... ok
+test_map_and_run (test_dashboard_api.DashboardAPITests.test_map_and_run) ... ok
+test_selected_world_affects_geometry_replay_and_occupancy (test_dashboard_api.DashboardAPITests.test_selected_world_affects_geometry_replay_and_occupancy) ... ok
+test_static_files (test_dashboard_api.DashboardAPITests.test_static_files) ... ok
+test_invalid_input_does_not_create_output (test_delivery_recording.DeliveryRecordingTests.test_invalid_input_does_not_create_output) ... ok
+test_provenance_fault_status_and_reproducibility (test_delivery_recording.DeliveryRecordingTests.test_provenance_fault_status_and_reproducibility) ... ok
+test_roundtrip_ros_frames_and_real_motion (test_delivery_recording.DeliveryRecordingTests.test_roundtrip_ros_frames_and_real_motion) ... ok
+test_calibration_rejects_false_physics_claims_and_bad_units (test_garden_physics.GardenPhysicsTests.test_calibration_rejects_false_physics_claims_and_bad_units) ... ok
+test_codespaces_launcher_is_syntax_checked_and_source_labeled (test_garden_physics.GardenPhysicsTests.test_codespaces_launcher_is_syntax_checked_and_source_labeled) ... ok
+test_export_and_api_keep_recorded_source_and_not_garden_contact (test_garden_physics.GardenPhysicsTests.test_export_and_api_keep_recorded_source_and_not_garden_contact) ... ok
+test_parser_rejects_fake_empty_stream_and_extracts_metrics (test_garden_physics.GardenPhysicsTests.test_parser_rejects_fake_empty_stream_and_extracts_metrics) ... ok
+test_physical_ground_and_dynamic_robot_but_no_claimed_hedges (test_garden_physics.GardenPhysicsTests.test_physical_ground_and_dynamic_robot_but_no_claimed_hedges) ... ok
+test_ros2_watchdog_and_real_stop_acceptance_present (test_garden_physics.GardenPhysicsTests.test_ros2_watchdog_and_real_stop_acceptance_present) ... ok
+test_dashboard_not_redirected_to_external_website (test_gaussian_garden.GardenDashboardTests.test_dashboard_not_redirected_to_external_website) ... ok
+test_garden_canvas_is_real_playcanvas_not_provider_website (test_gaussian_garden.GardenDashboardTests.test_garden_canvas_is_real_playcanvas_not_provider_website) ... ok
+test_nav_retains_dashboard_and_synthetic_model_disclosure (test_gaussian_garden.GardenDashboardTests.test_nav_retains_dashboard_and_synthetic_model_disclosure) ... ok
+test_inertias_positive (test_gazebo_geometry.SDFGeometryTests.test_inertias_positive) ... ok
+test_joint_references_and_sensors (test_gazebo_geometry.SDFGeometryTests.test_joint_references_and_sensors) ... ok
+test_links_joints_and_drive (test_gazebo_geometry.SDFGeometryTests.test_links_joints_and_drive) ... ok
+test_total_mass_25kg_with_payload (test_gazebo_geometry.SDFGeometryTests.test_total_mass_25kg_with_payload) ... ok
+test_path_pose_count (test_lichtblick_3d.TestLichtblick3D.test_path_pose_count) ... ok
+test_pose_has_correct_position_and_quaternion (test_lichtblick_3d.TestLichtblick3D.test_pose_has_correct_position_and_quaternion) ... ok
+test_pose_stamped_header (test_lichtblick_3d.TestLichtblick3D.test_pose_stamped_header) ... ok
+test_ros_time_normalizes_rounding (test_lichtblick_3d.TestLichtblick3D.test_ros_time_normalizes_rounding) ... ok
+test_tf_frame_and_transform (test_lichtblick_3d.TestLichtblick3D.test_tf_frame_and_transform) ... ok
+test_reject_fake_source (test_lichtblick_mcap.TestLichtblickBridge.test_reject_fake_source) ... ok
+test_reject_nan (test_lichtblick_mcap.TestLichtblickBridge.test_reject_nan) ... ok
+test_reject_nonmonotonic_time (test_lichtblick_mcap.TestLichtblickBridge.test_reject_nonmonotonic_time) ... ok
+test_reject_sample_mismatch (test_lichtblick_mcap.TestLichtblickBridge.test_reject_sample_mismatch) ... ok
+test_reject_unvalidated_provenance (test_lichtblick_mcap.TestLichtblickBridge.test_reject_unvalidated_provenance) ... ok
+test_valid_recording (test_lichtblick_mcap.TestLichtblickBridge.test_valid_recording) ... ok
+test_no_control_endpoint (test_lichtblick_studio.TestStudioRoutes.test_no_control_endpoint) ... ok
+test_studio_assets (test_lichtblick_studio.TestStudioRoutes.test_studio_assets) ... ok
+test_studio_document (test_lichtblick_studio.TestStudioRoutes.test_studio_document) ... ok
+test_visual_cad_is_local_and_frame_connected (test_native_robot_model.NativeRobotModelTests.test_visual_cad_is_local_and_frame_connected) ... ok
+test_attributed_reference_fixtures (test_reference_integrations.UpstreamIntegrationTests.test_attributed_reference_fixtures) ... ok
+test_local_three_engine_and_3d_scripts (test_reference_integrations.UpstreamIntegrationTests.test_local_three_engine_and_3d_scripts) ... ok
+test_provenance_api_and_roles (test_reference_integrations.UpstreamIntegrationTests.test_provenance_api_and_roles) ... ok
+test_csp_is_scoped_to_lab_page (test_robot_garden.GardenRobotTests.test_csp_is_scoped_to_lab_page) ... ok
+test_homepage_has_visible_lab_entry (test_robot_garden.GardenRobotTests.test_homepage_has_visible_lab_entry) ... ok
+test_missing_garden_zip_is_reported (test_robot_garden.GardenRobotTests.test_missing_garden_zip_is_reported) ... ok
+test_real_playcanvas_entity_is_created (test_robot_garden.GardenRobotTests.test_real_playcanvas_entity_is_created) ... ok
+test_real_robot_lab_route_exists (test_robot_garden.GardenRobotTests.test_real_robot_lab_route_exists) ... ok
+test_secure_lod_zip_streaming (test_robot_garden.GardenRobotTests.test_secure_lod_zip_streaming) ... ok
+test_battery_uses_energy (test_sim.EngineeringTests.test_battery_uses_energy) ... ok
+test_blocked_route_fails_safe (test_sim.EngineeringTests.test_blocked_route_fails_safe) ... ok
+test_emergency_stop (test_sim.EngineeringTests.test_emergency_stop) ... ok
+test_fault_mission (test_sim.EngineeringTests.test_fault_mission) ... ok
+test_grade_limit (test_sim.EngineeringTests.test_grade_limit) ... ok
+test_handover_requires_authorization (test_sim.EngineeringTests.test_handover_requires_authorization) ... ok
+test_independent_odom_error (test_sim.EngineeringTests.test_independent_odom_error) ... ok
+test_nominal_100_seed_safety (test_sim.EngineeringTests.test_nominal_100_seed_safety) ... ok
+test_nominal_incline_five_deg (test_sim.EngineeringTests.test_nominal_incline_five_deg) ... ok
+test_nominal_mission (test_sim.EngineeringTests.test_nominal_mission) ... ok
+test_obstacle_stop (test_sim.EngineeringTests.test_obstacle_stop) ... ok
+test_payload_limit (test_sim.EngineeringTests.test_payload_limit) ... ok
+test_proximity (test_sim.EngineeringTests.test_proximity) ... ok
+test_safe_lock_interlock (test_sim.EngineeringTests.test_safe_lock_interlock) ... ok
+test_seed_reproducibility (test_sim.EngineeringTests.test_seed_reproducibility) ... ok
+test_stale_sensor (test_sim.EngineeringTests.test_stale_sensor) ... ok
+test_thousand_seed_robustness (test_sim.EngineeringTests.test_thousand_seed_robustness) ... ok
+test_wheel_torque_limit (test_sim.EngineeringTests.test_wheel_torque_limit) ... ok
+test_fresh_command_passes (test_watchdog.WatchdogTests.test_fresh_command_passes) ... ok
+test_invalid_command_stops (test_watchdog.WatchdogTests.test_invalid_command_stops) ... ok
+test_latched_stop (test_watchdog.WatchdogTests.test_latched_stop) ... ok
+test_limits_are_enforced (test_watchdog.WatchdogTests.test_limits_are_enforced) ... ok
+test_stale_command_stops (test_watchdog.WatchdogTests.test_stale_command_stops) ... ok
+test_stops_before_any_input (test_watchdog.WatchdogTests.test_stops_before_any_input) ... ok
+test_time_rollback_stops (test_watchdog.WatchdogTests.test_time_rollback_stops) ... ok
+test_all_model_frames_and_routes_obey_known_static_obstacles (test_world_collision_v4.SharedWorldCollisionTests.test_all_model_frames_and_routes_obey_known_static_obstacles) ... ok
+test_declared_solid_blocks_direct_route (test_world_collision_v4.SharedWorldCollisionTests.test_declared_solid_blocks_direct_route) ... ok
+test_manifest_has_required_provenance (test_world_collision_v4.SharedWorldCollisionTests.test_manifest_has_required_provenance) ... ok
+test_swept_segment_exact_intersection (test_world_collision_v4.SharedWorldCollisionTests.test_swept_segment_exact_intersection) ... ok
+
+----------------------------------------------------------------------
+Ran 102 tests in 43.856s
+
+OK
+Wrote /workspace/Delivery-Robot/simulation/campus_v0.sdf (9743 bytes). This is an unvalidated Gazebo candidate.
+Wrote /workspace/Delivery-Robot/simulation/campus_v0.sdf (9743 bytes). This is an unvalidated Gazebo candidate.
+Wrote /workspace/Delivery-Robot/simulation/campus_v0.sdf (9743 bytes). This is an unvalidated Gazebo candidate.
+Wrote /workspace/Delivery-Robot/simulation/campus_v0.sdf (9743 bytes). This is an unvalidated Gazebo candidate.
+Wrote /workspace/Delivery-Robot/simulation/campus_v0.sdf (9743 bytes). This is an unvalidated Gazebo candidate.
+Wrote /workspace/Delivery-Robot/simulation/campus_v0.sdf (9743 bytes). This is an unvalidated Gazebo candidate.

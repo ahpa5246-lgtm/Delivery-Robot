@@ -1,0 +1,36 @@
+{
+  "project": "Delivery-Robot",
+  "stage": "implementation",
+  "status": "BLOCKED_UNVERIFIED_DESIGN",
+  "findings": [
+    {
+      "code": "MISSING_INTERACTION_STATES",
+      "detail": "perception needs empty/loading/success/failure cases"
+    },
+    {
+      "code": "MISSING_INTERACTION_STATES",
+      "detail": "planning needs empty/loading/success/failure cases"
+    },
+    {
+      "code": "MISSING_INTERACTION_STATES",
+      "detail": "controls needs empty/loading/success/failure cases"
+    },
+    {
+      "code": "MISSING_INTERACTION_STATES",
+      "detail": "diagnostics needs empty/loading/success/failure cases"
+    },
+    {
+      "code": "MISSING_INTERACTION_STATES",
+      "detail": "missions needs empty/loading/success/failure cases"
+    },
+    {
+      "code": "TOO_FEW_REAL_BENCHMARKS",
+      "detail": "Need 3 different real released product references"
+    },
+    {
+      "code": "NOT_ENOUGH_DIRECT_COMPARATORS",
+      "detail": "Include relevant, released direct competitors"
+    }
+  ],
+  "limits": "Structural evidence validation only; cannot certify taste, source authenticity, accessibility or real implementation."
+}

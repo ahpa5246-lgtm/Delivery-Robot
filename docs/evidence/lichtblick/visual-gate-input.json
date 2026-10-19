@@ -1,0 +1,181 @@
+{
+  "project": "Delivery-Robot",
+  "stage": "implementation",
+  "kind": "desktop",
+  "complex_app": true,
+  "context": "Partial implementation evidence; original Garden, current Foxglove inspection, full independent native review and low-end device measurements remain incomplete. Do not treat this as release authorization.",
+  "journeys": [
+    {
+      "id": "perception",
+      "goal": "Inspect the available robot pose and frame-linked visual model",
+      "surface": "perception",
+      "states": [
+        "success"
+      ]
+    },
+    {
+      "id": "planning",
+      "goal": "Inspect travelled paths and recorded distance over time",
+      "surface": "planning",
+      "states": [
+        "success"
+      ]
+    },
+    {
+      "id": "controls",
+      "goal": "Inspect recorded motion without issuing actuator commands",
+      "surface": "controls",
+      "states": [
+        "success"
+      ]
+    },
+    {
+      "id": "diagnostics",
+      "goal": "Inspect recorded phase changes and modeled energy values",
+      "surface": "diagnostics",
+      "states": [
+        "success"
+      ]
+    },
+    {
+      "id": "missions",
+      "goal": "Read the delivery phase and recording provenance at the selected time",
+      "surface": "missions",
+      "states": [
+        "success"
+      ]
+    }
+  ],
+  "screens": [
+    {
+      "id": "perception",
+      "purpose": "Inspect the available robot pose and frame-linked visual model",
+      "navigation": "Distinct native saved workspace selected by the Delivery tabs"
+    },
+    {
+      "id": "planning",
+      "purpose": "Inspect travelled paths and recorded distance over time",
+      "navigation": "Distinct native saved workspace selected by the Delivery tabs"
+    },
+    {
+      "id": "controls",
+      "purpose": "Inspect recorded motion without issuing actuator commands",
+      "navigation": "Distinct native saved workspace selected by the Delivery tabs"
+    },
+    {
+      "id": "diagnostics",
+      "purpose": "Inspect recorded phase changes and modeled energy values",
+      "navigation": "Distinct native saved workspace selected by the Delivery tabs"
+    },
+    {
+      "id": "missions",
+      "purpose": "Read the delivery phase and recording provenance at the selected time",
+      "navigation": "Distinct native saved workspace selected by the Delivery tabs"
+    }
+  ],
+  "references": [
+    {
+      "name": "Lichtblick",
+      "category": "direct",
+      "release_status": "released_product",
+      "official_url": "https://github.com/Lichtblick-Suite/lichtblick",
+      "visual_source_url": "https://github.com/Lichtblick-Suite/lichtblick/blob/main/resources/screenshot.png",
+      "observed_on": "2026-10-19",
+      "pattern": "Native mosaic panels, shared playback clock, 3D transforms and configurable plots form a robotics analysis workstation. Actual source and runtime inspected.",
+      "tradeoff": "The native engine is a substantial desktop-oriented bundle; reusing it does not validate physical robot data."
+    }
+  ],
+  "comparisons": [
+    {
+      "journey_id": "perception",
+      "benchmark": "Lichtblick",
+      "gap": "The previous dashboard lacked native docking and a shared analysis runtime.",
+      "improvement": "Reuse the actual native engine and keep data-source provenance explicit.",
+      "not_copied": "No Foxglove proprietary code, branding or sensor recordings were copied."
+    },
+    {
+      "journey_id": "planning",
+      "benchmark": "Lichtblick",
+      "gap": "The previous dashboard lacked native docking and a shared analysis runtime.",
+      "improvement": "Reuse the actual native engine and keep data-source provenance explicit.",
+      "not_copied": "No Foxglove proprietary code, branding or sensor recordings were copied."
+    },
+    {
+      "journey_id": "controls",
+      "benchmark": "Lichtblick",
+      "gap": "The previous dashboard lacked native docking and a shared analysis runtime.",
+      "improvement": "Reuse the actual native engine and keep data-source provenance explicit.",
+      "not_copied": "No Foxglove proprietary code, branding or sensor recordings were copied."
+    },
+    {
+      "journey_id": "diagnostics",
+      "benchmark": "Lichtblick",
+      "gap": "The previous dashboard lacked native docking and a shared analysis runtime.",
+      "improvement": "Reuse the actual native engine and keep data-source provenance explicit.",
+      "not_copied": "No Foxglove proprietary code, branding or sensor recordings were copied."
+    },
+    {
+      "journey_id": "missions",
+      "benchmark": "Lichtblick",
+      "gap": "The previous dashboard lacked native docking and a shared analysis runtime.",
+      "improvement": "Reuse the actual native engine and keep data-source provenance explicit.",
+      "not_copied": "No Foxglove proprietary code, branding or sensor recordings were copied."
+    }
+  ],
+  "design_system": {
+    "body_font": "Native Inter UI and IBM Plex Mono technical values, retained from Lichtblick",
+    "arabic_font": "English native UI in this milestone; Arabic/RTL has not been accepted",
+    "type_hierarchy": [
+      "Native 12px-class panel metadata",
+      "Native panel titles",
+      "Mission section heading"
+    ],
+    "spacing_scale": [
+      4,
+      8,
+      12,
+      16,
+      24
+    ],
+    "color_roles": {
+      "canvas": "#08090b",
+      "surface": "#101215",
+      "text": "#e1e1e4",
+      "muted": "#a7a6af",
+      "action": "#ef833a",
+      "focus": "#ef833a"
+    },
+    "illustration_policy": "No decorative marketing illustrations. Licensed CAD and geometric paths explain robot frames; original Garden is absent and not substituted silently.",
+    "density_rationale": "Native docking separates Perception, Planning, Controls, Diagnostics and Missions; inspectors open progressively and the native playback bar remains shared.",
+    "body_font_license_checked": true,
+    "illustrations_license_checked": true
+  },
+  "review": {
+    "design_directions": [
+      {
+        "layout": "Retain the previous long HTML dashboard with independently rendered widgets; rejected by the owner."
+      },
+      {
+        "layout": "Vendor and run the actual native Lichtblick docking and playback engine with a thin Delivery workspace layer."
+      }
+    ],
+    "selected_direction": "Actual native engine source reuse",
+    "decision_reason": "The owner explicitly prefers genuine code reuse and professional analysis behavior; native docking and shared playback avoid reconstructing another imitation.",
+    "implemented_commit": "851c82685857a9d11260ed44d6e500e84739c148",
+    "screenshots": [
+      "docs/evidence/lichtblick/native-perception-motion.png",
+      "docs/evidence/lichtblick/native-missions-seek.png",
+      "docs/evidence/lichtblick/native-tablet.png",
+      "docs/evidence/lichtblick/native-missing-source.png"
+    ],
+    "tested_surfaces": [
+      "desktop",
+      "narrow_window"
+    ],
+    "keyboard_tested": true,
+    "empty_and_error_tested": true,
+    "comparison_rechecked_at_commit": true,
+    "arabic_ui": false,
+    "task_test_evidence": "Actual production Chromium playback, decoded world-position changes, play/pause/seek, keyboard toggle, native panel resizing/addition, workspace and reload persistence, 1024px playback, missing-source error and empty Missions state. See browser-results.json. Robot visibility was separately inspected in the saved screenshots."
+  }
+}

@@ -1,0 +1,8 @@
+- Processing: web/webpack.config.ts
+\ Processing: web/src/entrypoint.tsx
+| Processing: packages/suite-web/src/WebRoot.tsx
+/ Processing: web/src/delivery/DeliveryAppBar.tsx
+- Processing: web/src/delivery/workspaces.test.ts
+\ Processing: web/src/delivery/workspaces.ts
+| Processing: packages/suite-base/src/panels/DeliveryMissions/index.tsx
+✔ Lint done.

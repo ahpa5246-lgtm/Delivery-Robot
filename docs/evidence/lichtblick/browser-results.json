@@ -1,0 +1,98 @@
+{
+  "status": "passed",
+  "checks": [
+    "real MCAP",
+    "licensed CAD fetch",
+    "default dark",
+    "default workspace",
+    "play",
+    "pause",
+    "keyboard toggle",
+    "seek",
+    "Missions",
+    "Diagnostics",
+    "resize",
+    "workspace persistence",
+    "reload persistence",
+    "add panel",
+    "1024px playback",
+    "768px capture",
+    "missing source error",
+    "empty mission state"
+  ],
+  "models": [
+    {
+      "url": "http://127.0.0.1:8080/models/cdr01.urdf",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8080/models/rbot-chassis.stl",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8080/models/rbot-wheel.stl",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8080/models/cdr01.urdf",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8080/models/rbot-chassis.stl",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8080/models/rbot-wheel.stl",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8080/models/cdr01.urdf",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8080/models/rbot-chassis.stl",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8080/models/rbot-wheel.stl",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8080/models/cdr01.urdf",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8080/models/rbot-chassis.stl",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8080/models/rbot-wheel.stl",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8080/models/cdr01.urdf",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8080/models/rbot-chassis.stl",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8080/models/rbot-wheel.stl",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8080/models/cdr01.urdf",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8080/models/rbot-chassis.stl",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:8080/models/rbot-wheel.stl",
+      "status": 200
+    }
+  ],
+  "errors": []
+}

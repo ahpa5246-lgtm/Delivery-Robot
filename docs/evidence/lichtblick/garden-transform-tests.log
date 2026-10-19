@@ -1,0 +1,13 @@
+✔ ROS positive lateral displacement maps to scene negative Z (0.998669ms)
+✔ positive yaw rotates forward displacement toward negative scene Z (0.201206ms)
+✔ visual size does not alter metric displacement (1.381211ms)
+✔ invalid poses fail before engine mutation (0.31941ms)
+✔ trajectory vertices share the robot transform and stay within rendering budget (3.179417ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 68.112799
