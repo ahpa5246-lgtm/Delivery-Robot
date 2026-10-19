@@ -1,0 +1,20 @@
+/* Dense near-black robotics dashboard. Keeps existing canvas and real Garden colors untouched. */
+:root{color-scheme:dark;--bg:#090a0d;--panel:#15161b;--panel-alt:#1a1b21;--line:#303138;--ink:#e9e9ef;--muted:#a0a1ac;--accent:#9a83ec}
+html,body{background:#090a0d!important;color:#e9e9ef}
+.shell,.workspace,main{background-color:#090a0d}
+.rail{background:#111216!important;border-color:#303138!important}
+.masthead,.mission-bar,.panel-top,.scene-toolbar,.map-panel,.analytics-panel,.telemetry-panel,.sensor-panel{border-color:#303138!important}
+.mission-bar,.panel-top,.scene-toolbar{background:#18191e!important}
+.map-panel{background:#111216!important;border-radius:6px!important}
+.panel-top h2,.masthead h1{color:#efedf4}
+.map-wrap{background:#090a0d!important}
+#scene3d{background:#0b0c0f}
+.map-overlay,.map-badge,.world-inspector,.robot-inspector-label,.scene-3d-bar{background-color:#111216e8!important;border-color:#3b3941!important;color:#e9e5f2}
+.view-switch{background:#111216!important;border-color:#383840!important}
+.view-switch button{color:#d6d5df!important}
+.view-switch button[aria-pressed="true"]{background:#383044!important;color:#fff!important}
+button.primary,#run{background:#6d56bd!important;border-color:#6d56bd!important;color:#fff!important}
+button.primary:hover,#run:hover{background:#8268d9!important}
+input,select{background:#1b1c22!important;color:#eeedf4!important;border-color:#40414a!important}
+a{color:#c7b9f5}
+body{scrollbar-color:#474450 #101115}
