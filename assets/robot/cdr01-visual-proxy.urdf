@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!-- Visualization-only schematic. Dimensions are illustrative, NOT validated CAD. -->
+<robot name="cdr01_visual_proxy">
+  <material name="purple"><color rgba="0.43 0.29 0.85 1"/></material>
+  <material name="dark"><color rgba="0.13 0.16 0.22 1"/></material>
+  <material name="wheel"><color rgba="0.08 0.09 0.12 1"/></material>
+  <link name="base_link">
+    <visual><origin xyz="0 0 0.20"/><geometry><box size="0.58 0.42 0.22"/></geometry><material name="purple"/></visual>
+  </link>
+  <link name="cargo_box">
+    <visual><origin xyz="0 0 0.46"/><geometry><box size="0.39 0.33 0.30"/></geometry><material name="dark"/></visual>
+  </link>
+  <joint name="cargo_fixed" type="fixed"><parent link="base_link"/><child link="cargo_box"/><origin xyz="0 0 0"/></joint>
+  <link name="left_wheel">
+    <visual><origin xyz="0 0 0" rpy="1.57079632679 0 0"/><geometry><cylinder radius="0.11" length="0.055"/></geometry><material name="wheel"/></visual>
+  </link>
+  <link name="right_wheel">
+    <visual><origin xyz="0 0 0" rpy="1.57079632679 0 0"/><geometry><cylinder radius="0.11" length="0.055"/></geometry><material name="wheel"/></visual>
+  </link>
+  <joint name="left_wheel_fixed" type="fixed"><parent link="base_link"/><child link="left_wheel"/><origin xyz="0 0.24 0.11"/></joint>
+  <joint name="right_wheel_fixed" type="fixed"><parent link="base_link"/><child link="right_wheel"/><origin xyz="0 -0.24 0.11"/></joint>
+</robot>
