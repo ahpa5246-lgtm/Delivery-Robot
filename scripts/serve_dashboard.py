@@ -83,6 +83,9 @@ def garden_status() -> dict:
         return {"installed": False, "format": "invalid Garden archive"}
 
 STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
+          "/studio": ("lichtblick-studio.html", "text/html; charset=utf-8"),
+          "/lichtblick-studio.css": ("lichtblick-studio.css", "text/css; charset=utf-8"),
+          "/lichtblick-studio.js": ("lichtblick-studio.js", "text/javascript; charset=utf-8"),
           "/robot-garden": ("robot-garden.html", "text/html; charset=utf-8"),
           "/robot-garden.js": ("robot-garden.js", "text/javascript; charset=utf-8"),
           "/robot-garden.css": ("robot-garden.css", "text/css; charset=utf-8"),
