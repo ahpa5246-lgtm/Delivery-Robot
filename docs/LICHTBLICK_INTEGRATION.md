@@ -53,3 +53,35 @@ an end-to-end tested integration is made by this document.
 3. Add an opt-in read-only WebSocket bridge for live Gazebo topics.
 4. Build a CDR mission-status custom panel with source labels.
 5. Compare desktop/mobile screenshots and interaction latency with Foxglove.
+
+## Phase 2: 3D trajectory in Lichtblick (implemented exporter, pending visual QA)
+
+The new `scripts/export_lichtblick_3d.py` creates ROS1-encoded MCAP topics
+`/cdr01/pose` (`geometry_msgs/PoseStamped`) and `/cdr01/path`
+(`nav_msgs/Path`). **ROS1 is only the wire format for visualization**;
+the recording is from Gazebo Harmonic. This does not require a running ROS1
+installation.
+
+```bash
+python -m pip install mcap
+python scripts/export_lichtblick_3d.py experiments/garden_gazebo/latest_run.json \
+  --output experiments/garden_gazebo/cdr01-3d.mcap
+python -m unittest tests.test_lichtblick_3d -v
+```
+
+Open `cdr01-3d.mcap` in Lichtblick, add a **3D** panel, set the fixed
+frame to `odom`, and enable the `/cdr01/pose` and `/cdr01/path` topics.
+This should render the recorded pose/path **if the installed Lichtblick
+version supports these ROS1 message types**; verify in the UI before claiming
+acceptance. A full URDF mesh robot is **not** included: pose/path visualization
+is the first step toward a robot model. There is no TF tree, no LiDAR cloud,
+no live bridge and no mission-status panel yet.
+
+Coordinates: `x_m`, `y_m` and `yaw_rad` in the flat-proxy odometry frame;
+z=0, orientation is yaw-only. The path is emitted once at the end of the
+recording, so it represents the complete recorded trajectory, not a live
+incrementally growing path. Never infer real Garden surface physics.
+
+**Important limitation:** timestamps start at zero relative to the recording.
+They are not wall-clock ROS timestamps. This is a replay artifact only.
+
