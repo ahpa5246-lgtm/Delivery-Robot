@@ -26,3 +26,9 @@ assets/garden-calibration.json
 simulation/garden_physics_proxy.sdf
 simulation/garden_physics_proxy.provenance.json
 experiments/garden_gazebo/
+
+# Local tooling and generated telemetry
+node_modules/
+.cache/
+.tools/
+artifacts/
