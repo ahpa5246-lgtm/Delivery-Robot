@@ -91,3 +91,7 @@ a{color:#c4b4ff}
 .viewer-quick-controls{background:#0b0b10ed;border-color:#514768;border-radius:8px}
 #quick-ground{background:#a48bf4;color:#100f18}
 #garden-floor-help{background:#101116ee;border-color:#675b82;color:#e8e2f8}
+.camera-choice{display:flex;align-items:center;gap:5px;margin:0;font-size:11px}
+#camera-view{background:#141419;color:#ece9f4;border:1px solid #514768;padding:8px;border-radius:5px}
+#pose-readout{position:absolute;z-index:20;top:12px;right:12px;max-width:calc(100% - 24px);background:#111218e8;border:1px solid #494151;border-radius:5px;padding:8px 10px;font-size:10px;line-height:1.5}
+@media(max-width:530px){#pose-readout{top:10px;left:10px;right:10px}}

@@ -64,6 +64,7 @@ class GardenRobotTests(unittest.TestCase):
             with patch.object(app, "GARDEN_ZIP", p):
                 self.assertEqual(response_for("/api/garden-asset")[0], 200)
                 self.assertTrue(json.loads(response_for("/api/garden-asset")[2])["installed"])
+                self.assertFalse(json.loads(response_for("/api/garden-asset")[2])["source_verified"])
                 c, typ, data = response_for("/garden-assets/lod-meta.json")
                 self.assertEqual(c, 200)
                 self.assertIn("application/json", typ)

@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import hashlib
+from functools import lru_cache
 import os
 import re
 import zipfile
@@ -63,6 +65,14 @@ def garden_resource(name: str) -> tuple[int, str, bytes]:
     except (KeyError, zipfile.BadZipFile, OSError, RuntimeError):
         return 404, "application/json", b'{"error":"Garden archive entry unavailable"}'
 
+@lru_cache(maxsize=2)
+def verified_garden_source(path: str, size: int, mtime_ns: int) -> bool:
+    # Stat keys invalidate the digest when an uploaded archive changes.
+    with Path(path).open('rb') as stream:
+        return hashlib.file_digest(stream, 'sha256').hexdigest() == (
+            'e2c82908d3c871c47dc4e6498529944afaebd7d01cf130b65aa0bf01202086c3')
+
+
 def garden_status() -> dict:
     """Public diagnostic only; never leak server filesystem or credentials."""
     if not GARDEN_ZIP.is_file():
@@ -75,14 +85,17 @@ def garden_status() -> dict:
                      isinstance(metadata.get("filenames"), list) and
                      bool(metadata["filenames"]) and
                      all(n in names for n in metadata["filenames"]))
+            stat = GARDEN_ZIP.stat()
             return {"installed": valid,
+                    "source_verified": valid and verified_garden_source(str(GARDEN_ZIP), stat.st_size, stat.st_mtime_ns),
                     "format": "multi-file 3DGS LOD zip",
                     "entries": len(names),
                     "lod_levels": metadata.get("lodLevels")}
     except (ValueError, zipfile.BadZipFile, KeyError, OSError):
         return {"installed": False, "format": "invalid Garden archive"}
 
-STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
+STATIC = {"/garden-pose.js": ("garden-pose.js", "text/javascript; charset=utf-8"),
+          "/": ("index.html", "text/html; charset=utf-8"),
           "/studio": ("lichtblick-studio.html", "text/html; charset=utf-8"),
           "/lichtblick-studio.css": ("lichtblick-studio.css", "text/css; charset=utf-8"),
           "/black-studio.css": ("black-studio.css", "text/css; charset=utf-8"),

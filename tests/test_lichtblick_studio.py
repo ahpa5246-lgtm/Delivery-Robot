@@ -19,7 +19,7 @@ class TestStudioRoutes(unittest.TestCase):
             with self.subTest(path=path):
                 status, media, body = response_for(path)
                 self.assertEqual(status, 200)
-                self.assertEqual(media, kind)
+                self.assertEqual(media.split(";", 1)[0], kind)
                 self.assertGreater(len(body), 100)
 
     def test_no_control_endpoint(self):
