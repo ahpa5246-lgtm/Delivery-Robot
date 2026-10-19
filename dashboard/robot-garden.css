@@ -79,3 +79,15 @@ body.embedded .viewer-quick-controls{bottom:41px}
  padding:10px 14px;color:#cde8dc;font-size:11px;line-height:1.5;
  max-width:min(80%,450px);pointer-events:none}
 #garden-floor-help[hidden]{display:none}
+
+/* Black robotics lab palette; splat colors remain untouched and source-authentic. */
+:root{background:#08090c;--muted:#a9aab2;--mint:#b49cf7}
+body,body.embedded{background:#090a0e}
+header{background:#111216;border-color:#303037}
+a{color:#c4b4ff}
+.viewer-col{background:#08090c;border-color:#303036;border-radius:6px}
+#viewer{background:#08090c}
+#provenance{background:#111115;color:#ddd4f4;border-color:#36323e}
+.viewer-quick-controls{background:#0b0b10ed;border-color:#514768;border-radius:8px}
+#quick-ground{background:#a48bf4;color:#100f18}
+#garden-floor-help{background:#101116ee;border-color:#675b82;color:#e8e2f8}
