@@ -32,3 +32,12 @@ node_modules/
 .cache/
 .tools/
 artifacts/
+
+# Generated simulator geometry
+simulation/campus_delivery.sdf
+simulation/campus_v0.sdf
+simulation/warehouse_delivery.sdf
+
+# This is upstream source, not the legacy simulator's generated log directory.
+!vendor/lichtblick/packages/log/
+!vendor/lichtblick/packages/log/**

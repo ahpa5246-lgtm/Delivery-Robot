@@ -5,6 +5,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import CopyPlugin from "copy-webpack-plugin";
 import path from "path";
 
 import {
@@ -24,4 +25,37 @@ const params: ConfigParams = {
 };
 
 // foxglove-depcheck-used: webpack-dev-server
-export default [devServerConfig(params), mainConfig(params)];
+const appConfig: ReturnType<typeof mainConfig> = (env, argv) => {
+  const config = mainConfig(params)(env, argv);
+  config.plugins = [
+    ...(config.plugins ?? []),
+    new CopyPlugin({
+      patterns: [
+        { from: path.resolve(__dirname, "../LICENSE"), to: "licenses/LICHTBLICK-MPL-2.0.txt" },
+        { from: path.resolve(__dirname, "../../../docs/licenses"), to: "licenses/fonts" },
+        {
+          from: path.resolve(__dirname, "../../../docs/THIRD_PARTY_NOTICES.md"),
+          to: "licenses/THIRD_PARTY_NOTICES.md",
+        },
+        {
+          from: path.resolve(__dirname, "../../../integrations/upstream_samples/rbot-nav2/LICENSE"),
+          to: "licenses/RBOT-Apache-2.0.txt",
+        },
+        {
+          from: path.resolve(__dirname, "../../../artifacts/campus.mcap"),
+          to: "recordings/campus.mcap",
+        },
+        {
+          from: path.resolve(__dirname, "../../../assets/robot/cdr01-lichtblick.urdf"),
+          to: "models/cdr01.urdf",
+        },
+        ...["rbot-chassis.stl", "rbot-wheel.stl"].map((name) => ({
+          from: path.resolve(__dirname, "../../../dashboard/assets/robot", name),
+          to: `models/${name}`,
+        })),
+      ],
+    }),
+  ];
+  return config;
+};
+export default [devServerConfig(params), appConfig];

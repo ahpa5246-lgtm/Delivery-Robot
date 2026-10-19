@@ -34,6 +34,8 @@ const isDevelopment = process.env.NODE_ENV === "development";
 export function WebRoot(props: {
   extraProviders: React.JSX.Element[] | undefined;
   dataSources: IDataSourceFactory[] | undefined;
+  defaultColorScheme?: "dark" | "light";
+  defaultTimeFormat?: "SEC" | "TOD";
   AppBarComponent?: (props: AppBarProps) => React.JSX.Element;
   children: React.JSX.Element;
 }): React.JSX.Element {
@@ -42,9 +44,11 @@ export function WebRoot(props: {
       new LocalStorageAppConfiguration({
         defaults: {
           [AppSetting.SHOW_DEBUG_PANELS]: isDevelopment,
+          [AppSetting.COLOR_SCHEME]: props.defaultColorScheme,
+          [AppSetting.TIME_FORMAT]: props.defaultTimeFormat,
         },
       }),
-    [],
+    [props.defaultColorScheme, props.defaultTimeFormat],
   );
 
   const defaultExtensionLoaders: IExtensionLoader[] = [

@@ -1,5 +1,25 @@
 # Delivery-Robot — Campus Autonomous Delivery Robot (CDR-01)
 
+## Native Lichtblick platform (development branch)
+
+The actual MPL-2.0 Lichtblick React engine is included as ordinary source files in
+`vendor/lichtblick/`. No GitHub fork, submodule or externally hosted Lichtblick
+application is required. Native draggable/resizable panels, recording playback,
+3D/TF/URDF, plots, raw messages and saved layouts power the Delivery workspaces.
+
+```bash
+bash scripts/setup_telemetry.sh
+bash scripts/start_telemetry.sh
+```
+
+The native development application listens on loopback port **8080**. Choose
+**Load modeled demo** to open a real MCAP exported from the executed Python
+campus model. This is offline modeled telemetry, not a live ROS 2 robot.
+See [run instructions, evidence and outstanding acceptance](docs/DELIVERY_PLATFORM.md).
+The older Python dashboard and Gaussian viewer remain separate diagnostic tools;
+the old `/studio` page is a legacy planar viewer, not the Lichtblick engine.
+
+
 > Status: **Early executable prototype** (2026-10-11). Python planar simulator and SDF generator exist; full ROS 2/Gazebo/navigation/physical validation is still pending.
 
 This repository will host a simulation-first **autonomous ground delivery robot** for university campuses and controlled outdoor pedestrian walkways. The initial scope is **one robot**, with a clean interface for a future multi-robot fleet.

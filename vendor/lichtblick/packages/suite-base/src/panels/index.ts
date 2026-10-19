@@ -34,6 +34,14 @@ import variableSliderThumbnail from "./VariableSlider/thumbnail.png";
 
 export const getBuiltin: (t: TFunction<"panels">) => PanelInfo[] = (t) => [
   {
+    title: "Delivery Missions",
+    type: "DeliveryMissions",
+    description:
+      "Delivery mission state synchronized to the active data source and playback time",
+    thumbnail: stateTransitionsThumbnail,
+    module: async () => await import("./DeliveryMissions"),
+  },
+  {
     title: t("3D"),
     type: "3D",
     description: t("3DPanelDescription"),

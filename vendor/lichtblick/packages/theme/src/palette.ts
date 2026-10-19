@@ -35,7 +35,7 @@ export const dark: PaletteOptions = {
   mode: "dark",
   tonalOffset: 0.15,
   appBar: {
-    main: "#35363A",
+    main: "#090a0c",
     primary: "#808080",
     text: "#ffffff",
   },
@@ -49,11 +49,11 @@ export const dark: PaletteOptions = {
     primary: "#e1e1e4",
     secondary: "#a7a6af",
   },
-  divider: "#585861",
+  divider: "#303238",
   background: {
-    default: "#15151a",
-    paper: "#27272b",
-    menu: "#35363A",
+    default: "#08090b",
+    paper: "#111316",
+    menu: "#181a1e",
   },
   grey: {
     50: "#121217",

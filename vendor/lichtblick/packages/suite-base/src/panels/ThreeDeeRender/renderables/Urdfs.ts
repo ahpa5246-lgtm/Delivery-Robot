@@ -221,13 +221,17 @@ export class Urdfs extends SceneExtension<UrdfRenderable> {
         },
       },
 
-      // Note that this subscription will never happen because it does not appear as a topic in the
-      // topic list that can have its visibility toggled on. The ThreeDeeRender subscription logic
-      // needs to become more flexible to make this possible
+      // JointState has no visibility checkbox. Subscribe by its supported schema
+      // so valid ROS1/ROS2 joint messages can drive an imported articulated URDF.
+      // This receives existing messages only; it never synthesizes joint data.
       {
         type: "schema",
         schemaNames: JOINTSTATE_DATATYPES,
-        subscription: { handler: this.#handleJointState, filterQueue: onlyLastByTopicMessage },
+        subscription: {
+          handler: this.#handleJointState,
+          filterQueue: onlyLastByTopicMessage,
+          shouldSubscribe: () => true,
+        },
       },
 
       {

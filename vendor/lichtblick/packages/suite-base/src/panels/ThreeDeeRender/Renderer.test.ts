@@ -233,6 +233,19 @@ describe("3D Renderer", () => {
     (console.warn as jest.Mock).mockClear();
   });
 
+  it("subscribes to valid joint states without a topic visibility checkbox", () => {
+    const renderer = new Renderer({ ...defaultRendererProps, canvas });
+    try {
+      const urdf = renderer.sceneExtensions.get("foxglove.Urdfs")!;
+      const jointSubscription = urdf.getSubscriptions().find(
+        (item) => item.type === "schema" && item.schemaNames.has("sensor_msgs/JointState"),
+      );
+      expect(jointSubscription?.subscription.shouldSubscribe?.("/joint_states")).toBe(true);
+    } finally {
+      renderer.dispose();
+    }
+  });
+
   it("constructs a renderer without error", () => {
     expect(() => new Renderer({ ...defaultRendererProps, canvas })).not.toThrow();
   });

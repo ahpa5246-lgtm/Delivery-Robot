@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!-- Delivery visualization assembly, NOT validated mechanical CAD or a physics model.
+     Chassis and wheels: rlxai/rbot, Apache-2.0.
+     See dashboard/assets/SOURCES.md and integrations/upstream_samples/rbot-nav2/LICENSE.
+     Scales/placement adapt source millimetres to illustrative CDR dimensions.
+     Fixed wheel joints avoid fabricating joint-state telemetry. -->
+<robot name="cdr01_visual_cad_assembly">
+ <material name="shell"><color rgba="0.70 0.73 0.76 1"/></material>
+ <material name="cargo"><color rgba="0.13 0.15 0.18 1"/></material>
+ <material name="rubber"><color rgba="0.10 0.11 0.12 1"/></material>
+ <material name="amber"><color rgba="0.90 0.57 0.24 1"/></material>
+ <link name="base_link">
+  <visual><origin xyz="0 0 0.17"/><geometry><mesh filename="rbot-chassis.stl" scale="0.0012 0.0012 0.0012"/></geometry><material name="shell"/></visual>
+ </link>
+ <link name="cargo_box">
+  <visual><origin xyz="0 0 0.44"/><geometry><box size="0.36 0.32 0.24"/></geometry><material name="cargo"/></visual>
+  <visual><origin xyz="0 0 0.565"/><geometry><box size="0.38 0.34 0.015"/></geometry><material name="shell"/></visual>
+  <visual><origin xyz="0.183 0 0.45"/><geometry><box size="0.008 0.20 0.025"/></geometry><material name="amber"/></visual>
+ </link>
+ <joint name="cargo_fixed" type="fixed"><parent link="base_link"/><child link="cargo_box"/></joint>
+ <link name="left_wheel"><visual><origin rpy="1.57079632679 0 0"/><geometry><mesh filename="rbot-wheel.stl" scale="0.00176 0.00176 0.00176"/></geometry><material name="rubber"/></visual></link>
+ <link name="right_wheel"><visual><origin rpy="1.57079632679 0 0"/><geometry><mesh filename="rbot-wheel.stl" scale="0.00176 0.00176 0.00176"/></geometry><material name="rubber"/></visual></link>
+ <joint name="left_wheel_fixed" type="fixed"><parent link="base_link"/><child link="left_wheel"/><origin xyz="0 0.25 0.11"/></joint>
+ <joint name="right_wheel_fixed" type="fixed"><parent link="base_link"/><child link="right_wheel"/><origin xyz="0 -0.25 0.11"/></joint>
+</robot>

@@ -373,4 +373,29 @@ export default [
       "@lichtblick/license-header": "off",
     },
   },
+  {
+    // Upstream's rule hardcodes BMW ownership. First-party Delivery files retain
+    // equally required MPL/SPDX notices with their actual author attribution.
+    files: ["web/src/delivery/**/*.{ts,tsx}", "packages/suite-base/src/panels/DeliveryMissions/**/*.{ts,tsx}"],
+    plugins: {
+      delivery: {
+        rules: {
+          "license-header": {
+            meta: { schema: [] },
+            create(context) {
+              return {
+                Program(node) {
+                  const expected = "// SPDX-FileCopyrightText: Copyright (C) 2026 Delivery-Robot contributors\n// SPDX-License-Identifier: MPL-2.0";
+                  if (!context.sourceCode.getText().startsWith(expected)) {
+                    context.report({ node, message: "Delivery source requires its MPL-2.0 SPDX license and author notice." });
+                  }
+                },
+              };
+            },
+          },
+        },
+      },
+    },
+    rules: { "@lichtblick/license-header": "off", "delivery/license-header": "error" },
+  },
 ];
