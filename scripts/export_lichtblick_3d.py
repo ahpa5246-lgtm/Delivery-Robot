@@ -104,6 +104,50 @@ def path_message(frames: list[dict]) -> bytes:
     return bytes(payload)
 
 
+
+TF_DEFINITION = """geometry_msgs/TransformStamped[] transforms
+================================================================================
+MSG: geometry_msgs/TransformStamped
+std_msgs/Header header
+string child_frame_id
+geometry_msgs/Transform transform
+================================================================================
+MSG: std_msgs/Header
+uint32 seq
+time stamp
+string frame_id
+================================================================================
+MSG: geometry_msgs/Transform
+geometry_msgs/Vector3 translation
+geometry_msgs/Quaternion rotation
+================================================================================
+MSG: geometry_msgs/Vector3
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+float64 x
+float64 y
+float64 z
+float64 w
+"""
+
+
+def tf_message(frame: dict, seq: int) -> bytes:
+    """One odom -> base_link transform, derived solely from recorded odometry."""
+    half = frame["yaw_rad"] / 2
+    return (
+        struct.pack("<I", 1)
+        + header(frame["time_s"], seq, "odom")
+        + ros_string("base_link")
+        + struct.pack(
+            "<7d", frame["x_m"], frame["y_m"], 0.0,
+            0.0, 0.0, math.sin(half), math.cos(half),
+        )
+    )
+
+
 def export(source: Path, output: Path) -> int:
     from mcap.writer import Writer
 
@@ -123,6 +167,14 @@ def export(source: Path, output: Path) -> int:
             name="nav_msgs/Path", encoding="ros1msg",
             data=PATH_DEFINITION.encode(),
         )
+        tf_schema = writer.register_schema(
+            name="tf2_msgs/TFMessage", encoding="ros1msg",
+            data=TF_DEFINITION.encode(),
+        )
+        tf_channel = writer.register_channel(
+            topic="/tf", message_encoding="ros1", schema_id=tf_schema,
+            metadata={"source": "recorded_gazebo_harmonic_odometry"},
+        )
         pose_channel = writer.register_channel(
             topic="/cdr01/pose", message_encoding="ros1",
             schema_id=pose_schema,
@@ -137,6 +189,10 @@ def export(source: Path, output: Path) -> int:
         )
         for seq, frame in enumerate(frames):
             ns = round(frame["time_s"] * 1e9)
+            writer.add_message(
+                channel_id=tf_channel, log_time=ns, publish_time=ns,
+                data=tf_message(frame, seq),
+            )
             writer.add_message(
                 channel_id=pose_channel, log_time=ns, publish_time=ns,
                 data=pose_stamped(frame, seq),
@@ -156,7 +212,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=Path("experiments/garden_gazebo/cdr01-3d.mcap"))
     args = parser.parse_args()
     count = export(args.recording, args.output)
-    print(f"Exported {count} Gazebo poses + one Path to {args.output}")
+    print(f"Exported {count} Gazebo poses and TF transforms + one Path to {args.output}")
     print("Recorded flat-proxy simulation only; not live, not Garden collision validated.")
 
 
