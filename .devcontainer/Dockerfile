@@ -8,6 +8,12 @@ RUN apt-get update \
        ros-jazzy-xacro \
        ros-jazzy-robot-state-publisher \
        python3-colcon-common-extensions \
+       python3-venv \
+       python3-pip \
+       build-essential \
+       git \
+       curl \
+       ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 SHELL ["/bin/bash", "-c"]

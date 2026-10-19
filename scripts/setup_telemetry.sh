@@ -3,6 +3,19 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 repo_root="$PWD"
+# Fail before creating a partial environment when the container is outdated.
+if ! command -v node >/dev/null || ! command -v npm >/dev/null; then
+  echo 'Node.js >=20 and npm are required. Pull main, then run Codespaces: Rebuild Container.' >&2
+  exit 1
+fi
+if ! node -e 'process.exit(Number(process.versions.node.split(".")[0]) >= 20 ? 0 : 1)'; then
+  echo 'Node.js >=20 is required. Rebuild the updated dev container to install Node.js 24.' >&2
+  exit 1
+fi
+if ! python3 -c 'import venv, ensurepip' >/dev/null 2>&1; then
+  echo 'Python venv support is missing. Install python3-venv (apt-get install -y python3-venv), or rebuild the updated dev container.' >&2
+  exit 1
+fi
 export npm_config_cache="$repo_root/.cache/npm"
 export XDG_CACHE_HOME="$repo_root/.cache"
 export YARN_GLOBAL_FOLDER="$repo_root/.cache/yarn-global"

@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
+if ! command -v node >/dev/null; then
+  echo 'Node.js is missing. Pull main and rebuild the dev container, then run bash scripts/setup_telemetry.sh.' >&2
+  exit 1
+fi
 if [[ "${1:-}" == "--dev" ]]; then
   shift
   mkdir -p artifacts

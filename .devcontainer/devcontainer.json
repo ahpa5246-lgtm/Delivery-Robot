@@ -19,12 +19,22 @@
   },
   "postCreateCommand": "bash -lc 'source /opt/ros/jazzy/setup.bash && python3 -m unittest discover -s tests'",
   "forwardPorts": [
+    8080,
     8765
   ],
   "portsAttributes": {
     "8765": {
       "label": "CDR-01 Garden + Gazebo Replay",
       "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "Delivery-Robot native Lichtblick",
+      "onAutoForward": "notify"
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "24"
     }
   }
 }

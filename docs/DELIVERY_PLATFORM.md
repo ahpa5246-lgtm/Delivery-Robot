@@ -143,3 +143,21 @@ conversion of PR #19's current draft status. Continue on the existing
 network additions were saved to the environment draft: `api.github.com`,
 `repo.yarnpkg.com`, `foxglove.dev`, `packages.ros.org`. Saving the draft does not
 apply those changes to this running machine or publish the environment.
+
+## Existing GitHub Codespaces
+
+After pulling updated `main`, use the command palette (`Ctrl+Shift+P`) and run
+**Codespaces: Rebuild Container**. The container now installs Node.js 24, npm and
+Python venv support and forwards port 8080. A running container does not acquire
+new dependencies just by pulling files.
+
+After the rebuild, run from the repository root:
+
+```bash
+bash scripts/setup_telemetry.sh && bash scripts/start_telemetry.sh
+```
+
+Open port **8080** in the Ports tab. Setup can take several minutes. Using `&&`
+ensures the server starts only after setup succeeds. The setup preflight and
+container JSON were checked; a fresh GitHub Codespaces rebuild must still run
+in the user's Codespace.
