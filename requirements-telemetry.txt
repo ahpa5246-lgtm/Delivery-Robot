@@ -1,0 +1,3 @@
+# MCAP runtime and independent ROS1 roundtrip decoder used in contract tests.
+mcap==1.3.0
+mcap-ros1-support==0.7.3
