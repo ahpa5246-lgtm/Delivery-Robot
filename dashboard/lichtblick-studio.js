@@ -9,8 +9,21 @@ function normalize(data,kind){
   if(data.schema!=='cdr-garden-gazebo-replay-v1'||data.source!=='recorded_gazebo_harmonic_odometry'||data.contact_mesh_validated!==false||data.physics_world!=='flat_contact_proxy_not_real_garden_terrain')throw Error('Unsupported Gazebo provenance');
  }
  if(!Array.isArray(data.frames)||data.frames.length<2||data.frames.length>200000)throw Error('Invalid replay frames');
- const frames=data.frames.map(f=>({time_s:f.time_s,x_m:f.x_m,y_m:f.y_m,yaw_rad:f.yaw_rad}));
- if(frames.some((f,i)=>!Object.values(f).every(finite)||f.time_s<0||(i&&f.time_s<=frames[i-1].time_s)))throw Error('Invalid timestamps or position values');
+ const frames=[];
+ for(const raw of data.frames){
+  if(!finite(raw.time_s)||!finite(raw.x_m)||!finite(raw.y_m)||raw.time_s<0)throw Error('Invalid timestamps or position values');
+  const prev=frames.at(-1);
+  if(prev&&raw.time_s<prev.time_s)throw Error('Out-of-order timestamps');
+  // Planar replay records position and speed, not yaw. Infer a DISPLAY-ONLY
+  // heading from position deltas; never label it measured orientation.
+  const dx=prev?raw.x_m-prev.x_m:0,dy=prev?raw.y_m-prev.y_m:0;
+  const heading=finite(raw.yaw_rad)?raw.yaw_rad:(dx||dy?Math.atan2(dy,dx):prev?.yaw_rad??0);
+  if(!finite(heading))throw Error('Invalid orientation');
+  const frame={time_s:raw.time_s,x_m:raw.x_m,y_m:raw.y_m,yaw_rad:heading};
+  if(prev&&raw.time_s===prev.time_s){frames[frames.length-1]=frame;continue}
+  frames.push(frame);
+ }
+ if(frames.length<2)throw Error('Not enough distinct timestamps');
  const events=kind==='planar'&&Array.isArray(data.events)?data.events.filter(e=>finite(e.time_s)&&typeof e.state==='string').slice(0,300):[];
  return {frames,events};
 }
@@ -27,7 +40,7 @@ function drawChart(canvas,series,position){
  const yVal=(v,min,max)=>bottom-(bottom-top)*(v-min)/(max-min||1);
  if(position){
   const xs=state.frames.map(f=>f.x_m),ys=state.frames.map(f=>f.y_m);
-  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+  const minX=xs.reduce((a,b)=>Math.min(a,b),Infinity),maxX=xs.reduce((a,b)=>Math.max(a,b),-Infinity),minY=ys.reduce((a,b)=>Math.min(a,b),Infinity),maxY=ys.reduce((a,b)=>Math.max(a,b),-Infinity);
   const span=Math.max(maxX-minX,maxY-minY,1),midX=(maxX+minX)/2,midY=(maxY+minY)/2;
   const coords=f=>[xVal(f.x_m,midX-span/2,midX+span/2),yVal(f.y_m,midY-span/2,midY+span/2)];
   ctx.strokeStyle='#a68cff';ctx.lineWidth=3;ctx.beginPath();
@@ -35,7 +48,7 @@ function drawChart(canvas,series,position){
   const [x,y]=coords(state.frames[currentIndex()]);ctx.fillStyle='#69e4ce';ctx.beginPath();ctx.arc(x,y,9,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#d9d9e8';ctx.fillText('RECORDED XY · METRES',left+12,top+20);
  }else{
-  const vals=series.flatMap(s=>s.values.filter(finite)),min=Math.min(...vals),max=Math.max(...vals);
+  const vals=series.flatMap(s=>s.values.filter(finite)),min=vals.reduce((a,b)=>Math.min(a,b),Infinity),max=vals.reduce((a,b)=>Math.max(a,b),-Infinity);
   for(const s of series){ctx.strokeStyle=s.color;ctx.lineWidth=2;ctx.beginPath();let started=false;
    s.values.forEach((v,i)=>{if(!finite(v))return;const x=xVal(state.frames[i].time_s,state.frames[0].time_s,state.duration),y=yVal(v,min,max);started?ctx.lineTo(x,y):ctx.moveTo(x,y);started=true});ctx.stroke()}
   const x=xVal(state.t,state.frames[0].time_s,state.duration);ctx.strokeStyle='#fff8';ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x,bottom);ctx.stroke();
@@ -69,7 +82,7 @@ async function load(){
   state.t=state.frames[0].time_s;state.duration=state.frames.at(-1).time_s;
   el('source-label').textContent=kind==='gazebo'?'RECORDED GAZEBO · FLAT PROXY':'SCRIPTED PLANAR SIMULATOR';
   el('source-description').textContent=kind==='gazebo'?'Recorded physics-engine odometry. Garden terrain collisions not validated.':'Deterministic Python surrogate; not Gazebo, Nav2 or physical telemetry.';
-  el('frame-label').textContent=kind==='gazebo'?'GAZEBO ODOM FRAME':'PLANAR LOCAL XY';
+  el('frame-label').textContent=kind==='gazebo'?'GAZEBO ODOM FRAME':'PLANAR XY · HEADING INFERRED';
   el('connection').textContent='● REPLAY READY';el('limitations').textContent=kind==='gazebo'?'Flat-contact Gazebo proxy. No real Garden collision model, LiDAR or hardware measurements.':'Scripted planar simulation. No live robot, ROS 2 navigation, or measured hardware telemetry.';
   events();render();
  }catch(err){el('connection').textContent='● REPLAY ERROR';el('source-description').textContent=err.message;state.frames=[];el('events').textContent='Could not load replay: '+err.message}
