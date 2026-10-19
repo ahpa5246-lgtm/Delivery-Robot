@@ -85,3 +85,26 @@ incrementally growing path. Never infer real Garden surface physics.
 **Important limitation:** timestamps start at zero relative to the recording.
 They are not wall-clock ROS timestamps. This is a replay artifact only.
 
+
+## Phase 3: robot-frame transforms and schematic URDF
+
+The 3D exporter now writes a third ROS1-encoded MCAP channel, `/tf`
+(`tf2_msgs/TFMessage`), containing recorded `odom -> base_link`
+transforms. This is a replay-only transform stream, not live localization.
+
+A visualization-only URDF is supplied at
+`assets/robot/cdr01-visual-proxy.urdf`. It has a colored chassis, cargo box,
+and two wheels to aid interpretation. **Its dimensions and geometry are
+illustrative, not measured or validated CAD.** Do not use this URDF for
+collision simulation, motor sizing, or mechanical design.
+
+To inspect the model, import the URDF into a URDF-capable 3D panel or
+robot-description workflow, and use the recorded `/tf` stream as the
+`odom -> base_link` transform. Availability of local-file URDF loading
+depends on the Lichtblick build. The URDF is not automatically bundled into
+the MCAP, and the MCAP does not yet include `/robot_description`.
+
+Run `python -m unittest tests.test_lichtblick_3d -v` to check the
+serialization contract. A full end-to-end visual inspection in Lichtblick
+is still required. Live ROS 2, Nav2, real LiDAR, battery telemetry and mission
+dispatch are **not** implemented by this integration.
