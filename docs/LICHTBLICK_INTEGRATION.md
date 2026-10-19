@@ -108,3 +108,50 @@ Run `python -m unittest tests.test_lichtblick_3d -v` to check the
 serialization contract. A full end-to-end visual inspection in Lichtblick
 is still required. Live ROS 2, Nav2, real LiDAR, battery telemetry and mission
 dispatch are **not** implemented by this integration.
+
+## Phase 4: CDR mission intelligence workspace (implemented, visual QA pending)
+
+Run the existing loopback dashboard server:
+
+```bash
+python scripts/serve_dashboard.py --port 8765
+```
+
+Open `http://127.0.0.1:8765/studio`. The existing home dashboard now
+links to the studio.
+
+The studio is a **first-party CDR dashboard inspired by multi-panel robotics
+tools**. It is **not a Lichtblick plugin or a fork of Lichtblick**. It
+reuses the project's existing offline `/api/run` and
+`/api/garden-gazebo-run` read-only endpoints. Its canvas visualizations
+are 2D, while the earlier MCAP export can be opened in Lichtblick for 3D
+trajectory inspection. The original 3D campus and Garden viewers remain
+available through their existing routes.
+
+Features:
+- Source selector with explicit scripted-planar vs recorded-Gazebo provenance
+- Mission scenario, destination and seed for planar simulation only
+- Playback controls, scrubbing, XY trajectory and robot marker
+- Position/derived-speed plots and recorded mission events
+- Read-only boundary: no physical robot dispatch or actuator commands
+
+Planar heading is inferred from adjacent XY positions for visualization;
+it is **not a measured yaw sensor reading**. Recorded Gazebo heading is
+taken from the odometry export. Speed is derived from sampled XY position
+differences, not wheel encoder measurements.
+
+Validation commands:
+
+```bash
+python -m unittest tests.test_lichtblick_studio tests.test_lichtblick_3d tests.test_lichtblick_mcap -v
+```
+
+The Garden recording is not committed to GitHub and must be generated
+locally. Without it the Gazebo source intentionally reports an error rather
+than substituting fake data.
+
+**Pending acceptance:** run the tests, load both available data sources,
+inspect desktop and mobile screenshots, open the exported MCAP in Lichtblick,
+and verify URDF alignment with the replayed TF. Live ROS 2, live LiDAR,
+battery measurements, real mission dispatch and a full native Lichtblick
+custom panel are not yet delivered.
