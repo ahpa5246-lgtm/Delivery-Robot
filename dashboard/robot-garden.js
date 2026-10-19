@@ -8,6 +8,7 @@ const $=id=>document.getElementById(id);
 let viewer=null,robot=null,sourceUrl=null,trajectory=null,timer=0,playing=false,startAt=0;
 let manualPose={x:0,z:0,yaw:0};
 let groundAnchor=false,manualDistance=0,lastWorld=null,motionSource='manual';
+let needsPlacement=true;
 let replayDistance=0,playbackSeconds=0;
 const pickingOverlay=$('ground-pick-layer'),floorY=$('floor-y');
 if(new URLSearchParams(location.search).get('embed')==='1')document.body.classList.add('embedded');
@@ -48,7 +49,7 @@ function projectToGround(nx,ny){
  $('origin-y').value=y.toFixed(3);
  $('origin-z').value=p.z.toFixed(3);
  manualPose={x:0,z:0,yaw:0};
- groundAnchor=true;lastWorld=null;manualDistance=0;motionSource='manual';
+ groundAnchor=true;needsPlacement=false;lastWorld=null;manualDistance=0;motionSource='manual';
  robot.enabled=true;
  applyPose(0,0,0);
  pickingOverlay.hidden=true;
@@ -127,6 +128,24 @@ function buildRobot(app){
  part(base,'status-led','box',[.21,.665,0],[.06,.012,.11],accent);
  app.root.addChild(base);return base;
 }
+function previewRobotAtCamera(){
+ if(!robot||!viewer)return;
+ const cam=viewer.app.root.findByName('camera');
+ if(!cam)return;
+ const p=cam.getPosition(),forward=cam.forward;
+ // Do not pretend the preview is grounded: it hovers near the camera
+ // until the operator selects a visible lawn/paving point.
+ const d=2.5;
+ const scale=Math.max(.01,Math.min(5,val('robot-scale')));
+ robot.setPosition(p.x+forward.x*d,p.y+forward.y*d,p.z+forward.z*d);
+ robot.setLocalScale(scale,scale,scale);
+ robot.setEulerAngles(0,0,0);
+ robot.enabled=true;
+ viewer.app.renderNextFrame=true;
+ $('pose-readout').textContent='VISIBLE ROBOT PREVIEW · NOT GROUND ALIGNED · PLACE ON LAWN';
+ status('ROBOT PREVIEW VISIBLE · PLACE ON LAWN TO ALIGN WITH IMAGE');
+ provenance('REAL 3DGS + VISIBLE CAMERA-RELATIVE ROBOT PREVIEW · NO GROUND COLLISION OR METRIC REGISTRATION');
+}
 function initialPlacement(){
  manualPose={x:0,z:0,yaw:0};
  applyPose(0,0,0);
@@ -180,12 +199,14 @@ async function load(source,filename){
   viewer.events.on('progress:changed',p=>status('LOADING 3DGS '+p+'%'));
   const ready=()=>{
     robot=buildRobot(viewer.app);
-    robot.enabled=false;groundAnchor=false;manualDistance=0;lastWorld=null;
+    robot.enabled=true;groundAnchor=false;needsPlacement=true;manualDistance=0;lastWorld=null;
+    // Show a camera-facing visual preview immediately; ground placement remains explicitly unverified.
+    previewRobotAtCamera();
     for(const id of quickIds)$(id).disabled=false;
     pickingOverlay.hidden=true;
     $('garden-floor-help').hidden=false;
     $('robot-controls').hidden=false;$('playback-controls').hidden=false;
-    status('PICK LAWN · ORBIT UNTIL GRASS IS VISIBLE, THEN PLACE');
+    status('ROBOT PREVIEW VISIBLE · CLICK PLACE ON LAWN FOR GROUND ALIGNMENT');
     provenance('REAL 3DGS + CDR ROBOT IN SAME PLAYCANVAS ENGINE · SPATIAL REGISTRATION / GARDEN COLLISION NOT VERIFIED');
     viewer.app.renderNextFrame=true;
   };
