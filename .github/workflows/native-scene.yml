@@ -16,6 +16,9 @@ on:
       - 'tests/native-platform-browser.cjs'
       - 'tests/test_native_environment.py'
   workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
