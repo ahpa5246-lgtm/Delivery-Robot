@@ -14,7 +14,7 @@ export const DELIVERY_VIEWS: readonly DeliveryView[] = ["robot", "campus", "logi
 export const deliveryViewCamera: Record<DeliveryView, Partial<CameraState>> = {
   robot: { distance: 6.8, phi: 58, thetaOffset: 225, targetOffset: [0, 0, 0], near: 0.05 },
   campus: { distance: 28, phi: 52, thetaOffset: 225, targetOffset: [16, 10, 0], near: 0.1 },
-  logistics: { distance: 28, phi: 52, thetaOffset: 225, targetOffset: [16, 10, 0], near: 0.1 },
+  logistics: { distance: 31, phi: 56, thetaOffset: 45, targetOffset: [16, 10, 0], near: 0.1 },
   grid: { distance: 29, phi: 53, thetaOffset: 225, targetOffset: [16, 10, 0], near: 0.1 },
 };
 

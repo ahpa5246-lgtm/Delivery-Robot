@@ -39,8 +39,10 @@ selected. Native timeline, MCAP source, tracked `base_link`, mission telemetry
 and visual robot are unchanged. The grid layer is initially hidden to keep
 the campus presentation clear, but remains available with one click.
 
-The overview offset deliberately points the camera towards the campus buildings
-from the recorded starting depot position. Screenshots must verify the scene
+The campus overview targets the centre of the 32 × 20 m map in the fixed
+`odom` frame. The logistics overview additionally places the virtual camera
+to the southwest, so the model's rear/east walls form a backdrop instead of
+occluding most of the scene. Robot focus remains centred on `base_link`. Screenshots must verify the scene
 is actually in frame; a successful URDF HTTP fetch alone is insufficient.
 
 ## Logistics CAD improvement
