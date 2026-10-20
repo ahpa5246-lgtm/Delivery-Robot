@@ -38,7 +38,7 @@ describe("Delivery workspaces", () => {
     const manager = {
       updateLayout: jest.fn<ILayoutManager["updateLayout"]>(async ({ data }) => ({
         ...existing,
-        baseline: { data, savedAt: undefined },
+        baseline: { data: data ?? existing.baseline.data, savedAt: undefined },
       })),
       getLayouts: jest.fn<ILayoutManager["getLayouts"]>().mockResolvedValue([existing]),
       saveNewLayout: jest.fn<ILayoutManager["saveNewLayout"]>(async (p) => ({
@@ -95,9 +95,9 @@ it("migrates only Delivery-tagged old 3D panels, leaving camera and mission pane
   const missionBefore = JSON.stringify(layout.configById["DeliveryMissions!delivery"]);
   const migrated = rebaseDeliveryAssets(layout, "http://localhost:8080/")!;
   const layers = (migrated.configById["3D!delivery"] as typeof delivery).layers as Record<string, {url: string; visible: boolean}>;
-  expect(layers.delivery_campus.url).toBe("http://localhost:8080/models/environment/native-campus.urdf");
-  expect(layers.delivery_campus.visible).toBe(true);
-  expect(layers.delivery_logistics.visible).toBe(false);
+  expect(layers.delivery_campus!.url).toBe("http://localhost:8080/models/environment/native-campus.urdf");
+  expect(layers.delivery_campus!.visible).toBe(true);
+  expect(layers.delivery_logistics!.visible).toBe(false);
   expect((migrated.configById["3D!delivery"] as typeof delivery).cameraState.distance).toBe(8.5);
   expect(JSON.stringify(migrated.configById["DeliveryMissions!delivery"])).toBe(missionBefore);
   expect(delivery.layers.delivery_campus).toBeUndefined();
