@@ -37,6 +37,30 @@ const path = require('node:path');
   const position = async()=>{const text=await page.locator('body').innerText();const match=text.slice(text.indexOf('position')).match(/\bx\s+(-?[\d.]+)\s+y\s+(-?[\d.]+)/);assert.ok(match,'decoded odometry position is visible');return [Number(match[1]),Number(match[2])];};
   const firstPosition=await position();
   await page.screenshot({path:path.join(out,'native-perception-start.png')});
+  // Validate *both* authored worlds in the same real WebGL renderer, not merely
+  // that an invisible URDF responded with 200 OK.
+  const environmentMenu = page.getByRole('button', {name:'Environment view',exact:true});
+  await environmentMenu.waitFor();
+  await environmentMenu.click();
+  await page.getByRole('menuitem',{name:'Logistics warehouse',exact:true}).click();
+  await page.waitForFunction(() => document.body.innerText.includes('Environment view: logistics'));
+  await page.waitForTimeout(700);
+  await page.screenshot({path:path.join(out,'native-logistics-overview.png')});
+  assert.ok(models.some(m=>m.url.endsWith('/models/environment/world/warehouse-shelf.dae')&&m.status===200),
+    'actual AWS warehouse shelving mesh must render in native scene');
+  await environmentMenu.click();
+  await page.getByRole('menuitem',{name:'University campus',exact:true}).click();
+  await page.waitForFunction(() => document.body.innerText.includes('Environment view: campus'));
+  await page.waitForTimeout(450);
+  await page.screenshot({path:path.join(out,'native-campus-overview.png')});
+  await environmentMenu.click();
+  await page.getByRole('menuitem',{name:'Grid only',exact:true}).click();
+  await page.waitForFunction(() => document.body.innerText.includes('Environment view: grid'));
+  await page.screenshot({path:path.join(out,'native-grid-only.png')});
+  await environmentMenu.click();
+  await page.getByRole('menuitem',{name:'University campus',exact:true}).click();
+  await page.waitForFunction(() => document.body.innerText.includes('Environment view: campus'));
+
   await play.click();await page.waitForTimeout(1800);
   await page.getByRole('button',{name:'Pause',exact:true}).click();
   const time=page.getByTestId('PlaybackTime-text').locator('input');
@@ -85,7 +109,7 @@ const path = require('node:path');
   await missing.getByRole('tab',{name:'Missions',exact:true}).click();await missing.getByText(/No mission message at the current playback time/).waitFor();
   await missing.screenshot({path:path.join(out,'native-missing-source.png')});
   assert.deepEqual(errors,[]);
-  await fs.writeFile(path.join(out,'results.json'),JSON.stringify({status:'passed',checks:['real MCAP','licensed CAD fetch','default dark','default workspace','play','pause','keyboard toggle','seek','Missions','Diagnostics','resize','workspace persistence','reload persistence','add panel','1024px playback','768px capture','missing source error','empty mission state'],models,errors},null,2));
+  await fs.writeFile(path.join(out,'results.json'),JSON.stringify({status:'passed',checks:['native camera and environment menu','campus overview','logistics overview','grid-only isolation','real MCAP','licensed CAD fetch','default dark','default workspace','play','pause','keyboard toggle','seek','Missions','Diagnostics','resize','workspace persistence','reload persistence','add panel','1024px playback','768px capture','missing source error','empty mission state'],models,errors},null,2));
   console.log('PASS: native engine MCAP, CAD, play/pause/seek, workspaces, persistence and responsive captures. '+out);
  } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
