@@ -36,6 +36,10 @@ Meshes already present in this repository were reused rather than redrawn:
 The existing `dashboard/assets/SOURCES.md` contains file-by-file provenance.
 All assets are local, not hotlinked to third-party CDNs. COLLADA supporting
 textures are copied preserving the original `../materials/textures` paths.
+The TurtleBot3 COLLADA file contains two SketchUp image IDs (`ID7`, `ID16`)
+used in effect slots as filenames. The Webpack import **rewrites those two IDs
+only in the bundled copy** to the already included `Wood_Floor_Dark.jpg` and
+`Maple.jpg` textures. The checked-in upstream source file is unchanged.
 No physics performance conclusions can be made from attractive renderings.
 
 ## Run / verification
