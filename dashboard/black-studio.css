@@ -18,3 +18,5 @@ button.primary:hover,#run:hover{background:#8268d9!important}
 input,select{background:#1b1c22!important;color:#eeedf4!important;border-color:#40414a!important}
 a{color:#c7b9f5}
 body{scrollbar-color:#474450 #101115}
+\n/* Keep Studio navigation styled without CSP-blocked inline HTML attributes. */
+.mast-actions .telemetry-studio-link{color:#e6d8ff;border:1px solid #8a69d6;border-radius:8px;padding:10px 14px;text-decoration:none;font-weight:700;margin-right:12px}
