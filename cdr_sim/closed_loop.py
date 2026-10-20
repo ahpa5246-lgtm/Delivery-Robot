@@ -51,12 +51,35 @@ def closed_loop_replay(options: ReplayOptions, world: Campus) -> dict:
         raise ValueError("positive braking deceleration is required")
     nominal = astar(world, home, goal)
     obstacle_radius = 0.37
-    # The obstacle lies ON the nominal route, but is initially unknown to A*.
-    obstacle = point_along(nominal, min(8.0, path_length(nominal) * 0.42))
-    occupied = world.disk_cells(obstacle, obstacle_radius + world.safety_margin)
     safe_radius = obstacle_radius + world.robot_radius + world.safety_margin
-    if hypot(home[0] - obstacle[0], home[1] - obstacle[1]) <= safe_radius + 2:
-        raise ValueError("scenario obstacle must be away from initial depot")
+    # Select a reproducible *test fixture* on the old route that admits a
+    # detour. A blockage inside the 1.5-m west-side choke point has no
+    # physically traversable alternative and must NOT be called "replanning".
+    # Selection is offline ground-truth scenario design; the running A* still
+    # receives only unknown obstacle cells AFTER modeled range detection.
+    candidates = []
+    nominal_length = path_length(nominal)
+    for index in range(6, max(7, int(nominal_length - 4))):
+        p = point_along(nominal, float(index))
+        if min(hypot(p[0] - home[0], p[1] - home[1]),
+               hypot(p[0] - goal[0], p[1] - goal[1])) < 4.0:
+            continue
+        candidates.append((world.clearance(p), p))
+    candidates.sort(key=lambda item: item[0], reverse=True)
+    obstacle = None
+    occupied = frozenset()
+    for _, candidate in candidates:
+        cells = world.disk_cells(candidate, obstacle_radius + world.safety_margin)
+        try:
+            alternative = astar(world, home, goal, cells)
+        except NoRoute:
+            continue
+        if all(point_segment_distance(candidate, a, b) >= safe_radius - 1e-7
+               for a, b in zip(alternative, alternative[1:])):
+            obstacle, occupied = candidate, cells
+            break
+    if obstacle is None:
+        raise ValueError("no geometrically feasible dynamic-obstacle test site")
 
     position: Point = home
     speed = 0.0
