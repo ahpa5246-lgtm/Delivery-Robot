@@ -75,7 +75,15 @@ class SharedWorldCollisionTests(unittest.TestCase):
                             run=replay(ReplayOptions(destination=name,seed=seed,scenario=scenario),
                                        campus=world)
                             self.assertIn(run["status"],{"COMPLETED","PAUSED_SAFE"})
-                            self.assertTrue(run["collision_checked"])
+                            invalid_segments = [
+                                (a["x_m"], a["y_m"], b["x_m"], b["y_m"])
+                                for a, b in zip(run["frames"], run["frames"][1:])
+                                if not world.segment_safe(
+                                    (a["x_m"], a["y_m"]), (b["x_m"], b["y_m"]))
+                            ]
+                            self.assertTrue(run["collision_checked"],
+                                (theme, name, seed, scenario, run["status"], run["reason"],
+                                 invalid_segments[:6], world.buildings))
                             self.assertEqual(run["collision_objects"],len(world.obstacles))
                             self.assertGreaterEqual(run["minimum_sampled_clearance_m"],0)
                             for a,b in zip(run["frames"],run["frames"][1:]):
