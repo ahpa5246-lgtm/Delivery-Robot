@@ -12,6 +12,12 @@ import math
 from pathlib import Path
 import re
 import struct
+import sys
+
+# Standalone invocation via `python scripts/export_gazebo_observation.py`
+# starts with /scripts on sys.path, rather than the repository root.
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.export_delivery_recording import SCHEMAS, header, ros_schema, string, ROOT
 
 
