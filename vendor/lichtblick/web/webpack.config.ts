@@ -49,6 +49,18 @@ const appConfig: ReturnType<typeof mainConfig> = (env, argv) => {
           from: path.resolve(__dirname, "../../../assets/robot/cdr01-lichtblick.urdf"),
           to: "models/cdr01.urdf",
         },
+        ...["native-campus.urdf", "native-logistics.urdf"].map((name) => ({
+          from: path.resolve(__dirname, "../../../assets/world", name),
+          to: `models/environment/${name}`,
+        })),
+        ...["cafe-table.dae", "warehouse-shelf.dae", "Maple.jpg", "Wood_Floor_Dark.jpg"].map((name) => ({
+          from: path.resolve(__dirname, "../../../dashboard/assets/world", name),
+          to: `models/environment/world/${name}`,
+        })),
+        {
+          from: path.resolve(__dirname, "../../../dashboard/assets/materials/textures"),
+          to: "models/environment/materials/textures",
+        },
         ...["rbot-chassis.stl", "rbot-wheel.stl"].map((name) => ({
           from: path.resolve(__dirname, "../../../dashboard/assets/robot", name),
           to: `models/${name}`,
