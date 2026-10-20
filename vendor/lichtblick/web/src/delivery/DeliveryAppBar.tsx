@@ -89,6 +89,7 @@ export function DeliveryAppBar(props: AppBarProps): React.JSX.Element {
         nextLayers[key] = { ...layer, visible };
       }
     }
+    const followTf = view === "robot" ? "base_link" : "odom";
     const cameraState: CameraState = {
       ...DEFAULT_CAMERA_STATE,
       ...(current.cameraState as Partial<CameraState> | undefined),
@@ -98,7 +99,7 @@ export function DeliveryAppBar(props: AppBarProps): React.JSX.Element {
     savePanelConfigs({
       configs: [{
         id: "3D!delivery",
-        config: { ...current, layers: nextLayers, cameraState },
+        config: { ...current, layers: nextLayers, followTf, cameraState },
         override: true,
       }],
     });
@@ -107,7 +108,7 @@ export function DeliveryAppBar(props: AppBarProps): React.JSX.Element {
     updateSharedPanelState("3D", {
       cameraState,
       followMode: (current.followMode as "follow-position") ?? "follow-position",
-      followTf: (current.followTf as string | undefined) ?? "base_link",
+      followTf,
       deliveryViewRequest: {
         id: ++viewRequestSequence,
         layoutId: selected.id,

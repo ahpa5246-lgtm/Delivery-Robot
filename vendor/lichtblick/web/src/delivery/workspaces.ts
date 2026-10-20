@@ -42,7 +42,7 @@ const environmentLayer = (name: "campus" | "logistics", visible: boolean) => ({
 });
 
 const scene = {
-  followTf: "base_link",
+  followTf: "odom",
   followMode: "follow-position",
   scene: {
     backgroundColor: "#08090b",

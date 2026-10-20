@@ -772,6 +772,15 @@ export function ThreeDeeRender(props: Readonly<ThreeDeeRenderProps>): React.JSX.
       return;
     }
     lastDeliveryViewRequest.current = request.id;
+    // View presets use the original native display-frame setting:
+    // odom keeps overviews anchored while the robot moves, base_link follows it.
+    const targetFrame = request.view === "robot" ? "base_link" : "odom";
+    if (renderer.config.followTf !== targetFrame) {
+      renderer.settings.handleAction({
+        action: "update",
+        payload: { path: ["general", "followTf"], input: "select", value: targetFrame },
+      });
+    }
     const visibility = {
       delivery_campus: request.view === "campus",
       delivery_logistics: request.view === "logistics",

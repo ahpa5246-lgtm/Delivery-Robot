@@ -9,12 +9,13 @@ export type DeliveryView = "robot" | "campus" | "logistics" | "grid";
 export const DELIVERY_VIEWS: readonly DeliveryView[] = ["robot", "campus", "logistics", "grid"];
 
 // Angles and distance are the native Lichtblick camera parameters, in degrees/metres.
-// The target offset shows *surrounding buildings* in addition to the robot at depot (2, 2).
+// Environment modes use the stationary odom frame and target the map centre (16,10).
+// Robot focus retains the moving base_link frame; no recorded transform is rewritten.
 export const deliveryViewCamera: Record<DeliveryView, Partial<CameraState>> = {
   robot: { distance: 6.8, phi: 58, thetaOffset: 225, targetOffset: [0, 0, 0], near: 0.05 },
-  campus: { distance: 30, phi: 49, thetaOffset: 225, targetOffset: [7, 5, 0], near: 0.1 },
-  logistics: { distance: 28, phi: 46, thetaOffset: 225, targetOffset: [7, 5, 0], near: 0.1 },
-  grid: { distance: 24, phi: 54, thetaOffset: 225, targetOffset: [5, 4, 0], near: 0.1 },
+  campus: { distance: 28, phi: 52, thetaOffset: 225, targetOffset: [16, 10, 0], near: 0.1 },
+  logistics: { distance: 28, phi: 52, thetaOffset: 225, targetOffset: [16, 10, 0], near: 0.1 },
+  grid: { distance: 29, phi: 53, thetaOffset: 225, targetOffset: [16, 10, 0], near: 0.1 },
 };
 
 export function deliveryViewLayers(view: DeliveryView): Record<

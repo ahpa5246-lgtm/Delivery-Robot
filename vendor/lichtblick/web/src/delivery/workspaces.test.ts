@@ -112,7 +112,8 @@ it("native scenery presets are exclusive, use realistic overview zoom, and never
     expect(deliveryViewCamera[name].distance).toBeGreaterThan(5);
   }
   expect(deliveryViewCamera.campus.distance).toBeGreaterThan(20);
-  expect(deliveryViewCamera.campus.targetOffset?.[0]).toBeGreaterThan(4);
+  expect(deliveryViewCamera.campus.targetOffset).toEqual([16, 10, 0]);
+  expect(deliveryViewCamera.logistics.targetOffset).toEqual([16, 10, 0]);
   const initial = workspacePresets[0]!.data.configById["3D!delivery"] as {
     layers: { grid: { visible: boolean }; delivery_campus: { visible: boolean }; delivery_robot: { visible: boolean } };
     cameraState: { distance: number };
