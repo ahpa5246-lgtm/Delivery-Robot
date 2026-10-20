@@ -37,12 +37,12 @@ class ReactiveMCAPTests(unittest.TestCase):
                     with output.open("rb") as fp:
                         data = list(make_reader(fp, decoder_factories=[DecoderFactory()]).iter_decoded_messages(
                             topics=["/cdr01/dynamic_obstacle", "/odom"]))
-                    markers = [m for _, ch, m in data if ch.topic == "/cdr01/dynamic_obstacle"]
+                    markers = [m for _, ch, _, m in data if ch.topic == "/cdr01/dynamic_obstacle"]
                     self.assertEqual(len(markers), count)
                     self.assertEqual(markers[0].header.frame_id, "odom")
                     self.assertEqual(markers[0].type, 2)  # SPHERE
                     self.assertGreater(markers[0].scale.x, 0)
-                    self.assertEqual(len([m for _, ch, _ in data if ch.topic == "/odom"]), count)
+                    self.assertEqual(len([m for _, ch, _, _ in data if ch.topic == "/odom"]), count)
 
     def test_unsupported_world_does_not_create_file(self):
         with TemporaryDirectory() as directory:
