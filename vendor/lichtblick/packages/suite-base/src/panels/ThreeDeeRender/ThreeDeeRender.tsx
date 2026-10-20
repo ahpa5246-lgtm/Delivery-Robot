@@ -42,6 +42,8 @@ import {
   TRANSFORM_STAMPED_DATATYPES,
 } from "@lichtblick/suite-base/panels/ThreeDeeRender/ros";
 import ThemeProvider from "@lichtblick/suite-base/theme/ThemeProvider";
+import { usePanelContext } from "@lichtblick/suite-base/components/PanelContext";
+import { useCurrentLayoutSelector } from "@lichtblick/suite-base/context/CurrentLayoutContext";
 
 import type { IRenderer, ImageModeConfig, RendererConfig, RendererSubscription } from "./IRenderer";
 import type { Path } from "./LayerErrors";
@@ -97,6 +99,9 @@ export function ThreeDeeRender(props: Readonly<ThreeDeeRenderProps>): React.JSX.
     unstable_setMessagePathDropConfig: setMessagePathDropConfig,
     unstable_setAlert: setPanelAlert,
   } = context;
+  const panelId = usePanelContext().id;
+  const selectedLayoutId = useCurrentLayoutSelector((state) => state.selectedLayout?.id);
+  const lastDeliveryViewRequest = useRef<number | undefined>();
   const analytics = useAnalytics();
   const { classes } = useStyles();
   const { t } = useTranslation("threeDee");
@@ -758,6 +763,38 @@ export function ThreeDeeRender(props: Readonly<ThreeDeeRenderProps>): React.JSX.
       renderRef.current.needsRender = true;
     }
   }, [cameraState, renderer]);
+
+  // Delivery native toolbar uses the existing settings-tree actions, not a
+  // second renderer or a CSS-only scene overlay. Restrict the command to the
+  // exact selected layout and 3D panel, including while switching workspaces.
+  useEffect(() => {
+    const request = sharedPanelState?.deliveryViewRequest;
+    if (!renderer || !request || request.layoutId !== selectedLayoutId ||
+        request.panelId !== panelId || lastDeliveryViewRequest.current === request.id) {
+      return;
+    }
+    lastDeliveryViewRequest.current = request.id;
+    const visibility = {
+      delivery_campus: request.view === "campus" || request.view === "robot",
+      delivery_logistics: request.view === "logistics",
+      grid: request.view === "grid",
+    };
+    for (const [layerId, visible] of Object.entries(visibility)) {
+      const layer = renderer.config.layers[layerId];
+      if (layer?.visible !== visible) {
+        renderer.settings.handleAction({
+          action: "update",
+          payload: { path: ["layers", layerId, "visible"], value: visible },
+        });
+      }
+    }
+    const nextCamera = sharedPanelState.cameraState;
+    renderer.updateConfig((draft) => {
+      draft.cameraState = { ...draft.cameraState, ...nextCamera };
+    });
+    renderer.setCameraState(nextCamera);
+    renderer.queueAnimationFrame();
+  }, [renderer, sharedPanelState, panelId, selectedLayoutId]);
 
   // Sync camera with shared state, if enabled.
   useEffect(() => {

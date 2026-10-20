@@ -11,6 +11,7 @@ import { ILayoutManager } from "@lichtblick/suite-base/services/ILayoutManager";
 import { Layout } from "@lichtblick/suite-base/services/ILayoutStorage";
 
 import { ensureWorkspaces, workspacePresets, rebaseDeliveryAssets } from "./workspaces";
+import { DELIVERY_VIEWS, deliveryViewLayers, deliveryViewCamera } from "./viewPresets";
 
 describe("Delivery workspaces", () => {
   it("provides five native layouts without inventing sensor topics", () => {
@@ -101,4 +102,23 @@ it("migrates only Delivery-tagged old 3D panels, leaving camera and mission pane
   expect((migrated.configById["3D!delivery"] as typeof delivery).cameraState.distance).toBe(8.5);
   expect(JSON.stringify(migrated.configById["DeliveryMissions!delivery"])).toBe(missionBefore);
   expect(delivery.layers.delivery_campus).toBeUndefined();
+});
+
+it("native scenery presets are exclusive, use realistic overview zoom, and never hide the robot", () => {
+  expect(DELIVERY_VIEWS).toEqual(["robot", "campus", "logistics", "grid"]);
+  for (const name of DELIVERY_VIEWS) {
+    const flags = deliveryViewLayers(name);
+    expect(Object.values(flags).filter(Boolean)).toHaveLength(1);
+    expect(deliveryViewCamera[name].distance).toBeGreaterThan(5);
+  }
+  expect(deliveryViewCamera.campus.distance).toBeGreaterThan(20);
+  expect(deliveryViewCamera.campus.targetOffset?.[0]).toBeGreaterThan(4);
+  const initial = workspacePresets[0]!.data.configById["3D!delivery"] as {
+    layers: { grid: { visible: boolean }; delivery_campus: { visible: boolean }; delivery_robot: { visible: boolean } };
+    cameraState: { distance: number };
+  };
+  expect(initial.layers.delivery_robot.visible).toBe(true);
+  expect(initial.layers.delivery_campus.visible).toBe(true);
+  expect(initial.layers.grid.visible).toBe(false);
+  expect(initial.cameraState.distance).toBeGreaterThan(20);
 });

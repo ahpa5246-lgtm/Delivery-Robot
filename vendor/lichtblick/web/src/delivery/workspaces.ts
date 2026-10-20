@@ -9,6 +9,7 @@ import { LayoutData } from "@lichtblick/suite-base/context/CurrentLayoutContext/
 import { defaultPlaybackConfig } from "@lichtblick/suite-base/providers/CurrentLayoutProvider/reducers";
 import { ILayoutManager } from "@lichtblick/suite-base/services/ILayoutManager";
 import { Layout } from "@lichtblick/suite-base/services/ILayoutStorage";
+import { deliveryViewCamera } from "./viewPresets";
 
 const plot = (fields: string[], title: string) => ({
   title,
@@ -49,11 +50,7 @@ const scene = {
     transforms: { showLabel: false, axisScale: 0.2, lineColor: "#4b5058" },
   },
   cameraState: {
-    distance: 4,
-    phi: 58,
-    thetaOffset: 45,
-    targetOffset: [0, 0, 0],
-    near: 0.05,
+    ...deliveryViewCamera.campus,
   },
   topics: {
     "/robot_description": { visible: false },
@@ -81,7 +78,7 @@ const scene = {
     delivery_logistics: environmentLayer("logistics", false),
     grid: {
       layerId: "foxglove.Grid",
-      visible: true,
+      visible: false,
       size: 30,
       divisions: 30,
       color: "#454951",
