@@ -24,6 +24,15 @@ const path = require('node:path');
   const play=page.getByRole('button',{name:'Play',exact:true});assert.equal(await play.isEnabled(),true);
   await page.waitForFunction(()=>performance.getEntriesByType('resource').some(r=>r.name.endsWith('/models/rbot-chassis.stl')),null,{timeout:20000});
   assert.ok(models.some(m=>m.url.endsWith('rbot-chassis.stl')&&m.status===200),'licensed CAD chassis must load: '+JSON.stringify(models));
+  await page.waitForFunction(
+    () => performance.getEntriesByType('resource').some(r=>r.name.endsWith('/models/environment/native-campus.urdf')),
+    null,{timeout:25000}
+  );
+  await page.waitForTimeout(650);
+  assert.ok(models.some(m=>m.url.endsWith('/models/environment/native-campus.urdf')&&m.status===200),
+    'campus environment must load from local URL: '+JSON.stringify(models));
+  assert.ok(models.some(m=>m.url.endsWith('/models/environment/world/cafe-table.dae')&&m.status===200),
+    'licensed café-table mesh must load: '+JSON.stringify(models));
   assert.ok(models.every(m=>m.status===200),JSON.stringify(models));
   const position = async()=>{const text=await page.locator('body').innerText();const match=text.slice(text.indexOf('position')).match(/\bx\s+(-?[\d.]+)\s+y\s+(-?[\d.]+)/);assert.ok(match,'decoded odometry position is visible');return [Number(match[1]),Number(match[2])];};
   const firstPosition=await position();
