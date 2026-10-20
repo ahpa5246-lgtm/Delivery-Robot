@@ -97,7 +97,7 @@ const path = require('node:path');
   await page.screenshot({path:path.join(out,'native-perception-motion.png')});
   await page.getByRole('tab',{name:'Missions',exact:true}).click();
   await page.getByText('Mission playback',{exact:true}).waitFor();
-  await page.waitForTimeout(500);assert.match(await page.locator('body').innerText(),/campus_kinematic_replay/);assert.match(await page.locator('body').innerText(),/8[45]\.\d+ %/);
+  await page.waitForTimeout(500);assert.match(await page.locator('body').innerText(),/campus_(synthetic_reactive|kinematic)_replay/);assert.match(await page.locator('body').innerText(),/8[45]\.\d+ %/);
   await page.screenshot({path:path.join(out,'native-missions.png')});
   const slider=page.getByTestId('playback-slider');const sb=await slider.boundingBox();assert.ok(sb);
   await page.mouse.click(sb.x+sb.width*.55,sb.y+sb.height/2);

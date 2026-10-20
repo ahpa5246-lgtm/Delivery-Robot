@@ -41,10 +41,10 @@ const appConfig: ReturnType<typeof mainConfig> = (env, argv) => {
           from: path.resolve(__dirname, "../../../integrations/upstream_samples/rbot-nav2/LICENSE"),
           to: "licenses/RBOT-Apache-2.0.txt",
         },
-        {
-          from: path.resolve(__dirname, "../../../artifacts/campus.mcap"),
-          to: "recordings/campus.mcap",
-        },
+        ...["campus.mcap", "campus-reactive.mcap", "warehouse-reactive.mcap"].map((name) => ({
+          from: path.resolve(__dirname, "../../../artifacts", name),
+          to: `recordings/${name}`,
+        })),
         {
           from: path.resolve(__dirname, "../../../assets/robot/cdr01-lichtblick.urdf"),
           to: "models/cdr01.urdf",

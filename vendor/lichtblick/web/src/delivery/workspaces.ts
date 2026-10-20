@@ -126,13 +126,13 @@ export const workspacePresets = [
     name: "Planning",
     data: data(split("3D!delivery", "Plot!distance"), {
       "3D!delivery": scene,
-      "Plot!distance": plot(["distance_m"], "Travelled distance · m"),
+      "Plot!distance": plot(["distance_m", "minimum_clearance_m"], "Distance and static/dynamic clearance · m"),
     }),
   },
   {
     name: "Controls",
     data: data(split("Plot!motion", "RawMessages!odom", 60), {
-      "Plot!motion": plot(["speed_mps"], "Recorded motion · no actuator commands"),
+      "Plot!motion": plot(["speed_mps", "obstacle_range_m"], "Speed and modeled sensor range"),
       "RawMessages!odom": { topicPath: "/odom" },
     }),
   },

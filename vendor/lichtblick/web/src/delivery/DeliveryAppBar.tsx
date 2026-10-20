@@ -6,7 +6,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Alert, Button, Menu, MenuItem, Stack, Tab, Tabs, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import { makeStyles } from "tss-react/mui";
 
@@ -63,6 +63,7 @@ export function DeliveryAppBar(props: AppBarProps): React.JSX.Element {
   const { setSelectedLayoutId, getCurrentLayoutState, savePanelConfigs, updateSharedPanelState } =
     useCurrentLayoutActions();
   const [viewAnchor, setViewAnchor] = useState<HTMLElement | null>(null);
+  const initialSceneApplied = useRef(false);
   const activeLayers = active3DConfig?.layers as
     | { delivery_robot?: { deliveryAssetVersion?: number }; delivery_campus?: {visible?: boolean}; delivery_logistics?: {visible?: boolean}; grid?: {visible?: boolean} }
     | undefined;
@@ -73,7 +74,26 @@ export function DeliveryAppBar(props: AppBarProps): React.JSX.Element {
       ? "grid"
       : activeLayers?.delivery_campus?.visible ? "campus" : "robot";
 
+  const loadWorldRecording = (world: "campus" | "warehouse") => {
+    const target = new URL(location.href);
+    target.searchParams.set("world", world);
+    target.searchParams.set("ds", "remote-file");
+    target.searchParams.set("ds.url", new URL(
+      world === "campus" ? "/recordings/campus-reactive.mcap"
+        : "/recordings/warehouse-reactive.mcap", location.href).href);
+    location.assign(target.href);
+  };
+
   const applyEnvironmentView = (view: DeliveryView) => {
+    // Different 3D environments MUST NOT reuse the other world's MCAP path.
+    if (view === "logistics" && declaredWorld !== "warehouse") {
+      loadWorldRecording("warehouse");
+      return;
+    }
+    if (view === "campus" && declaredWorld !== "campus") {
+      loadWorldRecording("campus");
+      return;
+    }
     const selected = getCurrentLayoutState().selectedLayout;
     const current = selected?.data?.configById["3D!delivery"];
     const currentLayers = current?.layers as typeof activeLayers;
@@ -152,9 +172,28 @@ export function DeliveryAppBar(props: AppBarProps): React.JSX.Element {
     }
     localStorage.setItem("delivery.workspace.initialized.v1", "true");
   }, [layouts, selectedId, setSelectedLayoutId, sidebarActions]);
+  const declaredWorld = useMessagePipeline(
+    (ctx) => ctx.getMetadata().find((item) => item.name === "delivery.provenance")?.metadata.world,
+  );
   const declaredSource = useMessagePipeline(
     (ctx) => ctx.getMetadata().find((item) => item.name === "delivery.provenance")?.metadata.source,
   );
+  // A view switch loads the *matching* MCAP and then selects its native 3D layer.
+  // Only do it once per page load; subsequent manual view choices stay intact.
+  useEffect(() => {
+    if (initialSceneApplied.current || !viewAvailable || selectedId == undefined ||
+        declaredWorld == undefined) {
+      return;
+    }
+    const requested = new URL(location.href).searchParams.get("world");
+    if (requested === declaredWorld && (requested === "warehouse" || requested === "campus")) {
+      initialSceneApplied.current = true;
+      if ((requested === "warehouse" && activeView !== "logistics") ||
+          (requested === "campus" && activeView === "logistics")) {
+        applyEnvironmentView(requested === "warehouse" ? "logistics" : "campus");
+      }
+    }
+  }, [selectedId, viewAvailable, declaredWorld, activeView]);
   return (
     <>
       <AppBar {...props} />
@@ -199,24 +238,18 @@ export function DeliveryAppBar(props: AppBarProps): React.JSX.Element {
         </Menu>
         <div className={classes.spacer} />
         <Typography variant="caption" className={classes.source}>
-          {declaredSource === "campus_kinematic_replay"
-            ? "DECLARED: modeled replay"
+          {declaredWorld === "campus" || declaredWorld === "warehouse"
+            ? `MODELED ${declaredWorld.toUpperCase()} · ${declaredSource ?? "offline"}`
             : "SOURCE: inspect native data details"}
         </Typography>
         <Button
           size="small"
           className={classes.button}
           onClick={() => {
-            const target = new URL(location.href);
-            target.searchParams.set("ds", "remote-file");
-            target.searchParams.set(
-              "ds.url",
-              new URL("/recordings/campus.mcap", location.href).href,
-            );
-            location.assign(target.href);
+            loadWorldRecording(activeView === "logistics" ? "warehouse" : "campus");
           }}
         >
-          Load modeled demo
+          Load matching reactive demo
         </Button>
       </Stack>
       {error != undefined && (
