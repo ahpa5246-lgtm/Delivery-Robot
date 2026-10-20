@@ -61,6 +61,7 @@ const scene = {
       gradient: ["#e6a85c", "#8d663d"],
     },
     "/odom": { visible: false },
+    "/cdr01/dynamic_obstacle": { visible: true },
   },
   layers: {
     delivery_robot: {

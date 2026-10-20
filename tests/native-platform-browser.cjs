@@ -46,6 +46,7 @@ const path = require('node:path');
     'licensed café-table mesh must load: '+JSON.stringify(models));
   assert.ok(models.every(m=>m.status===200),JSON.stringify(models));
   const position = async()=>{const text=await page.locator('body').innerText();const match=text.slice(text.indexOf('position')).match(/\bx\s+(-?[\d.]+)\s+y\s+(-?[\d.]+)/);assert.ok(match,'decoded odometry position is visible');return [Number(match[1]),Number(match[2])];};
+  assert.ok(await page.locator('body').innerText().then(t => t.includes('Environment view:')),'environment selector mounted');
   const firstPosition=await position();
   await page.screenshot({path:path.join(out,'native-perception-start.png')});
   // Validate *both* authored worlds in the same real WebGL renderer, not merely
