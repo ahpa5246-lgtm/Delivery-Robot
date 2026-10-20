@@ -60,6 +60,12 @@ const scene = {
       lineWidth: 0.035,
       gradient: ["#e6a85c", "#8d663d"],
     },
+    "/cdr01/planned_path": {
+      visible: true,
+      type: "line",
+      lineWidth: 0.055,
+      gradient: ["#5bd5c5", "#118c81"],
+    },
     "/odom": { visible: false },
     "/cdr01/dynamic_obstacle": { visible: true },
   },

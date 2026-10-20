@@ -22,6 +22,7 @@ class ReactiveMCAPTests(unittest.TestCase):
                         messages = list(make_reader(fp).iter_messages())
                     topics = {ch.topic for _, ch, _ in messages}
                     self.assertIn("/cdr01/dynamic_obstacle", topics)
+                    self.assertIn("/cdr01/planned_path", topics)
                     self.assertIn("/odom", topics)
                     self.assertIn("/cdr01/mission", topics)
                     rows = [json.loads(msg.data) for _, ch, msg in messages if ch.topic == "/cdr01/mission"]
@@ -36,9 +37,16 @@ class ReactiveMCAPTests(unittest.TestCase):
                     self.assertGreater(min(r["minimum_clearance_m"] for r in rows), 0)
                     with output.open("rb") as fp:
                         data = list(make_reader(fp, decoder_factories=[DecoderFactory()]).iter_decoded_messages(
-                            topics=["/cdr01/dynamic_obstacle", "/odom"]))
+                            topics=["/cdr01/dynamic_obstacle", "/cdr01/planned_path", "/odom"]))
                     markers = [m for _, ch, _, m in data if ch.topic == "/cdr01/dynamic_obstacle"]
                     self.assertEqual(len(markers), count)
+                    plans = [m for _, ch, _, m in data if ch.topic == "/cdr01/planned_path"]
+                    self.assertEqual(len(plans), count)
+                    self.assertTrue(all(p.header.frame_id == "odom" for p in plans))
+                    first_plan = [(p.pose.position.x, p.pose.position.y) for p in plans[0].poses]
+                    final_plan = [(p.pose.position.x, p.pose.position.y) for p in plans[-1].poses]
+                    self.assertNotEqual(first_plan, final_plan,
+                        "an obstacle-triggered A* replan must alter the published future path")
                     self.assertEqual(markers[0].header.frame_id, "odom")
                     self.assertEqual(markers[0].type, 2)  # SPHERE
                     self.assertGreater(markers[0].scale.x, 0)

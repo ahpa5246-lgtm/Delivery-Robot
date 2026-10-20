@@ -40,7 +40,11 @@ Textures, canopies, windows and road markings remain visual-only.
    If no safe route exists, the robot remains in `PAUSED_SAFE`.
 
 Both test files compare poses and route segments against geometry rather than
-only checking a reported success flag. The synthetic obstacle is drawn from the
+only checking a reported success flag. The ROS1 `/cdr01/planned_path` topic publishes the current A* plan,
+updated at the first successful replan; the cyan planned trajectory can
+be visually compared with the orange `/cdr01/path` odometry history.
+These must not be conflated with one another.
+The synthetic obstacle is drawn from the
 recording's ROS1 visualization Marker topic
 `/cdr01/dynamic_obstacle`; it represents *simulated world truth*, **not**
 a measured LiDAR observation. The computed `obstacle_range_m` and

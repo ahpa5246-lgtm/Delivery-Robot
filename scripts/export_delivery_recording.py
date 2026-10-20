@@ -39,6 +39,7 @@ SCHEMAS = {
     '/tf': ('tf2_msgs/TFMessage', 'geometry_msgs/TransformStamped[] transforms\n'),
     '/odom': ('nav_msgs/Odometry', 'std_msgs/Header header\nstring child_frame_id\ngeometry_msgs/PoseWithCovariance pose\ngeometry_msgs/TwistWithCovariance twist\n'),
     '/cdr01/path': ('nav_msgs/Path', 'std_msgs/Header header\ngeometry_msgs/PoseStamped[] poses\n'),
+    '/cdr01/planned_path': ('nav_msgs/Path', 'std_msgs/Header header\ngeometry_msgs/PoseStamped[] poses\n'),
     '/robot_description': ('std_msgs/String', 'string data\n'),
     '/cdr01/dynamic_obstacle': ('visualization_msgs/Marker', 'std_msgs/Header header\nstring ns\nint32 id\nint32 type\nint32 action\ngeometry_msgs/Pose pose\ngeometry_msgs/Vector3 scale\nstd_msgs/ColorRGBA color\nduration lifetime\nbool frame_locked\ngeometry_msgs/Point[] points\nstd_msgs/ColorRGBA[] colors\nstring text\nstring mesh_resource\nbool mesh_use_embedded_materials\n'),
 }
@@ -115,7 +116,7 @@ def export_recording(output: Path, *, seed: int = 0, scenario: str = 'clear', wo
         writer.start(profile='ros1', library='delivery-robot-campus-exporter')
         channels = {}
         for topic, (name, body) in SCHEMAS.items():
-            if topic == '/cdr01/dynamic_obstacle' and scenario != 'reactive_obstacle':
+            if topic in ('/cdr01/dynamic_obstacle', '/cdr01/planned_path') and scenario != 'reactive_obstacle':
                 continue
             schema_id = writer.register_schema(name=name, encoding='ros1msg', data=ros_schema(body))
             channels[topic] = writer.register_channel(topic=topic, message_encoding='ros1', schema_id=schema_id,
@@ -140,6 +141,8 @@ def export_recording(output: Path, *, seed: int = 0, scenario: str = 'clear', wo
             writer.add_message(channel_id=channels[topic], log_time=ns, publish_time=ns, sequence=seq, data=data)
         poses = []
         yaw = 0.0
+        active_route_index = 0
+        plan_history = result.get('routes', []) if scenario == 'reactive_obstacle' else []
         for index, frame in enumerate(frames):
             ns = round(frame['time_s'] * 1e9)
             if index + 1 < len(frames):
@@ -159,6 +162,18 @@ def export_recording(output: Path, *, seed: int = 0, scenario: str = 'clear', wo
             emit('/odom', ns, odom, index)
             poses.append(h + p)
             emit('/cdr01/path', ns, h + struct.pack('<I', len(poses)) + b''.join(poses), index)
+            # The planned A* path is NOT the odometry breadcrumb trail.
+            # Publish the most recently known plan at each frame (latched by
+            # repeated samples so seeking or opening new panels works).
+            if plan_history:
+                while (active_route_index + 1 < len(plan_history) and
+                       plan_history[active_route_index + 1]['time_s'] <= frame['time_s'] + 1e-8):
+                    active_route_index += 1
+                route_points = plan_history[active_route_index]['points']
+                future_poses = b''.join(
+                    h + pose({'x_m': x, 'y_m': y}, 0.0) for x, y in route_points
+                )
+                emit('/cdr01/planned_path', ns, h + struct.pack('<I', len(route_points)) + future_poses, index)
             if scenario == 'reactive_obstacle':
                 emit('/cdr01/dynamic_obstacle', ns, synthetic_obstacle_marker(index, ns, result['obstacle']), index)
             final = index == len(frames)-1
