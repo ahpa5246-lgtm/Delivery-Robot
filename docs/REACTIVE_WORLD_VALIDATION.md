@@ -60,8 +60,13 @@ the odometry approaches but does not penetrate its x=8 m wall.
 
 This is an independent headless physics **wall contact smoke test**, not a full
 validation of all obstacles, calibrated dynamics, Nav2 execution or a physics
-simulation of the newly injected dynamic hazard. The physical result is only
-verified if this specific workflow job and artifact pass. Failed or missing
+simulation of the newly injected dynamic hazard. Only after the independent Gazebo wall-contact gate passes, CI exports the
+simulator's raw odometry to `campus_gazebo_verified.mcap` and
+`warehouse_gazebo_verified.mcap`. These MCAP files carry explicit provenance
+(`gazebo_harmonic_observation`, ROS1-wire container, **simulated** odometry)
+and unknown energy/battery values are null, not fabricated zero estimates.
+They show physics wall contact, not reactive Nav2 obstacle avoidance.
+The physical result is only verified if this specific workflow job and artifact pass. Failed or missing
 Gazebo evidence must not be represented as verified.
 
 ## Reproduce

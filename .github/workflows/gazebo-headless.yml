@@ -7,6 +7,8 @@ on:
       - 'cdr_sim/campus.py'
       - 'cdr_sim/closed_loop.py'
       - 'scripts/check_gazebo_collision.py'
+      - 'scripts/export_gazebo_observation.py'
+      - 'tests/test_gazebo_observation.py'
       - 'world/campus_layout.json'
       - 'tests/test_campus_world.py'
       - 'tests/test_gazebo_geometry.py'
@@ -61,7 +63,13 @@ jobs:
             ros2 launch ros_gz_bridge ros_gz_bridge.launch.py bridge_name:=cdr01_bridge config_file:=/work/simulation/ros_gz_bridge.yaml > /work/experiments/gazebo_smoke/ros_bridge.log 2>&1 &
             bridge_pid=$!
             sleep 5
-            ros2 topic list > /work/experiments/gazebo_smoke/ros_topics.txt
+            # Discovery is asynchronous: do not misdiagnose a working bridge
+            # because its ROS graph takes more than five seconds to appear.
+            for attempt in $(seq 1 30); do
+              ros2 topic list > /work/experiments/gazebo_smoke/ros_topics.txt
+              if grep -Fxq "/robot1/odom" /work/experiments/gazebo_smoke/ros_topics.txt; then break; fi
+              sleep 1
+            done
             grep -Fx "/robot1/odom" /work/experiments/gazebo_smoke/ros_topics.txt
             timeout 12 ros2 topic echo --once /robot1/odom > /work/experiments/gazebo_smoke/ros_odometry.txt 2>&1 || true
             test -s /work/experiments/gazebo_smoke/ros_odometry.txt
@@ -100,6 +108,16 @@ jobs:
               echo "PASS: ${theme} SDF robot physically blocked by building_0" >> /work/experiments/gazebo_smoke/outcome.txt
             done
           '
+      - name: Convert validated Gazebo physics observations to indexed MCAP
+        run: |
+          python3 -m pip install -r requirements-telemetry.txt
+          python3 -m unittest discover -s tests -p 'test_gazebo_observation.py' -v
+          for theme in campus warehouse; do
+            python3 scripts/export_gazebo_observation.py \
+              --world "$theme" \
+              --input "experiments/gazebo_smoke/${theme}_collision_odom.txt" \
+              --output "experiments/gazebo_smoke/${theme}_gazebo_verified.mcap"
+          done
       - name: Upload actual Gazebo startup and observation logs
         if: always()
         uses: actions/upload-artifact@v4
