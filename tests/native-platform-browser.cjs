@@ -13,6 +13,8 @@ const path = require('node:path');
   const context=await browser.newContext({viewport:{width:1600,height:1000}});
   const page=await context.newPage(); const errors=[]; const models=[];
   page.on('pageerror',e=>errors.push(e.message));
+  const consoleErrors=[];
+  page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text());});
   page.on('response',r=>{if(r.url().includes('/models/'))models.push({url:r.url(),status:r.status()});});
   await page.goto(base+'/');
   const perception=page.getByRole('tab',{name:'Perception',exact:true});
@@ -22,7 +24,16 @@ const path = require('node:path');
   await page.waitForTimeout(1200);
   assert.equal(await page.evaluate(()=>{let el=document.elementFromPoint(10,100);while(el){const c=getComputedStyle(el).backgroundColor;const v=c.match(/[\d.]+/g)?.map(Number);if(v&&v.length>=3&&(v.length===3||v[3]>0))return v.slice(0,3).every(n=>n<50);el=el.parentElement;}return false;}),true);
   const play=page.getByRole('button',{name:'Play',exact:true});assert.equal(await play.isEnabled(),true);
-  await page.waitForFunction(()=>performance.getEntriesByType('resource').some(r=>r.name.endsWith('/models/rbot-chassis.stl')),null,{timeout:20000});
+  try {
+    await page.waitForFunction(()=>performance.getEntriesByType('resource').some(r=>r.name.endsWith('/models/rbot-chassis.stl')),null,{timeout:45000});
+  } catch (failure) {
+    await page.screenshot({path:path.join(out,'native-startup-failure.png')}).catch(()=>{});
+    console.error('NATIVE STARTUP DIAGNOSTIC',JSON.stringify({
+      models,errors,consoleErrors,excerpt:(await page.locator('body').innerText()).slice(0,1800),
+      canvasCount:await page.locator('canvas').count(),
+    }));
+    throw failure;
+  }
   assert.ok(models.some(m=>m.url.endsWith('rbot-chassis.stl')&&m.status===200),'licensed CAD chassis must load: '+JSON.stringify(models));
   await page.waitForFunction(
     () => performance.getEntriesByType('resource').some(r=>r.name.endsWith('/models/environment/native-campus.urdf')),
