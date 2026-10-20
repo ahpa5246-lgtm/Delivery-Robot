@@ -199,7 +199,9 @@ export function rebaseDeliveryAssets(layoutData: LayoutData, baseUrl: string): L
     }
     const changed: Record<string, object> = {};
     for (const [key, assetPath, marker] of ownedAssets) {
-      const layer = layers[key];
+      const layer = layers[key] as
+        | { url: string; deliveryAssetVersion?: number; deliveryEnvironmentVersion?: number }
+        | undefined;
       const canonical = new URL(assetPath, baseUrl).href;
       if (!layer && key !== "delivery_robot") {
         changed[key] = { ...scene.layers[key], url: canonical };
