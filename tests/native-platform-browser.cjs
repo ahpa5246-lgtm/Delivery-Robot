@@ -56,7 +56,14 @@ const path = require('node:path');
   await page.getByRole('menuitem',{name:'Logistics warehouse',exact:true}).click();
   await page.waitForFunction(() => document.body.innerText.includes('Environment view: logistics'));
   await page.waitForTimeout(700);
+  await page.waitForFunction(
+    () => performance.getEntriesByType('resource').some(r=>r.name.endsWith('/models/environment/world/warehouse-cargo.dae')),
+    null,{timeout:25000}
+  );
+  await page.waitForTimeout(350);
   await page.screenshot({path:path.join(out,'native-logistics-overview.png')});
+  assert.ok(models.some(m=>m.url.endsWith('/models/environment/world/warehouse-cargo.dae')&&m.status===200),
+    'source-authored AWS cargo mesh must load with original materials');
   assert.ok(models.some(m=>m.url.endsWith('/models/environment/world/warehouse-shelf.dae')&&m.status===200),
     'actual AWS warehouse shelving mesh must render in native scene');
   await environmentMenu.click();

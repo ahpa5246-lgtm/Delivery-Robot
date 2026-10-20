@@ -50,6 +50,7 @@ class NativeEnvironmentTests(unittest.TestCase):
         allowed = {
             "/models/environment/world/cafe-table.dae": ROOT / "dashboard/assets/world/cafe-table.dae",
             "/models/environment/world/warehouse-shelf.dae": ROOT / "dashboard/assets/world/warehouse-shelf.dae",
+            "/models/environment/world/warehouse-cargo.dae": ROOT / "dashboard/assets/world/warehouse-cargo.dae",
         }
         seen = set()
         for name in ("campus", "logistics"):
@@ -63,6 +64,25 @@ class NativeEnvironmentTests(unittest.TestCase):
                 self.assertTrue(all(0 < value <= 1 for value in scale))
                 seen.add(uri)
         self.assertEqual(seen, set(allowed))
+
+    def test_logistics_source_cargo_tracks_existing_planner_fixture_centres(self):
+        root = ET.parse(ENV / "native-logistics.urdf").getroot()
+        visuals = {v.attrib["name"]: v for v in root.findall(".//visual")}
+        fixtures = [f for f in WORLD["worlds"]["warehouse"]["fixtures"] if f["kind"] == "cargo"]
+        self.assertEqual(len(fixtures), 5)
+        for fixture in fixtures:
+            with self.subTest(fixture=fixture["id"]):
+                node = visuals["source-cargo-" + fixture["id"]]
+                x0, y0, x1, y1 = fixture["footprint_m"]
+                x, y, z = map(float, node.find("origin").attrib["xyz"].split())
+                self.assertAlmostEqual(x, (x0 + x1) / 2, places=4)
+                self.assertAlmostEqual(y, (y0 + y1) / 2, places=4)
+                self.assertAlmostEqual(z, 0.22, places=4)
+                mesh = node.find("geometry/mesh")
+                self.assertEqual(mesh.attrib["filename"], "/models/environment/world/warehouse-cargo.dae")
+                self.assertEqual(mesh.attrib["scale"], "0.4 0.4 0.4")
+        self.assertEqual(sum(name.startswith("dock-") for name in visuals), 51)
+        self.assertFalse(root.findall(".//collision"))
 
     def test_existing_replay_and_robot_models_are_not_duplicated_in_visual_scene(self):
         for name in ("campus", "logistics"):

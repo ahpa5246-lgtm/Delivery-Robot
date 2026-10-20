@@ -43,6 +43,20 @@ The overview offset deliberately points the camera towards the campus buildings
 from the recorded starting depot position. Screenshots must verify the scene
 is actually in frame; a successful URDF HTTP fetch alone is insufficient.
 
+## Logistics CAD improvement
+
+The five simple cargo proxies are replaced with the original MIT-0 AWS RoboMaker
+`warehouse-cargo.dae` and its three bundled texture images. Each mesh
+stays centred on its `world/campus_layout.json` footprint, retaining the
+existing source-aligned pallets. Source node transforms and COLLADA centimetre
+units are preserved. The 0.4 visual scale fits these approximately
+1.05 × 0.9 m footprint areas.
+
+Three decorative rear loading bays add shutter ribs, headers, bollards and
+flush floor markings. They are scenery only, with no new collision shapes,
+navigation fixtures or sensor feeds. The copied source CAD is not modified,
+and all assets are distributed locally rather than hotlinked.
+
 ## Geometry and provenance
 
 The scene environment is NOT a new collision world. Building footprints and

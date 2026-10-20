@@ -70,7 +70,7 @@ const appConfig: ReturnType<typeof mainConfig> = (env, argv) => {
               .replace("<init_from>ID16</init_from>", "<init_from>Maple.jpg</init_from>");
           },
         },
-        ...["warehouse-shelf.dae", "Maple.jpg", "Wood_Floor_Dark.jpg"].map((name) => ({
+        ...["warehouse-shelf.dae", "warehouse-cargo.dae", "Maple.jpg", "Wood_Floor_Dark.jpg"].map((name) => ({
           from: path.resolve(__dirname, "../../../dashboard/assets/world", name),
           to: `models/environment/world/${name}`,
         })),
