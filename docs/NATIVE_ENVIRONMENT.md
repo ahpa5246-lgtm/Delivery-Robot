@@ -21,6 +21,28 @@ changed. Scene geometry is taken from `world/campus_layout.json`.
   resetting user cameras or unrelated imported URDFs. Layer source URLs rebase to
   the current Codespaces hostname on subsequent loads.
 
+## Native view controls
+
+The Delivery toolbar provides **Environment view**, with four options:
+
+- **Robot focus**: follows the recorded robot closely while retaining the campus context.
+- **University campus**: wider elevated camera, campus structures and decorations visible.
+- **Logistics warehouse**: wider camera and licensed AWS warehouse storage assets visible.
+- **Grid only**: hides environmental scenery to inspect the original frame-based robotics replay.
+
+This is **not** a secondary 3D engine: the menu writes only to the Delivery-tagged
+`3D!delivery` panel through Lichtblick's native saved-layout settings and
+sends a layout- and panel-scoped transient command to the *running renderer*.
+Selecting other saved workspaces does not command unrelated 3D panels. A user's
+manually adjusted camera remains untouched until a new view is explicitly
+selected. Native timeline, MCAP source, tracked `base_link`, mission telemetry
+and visual robot are unchanged. The grid layer is initially hidden to keep
+the campus presentation clear, but remains available with one click.
+
+The overview offset deliberately points the camera towards the campus buildings
+from the recorded starting depot position. Screenshots must verify the scene
+is actually in frame; a successful URDF HTTP fetch alone is insufficient.
+
 ## Geometry and provenance
 
 The scene environment is NOT a new collision world. Building footprints and
