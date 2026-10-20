@@ -56,6 +56,10 @@ const path = require('node:path');
   await environmentMenu.click();
   await page.getByRole('menuitem',{name:'Logistics warehouse',exact:true}).click();
   await page.waitForFunction(() => document.body.innerText.includes('Environment view: logistics'));
+  await page.waitForFunction(() => document.body.innerText.includes('MODELED WAREHOUSE'));
+  const warehouseSource = await page.locator('body').innerText();
+  assert.match(warehouseSource, /warehouse_synthetic_reactive_replay/,
+    'warehouse layer must use warehouse-specific MCAP data, not campus route');
   await page.waitForTimeout(700);
   await page.waitForFunction(
     () => performance.getEntriesByType('resource').some(r=>r.name.endsWith('/models/environment/world/warehouse-cargo.dae')),
@@ -70,6 +74,9 @@ const path = require('node:path');
   await environmentMenu.click();
   await page.getByRole('menuitem',{name:'University campus',exact:true}).click();
   await page.waitForFunction(() => document.body.innerText.includes('Environment view: campus'));
+  await page.waitForFunction(() => document.body.innerText.includes('MODELED CAMPUS'));
+  assert.match(await page.locator('body').innerText(), /campus_synthetic_reactive_replay/,
+    'campus layer must reload matching campus recording');
   await page.waitForTimeout(450);
   await page.screenshot({path:path.join(out,'native-campus-overview.png')});
   await environmentMenu.click();
