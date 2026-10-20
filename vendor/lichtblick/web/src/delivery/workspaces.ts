@@ -28,6 +28,18 @@ const plot = (fields: string[], title: string) => ({
   isSynced: true,
   sidebarDimension: 180,
 });
+const environmentLayer = (name: "campus" | "logistics", visible: boolean) => ({
+  deliveryEnvironmentVersion: 1,
+  layerId: "foxglove.Urdf" as const,
+  visible,
+  frameLocked: true,
+  label: name === "campus" ? "University campus · visual scenery" : "Logistics warehouse · visual scenery",
+  sourceType: "url" as const,
+  url: `/models/environment/native-${name}.urdf`,
+  framePrefix: "",
+  displayMode: "visual" as const,
+});
+
 const scene = {
   followTf: "base_link",
   followMode: "follow-position",
@@ -65,6 +77,8 @@ const scene = {
       framePrefix: "",
       displayMode: "visual",
     },
+    delivery_campus: environmentLayer("campus", true),
+    delivery_logistics: environmentLayer("logistics", false),
     grid: {
       layerId: "foxglove.Grid",
       visible: true,
@@ -166,29 +180,48 @@ export const workspacePresets = [
 ];
 
 // Rebase only our tagged bundled model. A user's other URDF URL stays untouched.
+// Migrate only Delivery-tagged panels. Preserve edits to cameras, topics and all
+// user-provided URDFs; do not reset or replace native saved layouts.
 export function rebaseDeliveryAssets(layoutData: LayoutData, baseUrl: string): LayoutData | undefined {
   let next: LayoutData | undefined;
+  const ownedAssets = [
+    ["delivery_robot", "/models/cdr01.urdf", "deliveryAssetVersion"],
+    ["delivery_campus", "/models/environment/native-campus.urdf", "deliveryEnvironmentVersion"],
+    ["delivery_logistics", "/models/environment/native-logistics.urdf", "deliveryEnvironmentVersion"],
+  ] as const;
   for (const [id, config] of Object.entries(layoutData.configById)) {
     if (!id.startsWith("3D!")) {
       continue;
     }
     const layers = config.layers as typeof scene.layers | undefined;
-    const model = layers?.delivery_robot;
-    if (model?.deliveryAssetVersion !== 1) {
+    if (layers?.delivery_robot?.deliveryAssetVersion !== 1) {
       continue;
     }
-    const current = new URL("/models/cdr01.urdf", baseUrl).href;
-    let oldPath: string;
-    try {
-      oldPath = new URL(model.url, baseUrl).pathname;
-    } catch {
-      continue;
+    const changed: Record<string, object> = {};
+    for (const [key, assetPath, marker] of ownedAssets) {
+      const layer = layers[key];
+      const canonical = new URL(assetPath, baseUrl).href;
+      if (!layer && key !== "delivery_robot") {
+        changed[key] = { ...scene.layers[key], url: canonical };
+        continue;
+      }
+      if (!layer || layer[marker] !== 1) {
+        continue;
+      }
+      try {
+        if (new URL(layer.url, baseUrl).pathname !== assetPath || layer.url === canonical) {
+          continue;
+        }
+      } catch {
+        continue;
+      }
+      changed[key] = { ...layer, url: canonical };
     }
-    if (oldPath !== "/models/cdr01.urdf" || model.url === current) {
-      continue;
+    if (Object.keys(changed).length > 0) {
+      next ??= structuredClone(layoutData);
+      const editable = next.configById[id] as { layers: typeof scene.layers };
+      editable.layers = { ...editable.layers, ...changed } as typeof scene.layers;
     }
-    next ??= structuredClone(layoutData);
-    (next.configById[id]!.layers as typeof scene.layers).delivery_robot.url = current;
   }
   return next;
 }
@@ -214,6 +247,14 @@ export async function ensureWorkspaces(
                     delivery_robot: {
                       ...scene.layers.delivery_robot,
                       url: new URL("/models/cdr01.urdf", baseUrl).href,
+                    },
+                    delivery_campus: {
+                      ...scene.layers.delivery_campus,
+                      url: new URL("/models/environment/native-campus.urdf", baseUrl).href,
+                    },
+                    delivery_logistics: {
+                      ...scene.layers.delivery_logistics,
+                      url: new URL("/models/environment/native-logistics.urdf", baseUrl).href,
                     },
                   },
                 },
