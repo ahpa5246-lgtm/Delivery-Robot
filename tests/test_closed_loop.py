@@ -22,7 +22,7 @@ class ClosedLoopTests(unittest.TestCase):
                 self.assertTrue(result["obstacle"]["detected"])
                 self.assertTrue(any(e["state"] == "OBSTACLE_DETECTED" for e in result["events"]))
                 self.assertTrue(any(e["state"] == "REPLANNING" for e in result["events"]))
-                self.assertGreaterEqual(result["replans"], 1)
+                self.assertGreaterEqual(result["replans"], 1, (name, result["status"], result["reason"], result["events"][-5:], result["obstacle"]))
                 self.assertIn(result["status"], ("COMPLETED", "PAUSED_SAFE"))
                 center = tuple(result["obstacle"]["center_m"])
                 radius = result["obstacle"]["clearance_radius_m"]
