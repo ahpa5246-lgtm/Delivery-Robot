@@ -85,10 +85,13 @@ jobs:
               gz topic -l | grep -F "/model/cdr01/odometry"
               timeout 50 gz topic -e -t /model/cdr01/odometry > "/work/experiments/gazebo_smoke/${theme}_collision_odom.txt" 2>&1 &
               observer=$!
-              timeout 36 gz topic -r 10 -t /model/cdr01/cmd_vel -m gz.msgs.Twist -p "linear: {x: 0.65}" > "/work/experiments/gazebo_smoke/${theme}_commands.log" 2>&1 &
-              publisher=$!
-              sleep 38
-              kill $publisher 2>/dev/null || true
+              # gz-harmonic CLI has no '-r' repeat flag; send real Twist
+              # messages at ~10 Hz, as in the previously passing motion smoke.
+              for i in $(seq 1 230); do
+                gz topic -t /model/cdr01/cmd_vel -m gz.msgs.Twist -p "linear: {x: 0.65}"                   >> "/work/experiments/gazebo_smoke/${theme}_commands.log" 2>&1
+                sleep 0.1
+              done
+              sleep 3
               kill $observer 2>/dev/null || true
               wait $observer 2>/dev/null || true
               kill $collision_server 2>/dev/null || true
