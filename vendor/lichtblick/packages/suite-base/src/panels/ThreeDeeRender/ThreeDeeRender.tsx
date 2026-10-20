@@ -784,7 +784,7 @@ export function ThreeDeeRender(props: Readonly<ThreeDeeRenderProps>): React.JSX.
       if (layer?.visible !== visible) {
         renderer.settings.handleAction({
           action: "update",
-          payload: { path: ["layers", layerId, "visible"], value: visible },
+          payload: { path: ["layers", layerId, "visible"], input: "boolean", value: visible },
         });
       }
     }
