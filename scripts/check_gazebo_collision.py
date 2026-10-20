@@ -1,8 +1,11 @@
-"""Independent Gazebo odometry acceptance: collision with first solid campus wall.
+"""Gazebo physics acceptance using native model-relative odometry.
 
-Robot starts at (2,2) facing +X. Authoritative model building_0 begins at
-x=8.0 with y in [0,6]; the chassis cannot cross its collision surface.
-This is a motor/geometry smoke test, not a calibrated robot safety certificate.
+The CDR-01 SDF spawns at world x=2 m. Building_0 begins at world x=8 m.
+The chassis half-length is 0.275 m; expected local odometry wall contact
+is (8 - 0.275) - 2 = 5.725 m, NOT global x=8.
+We require forward movement, no penetration, and a flat last-time-window
+trajectory while the 0.65 m/s command is still being published. This is a
+simplified headless contact test, not a field safety certificate.
 """
 from __future__ import annotations
 
@@ -13,33 +16,55 @@ from pathlib import Path
 
 
 def inspect(raw: str) -> dict:
-    samples = []
-    for record in re.split(r'(?=^header \{)', raw, flags=re.MULTILINE):
-        pose = re.search(r'\bpose\s*\{\s*position\s*\{([^}]*)\}', record, re.DOTALL)
+    records = []
+    for record in re.split(r"(?=^header \{)", raw, flags=re.MULTILINE):
+        pose = re.search(r"\bpose\s*\{\s*position\s*\{([^}]*)\}", record, re.DOTALL)
         if pose is None:
             continue
-        value = re.search(r'\bx:\s*([-+0-9.eE]+)', pose.group(1))
-        if value:
-            samples.append(float(value.group(1)))
+        value = re.search(r"\bx:\s*([-+0-9.eE]+)", pose.group(1))
+        if not value:
+            continue
+        stamp = re.search(r"\bstamp\s*\{\s*sec:\s*(\d+)\s*nsec:\s*(\d+)", record, re.DOTALL)
+        seconds = (int(stamp.group(1)) + int(stamp.group(2)) / 1e9) if stamp else None
+        records.append((seconds, float(value.group(1))))
+    xs = [x for _, x in records]
+    initial = xs[0] if xs else None
+    distance = (max(xs) - min(xs)) if xs else None
+    # First-order wall-gate acceptance: robot reaches collision contact and
+    # does not move through to the far side (absolute local displacement).
+    wall_contact_m = 5.725
+    tail = xs[-max(10, len(xs)//5):] if xs else []
+    tail_span = max(tail)-min(tail) if tail else None
+    reached = bool(
+        len(xs) >= 30
+        and distance is not None
+        and 5.2 <= distance <= 6.1
+        and abs(xs[-1] - wall_contact_m) <= 0.50
+        and tail_span is not None and tail_span <= 0.15
+    )
     return {
-        "samples": len(samples),
-        "initial_x_m": samples[0] if samples else None,
-        "maximum_x_m": max(samples) if samples else None,
-        "final_x_m": samples[-1] if samples else None,
-        "motion_m": max(samples) - min(samples) if samples else None,
-        "passed_wall_collision_gate": bool(
-            len(samples) > 15 and max(samples) >= 6.6 and
-            max(samples) <= 8.05 and max(samples) - min(samples) >= 4.0
-        ) if samples else False,
+        "samples": len(xs),
+        "odom_frame": "model-relative",
+        "robot_world_start_x_m": 2.0,
+        "building_world_start_x_m": 8.0,
+        "expected_odom_wall_contact_m": wall_contact_m,
+        "initial_odom_x_m": initial,
+        "max_odom_x_m": max(xs) if xs else None,
+        "final_odom_x_m": xs[-1] if xs else None,
+        "forward_displacement_m": distance,
+        "final_20_percent_motion_span_m": tail_span,
+        "first_simulation_s": records[0][0] if records else None,
+        "last_simulation_s": records[-1][0] if records else None,
+        "passed_wall_collision_gate": reached,
     }
 
 
 def main() -> None:
-    observed = inspect(Path(sys.argv[1]).read_text(errors="replace"))
-    Path(sys.argv[2]).write_text(json.dumps(observed, indent=2) + "\n")
-    print(json.dumps(observed))
-    if not observed["passed_wall_collision_gate"]:
-        raise SystemExit("FAIL: model did not demonstrably approach and stop at the first real SDF wall")
+    result = inspect(Path(sys.argv[1]).read_text(errors="replace"))
+    Path(sys.argv[2]).write_text(json.dumps(result, indent=2) + "\n")
+    print(json.dumps(result))
+    if not result["passed_wall_collision_gate"]:
+        raise SystemExit("FAIL: no verified Gazebo obstacle contact and stopped odometry")
 
 
 if __name__ == "__main__":
