@@ -42,7 +42,7 @@ class ReactiveMCAPTests(unittest.TestCase):
                     self.assertEqual(markers[0].header.frame_id, "odom")
                     self.assertEqual(markers[0].type, 2)  # SPHERE
                     self.assertGreater(markers[0].scale.x, 0)
-                    self.assertEqual(len([m for _, ch, _, _ in data if ch.topic == "/odom"]), count)
+                    self.assertEqual(len([1 for _, ch, _, _ in data if ch.topic == "/odom"]), count)
 
     def test_unsupported_world_does_not_create_file(self):
         with TemporaryDirectory() as directory:
