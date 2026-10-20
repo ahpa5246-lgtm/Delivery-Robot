@@ -17,6 +17,12 @@ robot radius, and drives offline A* and both Gazebo SDF static worlds.
 - `/recordings/campus.mcap` remains an explicit **legacy clear-route** reference,
   never a default source for the logistics view.
 
+In the warehouse, the formerly inherited campus wing rectangles have been
+removed. The source manifest now declares two structural wall footprints
+derived exactly from the rear and east wall visuals in the warehouse URDF.
+The warehouse Gazebo collision geometry and 2-D planner use those same
+footprints; this prevents invisible campus-building collision obstacles.
+
 The Environment view switch reloads the recording matching the chosen theme,
 then applies the camera and native URDF layer. Provenance metadata marks the
 exact collision world. In the Missions panel, **Collision verification** refers
@@ -58,6 +64,11 @@ Estimated energy values are unchanged approximations.
 
 The GitHub Actions `gazebo-headless.yml` installs Gazebo Harmonic within a
 ROS Jazzy container. It already checks robot movement and ROS2 bridging.
+The warehouse wall-contact smoke uses a **separate physics trial spawn**
+at (26,2) so its east wall is reachable during the test; the normal warehouse
+SDF and MCAP route still start from the (2,2) depot. The resulting Gazebo
+observation MCAP is labeled as a wall-contact test, not the delivery route.
+
 The new test additionally loads the two manifest-derived SDF worlds, drives
 CDR-01 toward the **first actual SDF building collision shape** and checks that
 the odometry approaches but does not penetrate its x=8 m wall.

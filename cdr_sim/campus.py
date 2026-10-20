@@ -90,6 +90,16 @@ class Campus:
             fixtures=tuple(spec["worlds"][self.theme]["fixtures"])
         else:
             fixtures=()  # Custom miniature test maps do not inherit campus props.
+        # Each world has its *own* building geometry. Using the campus four
+        # wings in the warehouse generated invisible phantom collision zones.
+        # Explicit callers with custom buildings keep their geometry.
+        default_buildings = tuple(tuple(b["footprint_m"]) for b in spec["buildings"])
+        if self.theme == "warehouse" and self.buildings == default_buildings and (
+            abs(self.width-m["width_m"]) <= 1e-7 and abs(self.height-m["height_m"]) <= 1e-7
+        ):
+            structures = tuple(tuple(a["footprint_m"])
+                               for a in spec["worlds"]["warehouse"]["structural_obstacles"])
+            object.__setattr__(self, "buildings", structures)
         object.__setattr__(self, "_fixtures", fixtures)
         object.__setattr__(self, "_obstacles", self.buildings + tuple(
             tuple(f["footprint_m"]) for f in fixtures))

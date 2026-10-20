@@ -15,7 +15,9 @@ import sys
 from pathlib import Path
 
 
-def inspect(raw: str) -> dict:
+def inspect(raw: str, world: str = "campus") -> dict:
+    if world not in ("campus", "warehouse"):
+        raise ValueError("unsupported physical contact world")
     records = []
     for record in re.split(r"(?=^header \{)", raw, flags=re.MULTILINE):
         pose = re.search(r"\bpose\s*\{\s*position\s*\{([^}]*)\}", record, re.DOTALL)
@@ -32,7 +34,7 @@ def inspect(raw: str) -> dict:
     distance = (max(xs) - min(xs)) if xs else None
     # First-order wall-gate acceptance: robot reaches collision contact and
     # does not move through to the far side (absolute local displacement).
-    wall_contact_m = 5.725
+    wall_contact_m = 5.725 if world == "campus" else 5.42
     tail = xs[-max(10, len(xs)//5):] if xs else []
     tail_span = max(tail)-min(tail) if tail else None
     reached = bool(
@@ -45,8 +47,9 @@ def inspect(raw: str) -> dict:
     return {
         "samples": len(xs),
         "odom_frame": "model-relative",
-        "robot_world_start_x_m": 2.0,
-        "building_world_start_x_m": 8.0,
+        "world": world,
+        "robot_world_start_x_m": 2.0 if world == "campus" else 26.0,
+        "building_world_start_x_m": 8.0 if world == "campus" else 31.695,
         "expected_odom_wall_contact_m": wall_contact_m,
         "initial_odom_x_m": initial,
         "max_odom_x_m": max(xs) if xs else None,
@@ -60,7 +63,8 @@ def inspect(raw: str) -> dict:
 
 
 def main() -> None:
-    result = inspect(Path(sys.argv[1]).read_text(errors="replace"))
+    world = sys.argv[4] if len(sys.argv) == 5 and sys.argv[3] == "--world" else "campus"
+    result = inspect(Path(sys.argv[1]).read_text(errors="replace"), world)
     Path(sys.argv[2]).write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result))
     if not result["passed_wall_collision_gate"]:

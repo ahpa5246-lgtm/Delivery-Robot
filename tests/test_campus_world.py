@@ -34,6 +34,21 @@ class CampusSDFTests(unittest.TestCase):
             self.assertAlmostEqual(dims[1],y1-y0)
             self.assertAlmostEqual(zz,dims[2]/2)
 
+    def test_warehouse_structural_walls_match_native_collision_world(self):
+        world=Campus(theme="warehouse")
+        scene=ET.parse(construct("warehouse")).getroot().find("world")
+        self.assertEqual(len(world.buildings),2)
+        for index, rect in enumerate(world.buildings):
+            node=scene.find(f"./model[@name='building_{index}']")
+            self.assertIsNotNone(node)
+            self.assertAlmostEqual(
+                float(node.findtext("link/collision/geometry/box/size").split()[0]),
+                rect[2]-rect[0], places=4)
+            self.assertAlmostEqual(float(node.findtext("pose").split()[2]),2.4,places=4)
+        special=ET.parse(construct("warehouse", wall_contact_test=True)).getroot()
+        self.assertEqual([float(v) for v in special.find(
+            "./world/model[@name='cdr01']/pose").text.split()[:2]],[26,2])
+
     def test_every_visible_solid_fixture_has_gazebo_collision_from_manifest(self):
         for theme in ("campus","warehouse"):
             campus=Campus(theme=theme)

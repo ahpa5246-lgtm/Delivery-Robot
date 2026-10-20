@@ -86,8 +86,10 @@ def export_observations(source: Path, target: Path, world: str) -> int:
         distance = 0.0
         for i, f in enumerate(frames):
             ns = f["ns"] - t0
-            # SDF spawn pose (2,2,0) + model-local Gazebo odometry.
-            x, y = 2.0+f["x"], 2.0+f["y"]
+            # The physical wall challenge intentionally starts the warehouse
+            # at (26,2), not the application's normal depot (2,2).
+            origin_x = 2.0 if world == "campus" else 26.0
+            x, y = origin_x+f["x"], 2.0+f["y"]
             qnorm=math.hypot(f["qz"],f["qw"]) or 1.0
             p = struct.pack("<7d",x,y,0,0,0,f["qz"]/qnorm,f["qw"]/qnorm)
             h = header(i,ns)

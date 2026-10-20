@@ -345,6 +345,10 @@
       ]
     },
     "warehouse": {
+      "structural_obstacles": [
+        {"id": "warehouse_rear_wall", "footprint_m": [0.0, 19.695, 32.0, 19.945]},
+        {"id": "warehouse_east_wall", "footprint_m": [31.695, 0.0, 31.945, 20.0]}
+      ],
       "fixtures": [
         {
           "id": "warehouse_shelf_1",

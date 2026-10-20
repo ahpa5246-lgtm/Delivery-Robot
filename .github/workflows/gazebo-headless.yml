@@ -14,6 +14,9 @@ on:
       - 'tests/test_gazebo_geometry.py'
       - '.github/workflows/gazebo-headless.yml'
   workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -40,6 +43,7 @@ jobs:
             gz sdf -k /work/simulation/campus_v0.sdf > /work/experiments/gazebo_smoke/sdf_validation.txt 2>&1
             gz sdf -k /work/simulation/campus_delivery.sdf > /work/experiments/gazebo_smoke/campus_sdf_validation.txt 2>&1
             gz sdf -k /work/simulation/warehouse_delivery.sdf > /work/experiments/gazebo_smoke/warehouse_sdf_validation.txt 2>&1
+            gz sdf -k /work/simulation/warehouse_collision_test.sdf > /work/experiments/gazebo_smoke/warehouse_contact_sdf_validation.txt 2>&1
             gz sim -s -r -v 3 /work/simulation/campus_v0.sdf > /work/experiments/gazebo_smoke/server.log 2>&1 &
             server_pid=$!
             trap "kill $server_pid 2>/dev/null || true" EXIT
@@ -87,6 +91,9 @@ jobs:
             for theme in campus warehouse; do
               export GZ_PARTITION="cdr_collision_${theme}"
               world_file="/work/simulation/${theme}_delivery.sdf"
+              if [ "$theme" = "warehouse" ]; then
+                world_file="/work/simulation/warehouse_collision_test.sdf"
+              fi
               gz sim -s -r -v 2 "$world_file" > "/work/experiments/gazebo_smoke/${theme}_server.log" 2>&1 &
               collision_server=$!
               sleep 10
@@ -104,7 +111,7 @@ jobs:
               wait $observer 2>/dev/null || true
               kill $collision_server 2>/dev/null || true
               wait $collision_server 2>/dev/null || true
-              python3 /work/scripts/check_gazebo_collision.py                 "/work/experiments/gazebo_smoke/${theme}_collision_odom.txt"                 "/work/experiments/gazebo_smoke/${theme}_collision_summary.json"
+              python3 /work/scripts/check_gazebo_collision.py                 "/work/experiments/gazebo_smoke/${theme}_collision_odom.txt"                 "/work/experiments/gazebo_smoke/${theme}_collision_summary.json" --world "$theme"
               echo "PASS: ${theme} SDF robot physically blocked by building_0" >> /work/experiments/gazebo_smoke/outcome.txt
             done
           '
