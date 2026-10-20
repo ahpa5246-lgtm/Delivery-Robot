@@ -22,7 +22,7 @@ export function deliveryViewLayers(view: DeliveryView): Record<
   boolean
 > {
   return {
-    delivery_campus: view === "robot" || view === "campus",
+    delivery_campus: view === "campus",
     delivery_logistics: view === "logistics",
     grid: view === "grid",
   };

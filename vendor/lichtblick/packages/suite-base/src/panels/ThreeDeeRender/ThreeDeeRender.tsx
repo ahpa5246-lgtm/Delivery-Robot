@@ -775,7 +775,7 @@ export function ThreeDeeRender(props: Readonly<ThreeDeeRenderProps>): React.JSX.
     }
     lastDeliveryViewRequest.current = request.id;
     const visibility = {
-      delivery_campus: request.view === "campus" || request.view === "robot",
+      delivery_campus: request.view === "campus",
       delivery_logistics: request.view === "logistics",
       grid: request.view === "grid",
     };

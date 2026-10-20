@@ -108,7 +108,7 @@ it("native scenery presets are exclusive, use realistic overview zoom, and never
   expect(DELIVERY_VIEWS).toEqual(["robot", "campus", "logistics", "grid"]);
   for (const name of DELIVERY_VIEWS) {
     const flags = deliveryViewLayers(name);
-    expect(Object.values(flags).filter(Boolean)).toHaveLength(1);
+    expect(Object.values(flags).filter(Boolean)).toHaveLength(name === "robot" ? 0 : 1);
     expect(deliveryViewCamera[name].distance).toBeGreaterThan(5);
   }
   expect(deliveryViewCamera.campus.distance).toBeGreaterThan(20);
