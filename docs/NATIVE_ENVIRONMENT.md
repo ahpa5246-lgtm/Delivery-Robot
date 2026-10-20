@@ -25,7 +25,7 @@ changed. Scene geometry is taken from `world/campus_layout.json`.
 
 The Delivery toolbar provides **Environment view**, with four options:
 
-- **Robot focus**: follows the recorded robot closely while retaining the campus context.
+- **Robot focus**: follows the recorded robot closely, hiding both environmental layers and the grid.
 - **University campus**: wider elevated camera, campus structures and decorations visible.
 - **Logistics warehouse**: wider camera and licensed AWS warehouse storage assets visible.
 - **Grid only**: hides environmental scenery to inspect the original frame-based robotics replay.
