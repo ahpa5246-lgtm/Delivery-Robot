@@ -35,7 +35,7 @@ const useStyles = makeStyles()(() => ({
     overflowX: "auto",
     flexShrink: 0,
   },
-  brand: { fontWeight: 700, whiteSpace: "nowrap", letterSpacing: 1.2 },
+  brand: { fontWeight: 700, whiteSpace: "nowrap", letterSpacing: 0.4, textTransform: "none", color: "#60A5FA", fontSize: 18 },
   tabs: {
     minHeight: 36,
     "& .MuiTab-root": {
@@ -45,7 +45,7 @@ const useStyles = makeStyles()(() => ({
       fontSize: 12,
     },
   },
-  source: { color: "#c4a47e", whiteSpace: "nowrap" },
+  source: { color: "#93c5fd", whiteSpace: "nowrap" },
   button: { whiteSpace: "nowrap", fontSize: 11 },
   spacer: { flexGrow: 1 },
 }));
@@ -199,7 +199,7 @@ export function DeliveryAppBar(props: AppBarProps): React.JSX.Element {
       <AppBar {...props} />
       <Stack direction="row" alignItems="center" spacing={1} className={classes.bar}>
         <Typography variant="overline" className={classes.brand}>
-          DELIVERY ROBOT
+          mina
         </Typography>
         <Tabs
           value={layouts.some((item) => item.id === selectedId) ? selectedId : false}

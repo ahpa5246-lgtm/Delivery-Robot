@@ -31,6 +31,7 @@ const appConfig: ReturnType<typeof mainConfig> = (env, argv) => {
     ...(config.plugins ?? []),
     new CopyPlugin({
       patterns: [
+        { from: path.resolve(__dirname, "src/delivery/mina.svg"), to: "mina.svg" },
         { from: path.resolve(__dirname, "../LICENSE"), to: "licenses/LICHTBLICK-MPL-2.0.txt" },
         { from: path.resolve(__dirname, "../../../docs/licenses"), to: "licenses/fonts" },
         {
