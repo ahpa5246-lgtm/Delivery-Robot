@@ -7,6 +7,7 @@ on:
       - 'cdr_sim/campus.py'
       - 'cdr_sim/closed_loop.py'
       - 'scripts/check_gazebo_collision.py'
+      - 'tests/test_gazebo_contact.py'
       - 'scripts/export_gazebo_observation.py'
       - 'tests/test_gazebo_observation.py'
       - 'world/campus_layout.json'
@@ -32,6 +33,7 @@ jobs:
           python3 scripts/generate_gazebo_world.py
           python3 scripts/generate_campus_gazebo.py
           python3 -m unittest discover -s tests -p 'test_gazebo_geometry.py' -v
+          python3 -m unittest discover -s tests -p 'test_gazebo_contact.py' -v
           mkdir -p experiments/gazebo_smoke
       - name: Install ROS Jazzy Gazebo integration in ephemeral container and run headless
         run: |
@@ -98,6 +100,12 @@ jobs:
               collision_server=$!
               sleep 10
               gz topic -l | grep -F "/model/cdr01/odometry"
+              # SceneBroadcaster reports actual rigid-body poses; DiffDrive
+              # odometry alone can continue advancing during wheel slip.
+              pose_topic="/world/campus_test/pose/info"
+              gz topic -l | grep -Fx "$pose_topic"
+              timeout 50 gz topic -e -t "$pose_topic" > "/work/experiments/gazebo_smoke/${theme}_world_pose.txt" 2>&1 &
+              pose_observer=$!
               timeout 50 gz topic -e -t /model/cdr01/odometry > "/work/experiments/gazebo_smoke/${theme}_collision_odom.txt" 2>&1 &
               observer=$!
               # gz-harmonic CLI has no '-r' repeat flag; send real Twist
@@ -108,10 +116,13 @@ jobs:
               done
               sleep 3
               kill $observer 2>/dev/null || true
+              kill $pose_observer 2>/dev/null || true
               wait $observer 2>/dev/null || true
+              wait $pose_observer 2>/dev/null || true
               kill $collision_server 2>/dev/null || true
               wait $collision_server 2>/dev/null || true
-              python3 /work/scripts/check_gazebo_collision.py                 "/work/experiments/gazebo_smoke/${theme}_collision_odom.txt"                 "/work/experiments/gazebo_smoke/${theme}_collision_summary.json" --world "$theme"
+              python3 /work/scripts/check_gazebo_collision.py                 "/work/experiments/gazebo_smoke/${theme}_collision_odom.txt"                 "/work/experiments/gazebo_smoke/${theme}_collision_summary.json" --world "$theme" \
+                --pose-file "/work/experiments/gazebo_smoke/${theme}_world_pose.txt"
               echo "PASS: ${theme} SDF robot physically blocked by building_0" >> /work/experiments/gazebo_smoke/outcome.txt
             done
           '
@@ -123,6 +134,7 @@ jobs:
             python3 scripts/export_gazebo_observation.py \
               --world "$theme" \
               --input "experiments/gazebo_smoke/${theme}_collision_odom.txt" \
+              --pose-input "experiments/gazebo_smoke/${theme}_world_pose.txt" \
               --output "experiments/gazebo_smoke/${theme}_gazebo_verified.mcap"
           done
       - name: Upload actual Gazebo startup and observation logs

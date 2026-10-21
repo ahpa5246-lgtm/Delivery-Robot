@@ -1,74 +1,128 @@
-"""Gazebo physics acceptance using native model-relative odometry.
+"""Validate Gazebo actual rigid-body world poses against mapped SDF walls.
 
-The CDR-01 SDF spawns at world x=2 m. Building_0 begins at world x=8 m.
-The chassis half-length is 0.275 m; expected local odometry wall contact
-is (8 - 0.275) - 2 = 5.725 m, NOT global x=8.
-We require forward movement, no penetration, and a flat last-time-window
-trajectory while the 0.65 m/s command is still being published. This is a
-simplified headless contact test, not a field safety certificate.
+DiffDrive odometry is NOT ground truth: it can continue integrating commanded
+wheel motion while the simulated chassis is physically stopped against a wall.
+Use SceneBroadcaster /world/campus_test/pose/info (gz.msgs.Pose_V), require
+actual cdr01 pose, and fail closed if the body penetrates or misses the wall.
+This is an SDF contact smoke test, not ROS2 Nav2 or field safety certification.
 """
 from __future__ import annotations
 
+import argparse
 import json
+import math
 import re
-import sys
 from pathlib import Path
 
 
-def inspect(raw: str, world: str = "campus") -> dict:
+def _blocks(raw: str, token: str):
+    """Return complete protobuf-text blocks for token, including nested braces."""
+    pat = re.compile(r"(?m)^\s*" + re.escape(token) + r"\s*\{")
+    for match in pat.finditer(raw):
+        first = raw.find("{", match.start())
+        depth = 0
+        for i in range(first, len(raw)):
+            if raw[i] == "{":
+                depth += 1
+            elif raw[i] == "}":
+                depth -= 1
+                if depth == 0:
+                    yield raw[first + 1:i]
+                    break
+
+
+def _number(blob: str, field: str, default: float = 0.0) -> float:
+    found = re.search(r"(?m)^\s*" + re.escape(field) + r":\s*([-+0-9.eE]+)", blob)
+    return float(found.group(1)) if found else default
+
+
+def parse_ground_truth(raw: str) -> list[dict]:
+    """Extract robot model world pose (not chassis child, wall, or wheel odom)."""
+    records = {}
+    for packet in re.split(r"(?=^header\s*\{)", raw, flags=re.MULTILINE):
+        stamps = list(_blocks(packet, "stamp"))
+        if not stamps:
+            continue
+        seconds = int(_number(stamps[0], "sec"))
+        nanos = int(_number(stamps[0], "nsec"))
+        timestamp_ns = seconds * 1_000_000_000 + nanos
+        for p in _blocks(packet, "pose"):
+            if not re.search(r'(?m)^\s*name:\s*"cdr01"\s*$', p):
+                continue
+            xyz = list(_blocks(p, "position"))
+            quat = list(_blocks(p, "orientation"))
+            if not xyz:
+                continue
+            pos = xyz[0]
+            rot = quat[0] if quat else ""
+            values = [_number(pos, axis) for axis in ("x", "y", "z")]
+            values += [_number(rot, axis) for axis in ("x", "y", "z")]
+            values += [_number(rot, "w", 1.0)]
+            if all(math.isfinite(v) for v in values):
+                records[timestamp_ns] = {
+                    "ns": timestamp_ns, "x": values[0], "y": values[1],
+                    "z": values[2], "qx": values[3], "qy": values[4],
+                    "qz": values[5], "qw": values[6],
+                }
+    return [records[k] for k in sorted(records)]
+
+
+def evaluate_contact(poses: list[dict], world: str) -> dict:
+    """Compare actual body contact with true world-coordinate SDF wall face."""
     if world not in ("campus", "warehouse"):
-        raise ValueError("unsupported physical contact world")
-    records = []
-    for record in re.split(r"(?=^header \{)", raw, flags=re.MULTILINE):
-        pose = re.search(r"\bpose\s*\{\s*position\s*\{([^}]*)\}", record, re.DOTALL)
-        if pose is None:
-            continue
-        value = re.search(r"\bx:\s*([-+0-9.eE]+)", pose.group(1))
-        if not value:
-            continue
-        stamp = re.search(r"\bstamp\s*\{\s*sec:\s*(\d+)\s*nsec:\s*(\d+)", record, re.DOTALL)
-        seconds = (int(stamp.group(1)) + int(stamp.group(2)) / 1e9) if stamp else None
-        records.append((seconds, float(value.group(1))))
-    xs = [x for _, x in records]
-    initial = xs[0] if xs else None
-    distance = (max(xs) - min(xs)) if xs else None
-    # First-order wall-gate acceptance: robot reaches collision contact and
-    # does not move through to the far side (absolute local displacement).
-    wall_contact_m = 5.725 if world == "campus" else 5.42
-    tail = xs[-max(10, len(xs)//5):] if xs else []
-    tail_span = max(tail)-min(tail) if tail else None
-    reached = bool(
-        len(xs) >= 30
-        and distance is not None
-        and 5.2 <= distance <= 6.1
-        and abs(xs[-1] - wall_contact_m) <= 0.50
-        and tail_span is not None and tail_span <= 0.15
+        raise ValueError("unknown physics world")
+    first_x = 2.0 if world == "campus" else 26.0
+    wall_min_x = 8.0 if world == "campus" else 31.695
+    chassis_half_length = 0.275  # SDF chassis x-size 0.55
+    expected_contact_x = wall_min_x - chassis_half_length
+    x = [p["x"] for p in poses]
+    y = [p["y"] for p in poses]
+    n = len(x)
+    tail = x[-max(10, n // 5):]
+    tail_motion = max(tail) - min(tail) if tail else None
+    duration = (poses[-1]["ns"]-poses[0]["ns"])/1e9 if n>1 else 0.0
+    maximum = max(x) if x else None
+    minimum = min(x) if x else None
+    # Conservative acceptance: actual chassis approaches the SDF wall,
+    # cannot advance through the wall, and remains stopped under command.
+    passed = bool(
+        n >= 30 and duration >= 8
+        and abs(x[0]-first_x) <= .35 and abs(y[0]-2.0) <= .35
+        and maximum is not None
+        and expected_contact_x-.70 <= x[-1] <= expected_contact_x+.05
+        and maximum <= expected_contact_x+.05
+        and (maximum-minimum) >= 3.6
+        and (max(abs(v-2.0) for v in y) if y else 999) <= .65
+        and tail_motion is not None and tail_motion <= .12
     )
     return {
-        "samples": len(xs),
-        "odom_frame": "model-relative",
-        "world": world,
-        "robot_world_start_x_m": 2.0 if world == "campus" else 26.0,
-        "building_world_start_x_m": 8.0 if world == "campus" else 31.695,
-        "expected_odom_wall_contact_m": wall_contact_m,
-        "initial_odom_x_m": initial,
-        "max_odom_x_m": max(xs) if xs else None,
-        "final_odom_x_m": xs[-1] if xs else None,
-        "forward_displacement_m": distance,
-        "final_20_percent_motion_span_m": tail_span,
-        "first_simulation_s": records[0][0] if records else None,
-        "last_simulation_s": records[-1][0] if records else None,
-        "passed_wall_collision_gate": reached,
+        "world":world, "pose_source":"Gazebo SceneBroadcaster Pose_V actual model pose",
+        "samples":n, "duration_sim_s":round(duration,3),
+        "robot_spawn_world_x_m":first_x, "wall_min_world_x_m":wall_min_x,
+        "expected_body_contact_world_x_m":expected_contact_x,
+        "first_world_x_m":x[0] if x else None,
+        "max_world_x_m":maximum, "final_world_x_m":x[-1] if x else None,
+        "max_world_y_drift_m":max((abs(v-2.0) for v in y),default=None),
+        "tail_x_span_m":tail_motion, "passed_wall_collision_gate":passed,
+        "odometry_not_used_for_collision_verification":True,
     }
 
 
 def main() -> None:
-    world = sys.argv[4] if len(sys.argv) == 5 and sys.argv[3] == "--world" else "campus"
-    result = inspect(Path(sys.argv[1]).read_text(errors="replace"), world)
-    Path(sys.argv[2]).write_text(json.dumps(result, indent=2) + "\n")
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("odometry", type=Path, help="diagnostic wheel-integrated odometry only")
+    p.add_argument("summary", type=Path)
+    p.add_argument("--world", choices=("campus","warehouse"), required=True)
+    p.add_argument("--pose-file", type=Path, required=True,
+                   help="Gazebo /world/campus_test/pose/info, not wheel odometry")
+    args = p.parse_args()
+    pose = parse_ground_truth(args.pose_file.read_text(errors="replace"))
+    result = evaluate_contact(pose,args.world)
+    result["wheel_odometry_log_bytes"] = args.odometry.stat().st_size
+    args.summary.write_text(json.dumps(result,indent=2)+"\n")
     print(json.dumps(result))
     if not result["passed_wall_collision_gate"]:
-        raise SystemExit("FAIL: no verified Gazebo obstacle contact and stopped odometry")
+        raise SystemExit("FAIL: SDF wall contact not proven by actual Gazebo model world pose")
 
 
 if __name__ == "__main__":
