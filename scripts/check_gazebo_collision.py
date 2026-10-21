@@ -116,7 +116,7 @@ def evaluate_contact(poses: list[dict], world: str) -> dict:
 def wheel_odometry_displacement(raw: str) -> float | None:
     """Independent integrated-wheel displacement for contact evidence only."""
     positions = []
-    for packet in re.split(r"(?=^header\\s*\\{)", raw, flags=re.MULTILINE):
+    for packet in re.split(r"(?=^header\s*\{)", raw, flags=re.MULTILINE):
         poses = list(_blocks(packet, "pose"))
         if not poses:
             continue
