@@ -22,6 +22,18 @@ pose {{
 
 
 class ContactTests(unittest.TestCase):
+    def test_both_contact_trials_have_correct_world_spawn(self):
+        from xml.etree import ElementTree as ET
+        from scripts.generate_campus_gazebo import construct
+        for theme, expected in (("campus", (2.0, 2.0)), ("warehouse", (26.0, 2.0))):
+            with self.subTest(theme=theme):
+                root = ET.parse(construct(theme, wall_contact_test=True)).getroot()
+                robot = root.find("./world/model[@name='cdr01']")
+                self.assertIsNotNone(robot)
+                pose = tuple(float(v) for v in robot.findtext("pose").split()[:2])
+                self.assertEqual(pose, expected)
+
+
     def test_pose_extraction_filters_obstacles_and_deduplicates(self):
         obs = parse_ground_truth(packet(2,2.5) + packet(1,2.0)
                                  + packet(2,2.6) + packet(3,99,name="building_0"))

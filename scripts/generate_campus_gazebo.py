@@ -39,7 +39,7 @@ def construct(theme: str = "campus", *, wall_contact_test: bool = False):
     robot = world.find("./model[@name='cdr01']")
     # Warehouse contact trial starts 5.7m before the east wall, whereas
     # the normal warehouse recording still starts at the depot (2,2).
-    home = (26.0, 2.0) if wall_contact_test else campus.stops["depot"]
+    home = ((26.0, 2.0) if theme == "warehouse" else (2.0, 2.0)) if wall_contact_test else campus.stops["depot"]
     robot.find("pose").text = f"{home[0]} {home[1]} 0 0 0 0"
 
     for index, (x0,y0,x1,y1) in enumerate(campus.buildings):
