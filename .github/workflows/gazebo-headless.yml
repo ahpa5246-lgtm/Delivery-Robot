@@ -132,7 +132,10 @@ jobs:
               fi
               # Short positive command tests collision resistance. Then zero
               # velocity requests remove wall pressure and prevent side slip.
-              for i in $(seq 1 4); do
+              # Require ~1-2 simulated seconds of positive pressure after
+              # reaching the wall, so a simply preplanned stop cannot fake
+              # physics contact; the wheel-vs-body divergence is checked.
+              for i in $(seq 1 9); do
                 gz topic -t /model/cdr01/cmd_vel -m gz.msgs.Twist -p "linear: {x: 0.65}" >/dev/null 2>&1
                 sleep 0.1
               done

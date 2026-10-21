@@ -73,7 +73,12 @@ The test now records Gazebo SceneBroadcaster world-space `Pose_V` for the
 `cdr01` model, separately from wheel-integrated `/model/cdr01/odometry`.
 Only actual rigid-body world poses are used to check approaching the expected
 wall face, non-penetration, limited lateral drift and stationary final segment.
-Wheel odometry may continue increasing during contact and cannot prove collision.
+Wheel odometry may continue increasing during contact and cannot prove
+collision alone. The new gate also requires measurable divergence between
+wheel-integrated progress and actual chassis progress while a short positive
+command is still applied. The controller then sends zero velocity to prevent
+prolonged side slip or running off the pavement. Absence of this divergence
+or penetration of the wall keeps the workflow red.
 
 This is an independent headless physics **wall contact smoke test**, not a full
 validation of all obstacles, calibrated dynamics, Nav2 execution or a physics

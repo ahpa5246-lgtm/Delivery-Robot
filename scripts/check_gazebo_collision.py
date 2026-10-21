@@ -111,6 +111,21 @@ def evaluate_contact(poses: list[dict], world: str) -> dict:
     }
 
 
+def wheel_odometry_displacement(raw: str) -> float | None:
+    """Independent integrated-wheel displacement for contact evidence only."""
+    positions = []
+    for packet in re.split(r"(?=^header\\s*\\{)", raw, flags=re.MULTILINE):
+        poses = list(_blocks(packet, "pose"))
+        if not poses:
+            continue
+        positions_blocks = list(_blocks(poses[0], "position"))
+        if positions_blocks:
+            positions.append(_number(positions_blocks[0], "x"))
+    if len(positions) < 10:
+        return None
+    return positions[-1]-positions[0]
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("odometry", type=Path, help="diagnostic wheel-integrated odometry only")
@@ -121,7 +136,19 @@ def main() -> None:
     args = p.parse_args()
     pose = parse_ground_truth(args.pose_file.read_text(errors="replace"))
     result = evaluate_contact(pose,args.world)
-    result["wheel_odometry_log_bytes"] = args.odometry.stat().st_size
+    wheel_motion = wheel_odometry_displacement(args.odometry.read_text(errors="replace"))
+    body_motion = pose[-1]["x"]-pose[0]["x"] if len(pose)>1 else None
+    measured_slip = ((wheel_motion - body_motion)
+                     if wheel_motion is not None and body_motion is not None else None)
+    # If there were no wall, stopping a commanded robot just short of it
+    # could mimic a stationary final pose. Require evidence that the wheels
+    # kept integrating while the chassis was actually stopped by contact.
+    result["wheel_odom_forward_m"] = wheel_motion
+    result["actual_body_forward_m"] = body_motion
+    result["wheel_minus_body_forward_m"] = measured_slip
+    result["contact_resistance_proven"] = (measured_slip is not None and measured_slip >= .20)
+    result["passed_wall_collision_gate"] = (
+        result["passed_wall_collision_gate"] and result["contact_resistance_proven"])
     args.summary.write_text(json.dumps(result,indent=2)+"\n")
     print(json.dumps(result))
     if not result["passed_wall_collision_gate"]:

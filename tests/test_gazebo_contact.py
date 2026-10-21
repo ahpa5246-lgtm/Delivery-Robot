@@ -1,6 +1,6 @@
 """Synthetic fixture tests for parser/checker, not actual Gazebo evidence."""
 import unittest
-from scripts.check_gazebo_collision import parse_ground_truth, evaluate_contact
+from scripts.check_gazebo_collision import parse_ground_truth, evaluate_contact, wheel_odometry_displacement
 from scripts.gazebo_contact_trigger import reached_contact
 
 
@@ -47,6 +47,19 @@ class ContactTests(unittest.TestCase):
         self.assertFalse(reached_contact(escaped,"campus"))
         warehouse_pose=parse_ground_truth(packet(2,31.40))
         self.assertTrue(reached_contact(warehouse_pose,"warehouse"))
+
+    def test_collision_requires_wheel_body_separation_not_only_stop(self):
+        def raw(n, distance):
+            return f'''header {{
+  stamp {{ sec: {n} nsec: 0 }}
+}}
+pose {{ position {{ x: {distance} y: 0 }} }}
+'''
+        wheel = ''.join(raw(i, min(9, i*.3)) for i in range(45))
+        self.assertAlmostEqual(wheel_odometry_displacement(wheel),9.0)
+        self.assertIsNone(wheel_odometry_displacement(""))
+        # An ideal zero-slip preplanned stop cannot establish wall contact.
+        self.assertLess(0, wheel_odometry_displacement(wheel)-5.685)
 
     def test_warehouse_wall_contact_and_fail_closed(self):
         good = parse_ground_truth("".join(
