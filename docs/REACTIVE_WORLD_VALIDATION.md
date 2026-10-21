@@ -76,8 +76,14 @@ wall face, non-penetration, limited lateral drift and stationary final segment.
 Wheel odometry may continue increasing during contact and cannot prove
 collision alone. The new gate also requires measurable divergence between
 wheel-integrated progress and actual chassis progress while a short positive
-command is still applied. The controller then sends zero velocity to prevent
-prolonged side slip or running off the pavement. Absence of this divergence
+command is still applied. The headless wall-contact **test stimulus** now sends 60 finite positive
+velocity requests followed by 30 explicit zero-velocity requests. This
+is deliberately not a sensor-driven Nav2 controller: the older live text-file
+monitoring method buffered pose messages too late, allowing the robot to slip
+off the pavement. The **post-run** safety gate must still prove physical
+contact using world-space body poses and wheel/body divergence. If the
+limited stimulus stops before reaching the wall, or if the robot penetrates
+the wall or falls, the test fails. Absence of this divergence
 or penetration of the wall keeps the workflow red.
 
 This is an independent headless physics **wall contact smoke test**, not a full
