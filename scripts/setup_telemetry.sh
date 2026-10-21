@@ -26,8 +26,20 @@ if [[ -n "${HTTPS_PROXY:-}" ]]; then export YARN_HTTPS_PROXY="$HTTPS_PROXY"; fi
 if [[ -n "${HTTP_PROXY:-}" ]]; then export YARN_HTTP_PROXY="$HTTP_PROXY"; fi
 python3 -m venv .venv
 .venv/bin/python -m pip install --cache-dir "$repo_root/.cache/pip" -r requirements-telemetry.txt
-npm install --prefix "$repo_root/.tools/yarn" @yarnpkg/cli-dist@4.17.0 --ignore-scripts
+# Dependency downloads can hit a transient proxy ECONNRESET in Actions.
+# Retry *network installation only*; never hide errors in the actual build.
+retry_dependency_install() {
+  local attempt
+  for attempt in 1 2 3; do
+    if "$@"; then return 0; fi
+    echo "Dependency network/install failed on attempt ${attempt}/3" >&2
+    if (( attempt < 3 )); then sleep "$((attempt * 7))"; fi
+  done
+  echo 'Dependency installation failed three times; not running an unverified build.' >&2
+  return 1
+}
+retry_dependency_install npm install --prefix "$repo_root/.tools/yarn" @yarnpkg/cli-dist@4.17.0 --ignore-scripts
 cd vendor/lichtblick
-node "$repo_root/.tools/yarn/node_modules/@yarnpkg/cli-dist/bin/yarn.js" install --immutable
+retry_dependency_install node "$repo_root/.tools/yarn/node_modules/@yarnpkg/cli-dist/bin/yarn.js" install --immutable
 cd "$repo_root"
 bash scripts/build_telemetry.sh
