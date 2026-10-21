@@ -39,9 +39,11 @@ class GazeboObservationTests(unittest.TestCase):
             wheel_file=Path(directory)/"wheel.txt"
             pose_file=Path(directory)/"pose.txt"
             output=Path(directory)/"contact.mcap"
+            touch_file=Path(directory)/"touch.txt"
+            touch_file.write_text("data: true\n")
             wheel_file.write_text("".join(wheel(i,i*.65) for i in range(50)))
             pose_file.write_text("".join(body(i,min(7.72,2+i*.2)) for i in range(50)))
-            self.assertEqual(export_observations(wheel_file,output,"campus",pose_file),50)
+            self.assertEqual(export_observations(wheel_file,output,"campus",pose_file,touch_file),50)
             with output.open("rb") as f:
                 decoded=list(make_reader(f,decoder_factories=[DecoderFactory()]).iter_decoded_messages(topics=["/odom"]))
             self.assertEqual(len(decoded),50)
@@ -54,15 +56,23 @@ class GazeboObservationTests(unittest.TestCase):
             wheel_file=Path(directory)/"wheel.txt"
             pose_file=Path(directory)/"pose.txt"
             target=Path(directory)/"invalid.mcap"
+            contact_file=Path(directory)/"contact.txt"
+            contact_file.write_text("data: true\n")
             wheel_file.write_text("".join(wheel(i,i*.65) for i in range(50)))
             pose_file.write_text("".join(body(i,2+i*.65) for i in range(50)))
             with self.assertRaises(ValueError):
-                export_observations(wheel_file,target,"campus",pose_file)
+                export_observations(wheel_file,target,"campus",pose_file,contact_file)
             self.assertFalse(target.exists())
+            valid_pose=Path(directory)/"valid_pose.txt"
+            valid_pose.write_text("".join(body(i,min(7.72,2+i*.2)) for i in range(50)))
+            contact_file.write_text("data: false\n")
+            with self.assertRaises(ValueError):
+                export_observations(wheel_file,target,"campus",valid_pose,contact_file)
+            contact_file.write_text("data: true\n")
             with self.assertRaises(ValueError):
                 export_observations(wheel_file,target,"campus")
             with self.assertRaises(ValueError):
-                export_observations(wheel_file,target,"fictional",pose_file)
+                export_observations(wheel_file,target,"fictional",pose_file,contact_file)
 
 
 if __name__ == "__main__":

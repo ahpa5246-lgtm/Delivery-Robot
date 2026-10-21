@@ -19,7 +19,7 @@ import sys
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.export_delivery_recording import SCHEMAS, header, ros_schema, string, ROOT
-from scripts.check_gazebo_collision import parse_ground_truth, evaluate_contact
+from scripts.check_gazebo_collision import parse_ground_truth, evaluate_contact, physical_contact_event_seen
 
 
 def parse_observations(raw: str) -> list[dict]:
@@ -46,12 +46,14 @@ def parse_observations(raw: str) -> list[dict]:
     return [by_stamp[n] for n in sorted(by_stamp)]
 
 
-def export_observations(source: Path, target: Path, world: str, pose_source: Path | None = None) -> int:
+def export_observations(source: Path, target: Path, world: str, pose_source: Path | None = None, contact_source: Path | None = None) -> int:
     from mcap.writer import Writer
     if world not in ("campus", "warehouse"):
         raise ValueError("unknown Gazebo world")
     if pose_source is None:
         raise ValueError("actual Gazebo world Pose_V required; wheel odometry cannot prove contact")
+    if contact_source is None or not physical_contact_event_seen(contact_source.read_text(errors="replace")):
+        raise ValueError("actual Gazebo TouchPlugin contact event required for physics provenance")
     # Wheel-integrated odometry is saved independently as a diagnostic.
     # It is NOT the source of the verified chassis world position.
     wheel_odometry = parse_observations(source.read_text(errors="replace"))
@@ -138,6 +140,8 @@ if __name__ == "__main__":
                         help="diagnostic wheel odometry (not chassis ground truth)")
     parser.add_argument("--pose-input",required=True,type=Path,
                         help="SceneBroadcaster world Pose_V from Gazebo")
+    parser.add_argument("--contact-input",required=True,type=Path,
+                        help="Gazebo wall TouchPlugin data: true recording")
     parser.add_argument("--output",required=True,type=Path)
     args=parser.parse_args()
-    print(f"Gazebo observations: {export_observations(args.input,args.output,args.world,args.pose_input)} frames -> {args.output}")
+    print(f"Gazebo observations: {export_observations(args.input,args.output,args.world,args.pose_input,args.contact_input)} frames -> {args.output}")
