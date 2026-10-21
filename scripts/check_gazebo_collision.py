@@ -17,7 +17,9 @@ from pathlib import Path
 
 def _blocks(raw: str, token: str):
     """Return complete protobuf-text blocks for token, including nested braces."""
-    pat = re.compile(r"(?m)^\s*" + re.escape(token) + r"\s*\{")
+    # CLI protobuf text may nest fields inline in compact representations,
+    # as well as put each block on its own line.
+    pat = re.compile(r"(?<![A-Za-z0-9_])" + re.escape(token) + r"\s*\{")
     for match in pat.finditer(raw):
         first = raw.find("{", match.start())
         depth = 0
