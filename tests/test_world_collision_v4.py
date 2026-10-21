@@ -1,6 +1,8 @@
 """Prove the source-driven visual fixtures are also known to the offline planner."""
 import unittest
 from math import hypot
+from xml.etree import ElementTree as ET
+from pathlib import Path
 from cdr_sim.campus import (
     Campus, ReplayOptions, astar, replay, swept_rect_intersects, shared_world,
 )
@@ -30,6 +32,22 @@ class SharedWorldCollisionTests(unittest.TestCase):
                 with self.subTest(theme=theme,stop=stop):
                     self.assertTrue(world.free(world.cell(stop)))
 
+    def test_warehouse_uses_rendered_walls_not_invisible_campus_wings(self):
+        campus=Campus(theme="campus")
+        warehouse=Campus(theme="warehouse")
+        self.assertNotEqual(warehouse.buildings, campus.buildings)
+        self.assertEqual(len(warehouse.buildings),2)
+        scene=ET.parse(Path("assets/world/native-logistics.urdf")).getroot()
+        for name, rect in zip(("rear-wall_29","east-wall_30"),warehouse.buildings):
+            v=scene.find(".//visual[@name='"+name+"']")
+            self.assertIsNotNone(v)
+            x,y,_=map(float,v.find("origin").attrib["xyz"].split())
+            w,h,_=map(float,v.find("geometry/box").attrib["size"].split())
+            self.assertAlmostEqual(x-w/2,rect[0],places=4)
+            self.assertAlmostEqual(y-h/2,rect[1],places=4)
+            self.assertAlmostEqual(x+w/2,rect[2],places=4)
+            self.assertAlmostEqual(y+h/2,rect[3],places=4)
+
     def test_swept_segment_exact_intersection(self):
         box=(1.0,1.0,2.0,2.0)
         self.assertTrue(swept_rect_intersects((0,1.5),(3,1.5),box,0))
@@ -57,7 +75,15 @@ class SharedWorldCollisionTests(unittest.TestCase):
                             run=replay(ReplayOptions(destination=name,seed=seed,scenario=scenario),
                                        campus=world)
                             self.assertIn(run["status"],{"COMPLETED","PAUSED_SAFE"})
-                            self.assertTrue(run["collision_checked"])
+                            invalid_segments = [
+                                (a["x_m"], a["y_m"], b["x_m"], b["y_m"])
+                                for a, b in zip(run["frames"], run["frames"][1:])
+                                if not world.segment_safe(
+                                    (a["x_m"], a["y_m"]), (b["x_m"], b["y_m"]))
+                            ]
+                            self.assertTrue(run["collision_checked"],
+                                (theme, name, seed, scenario, run["status"], run["reason"],
+                                 invalid_segments[:6], world.buildings))
                             self.assertEqual(run["collision_objects"],len(world.obstacles))
                             self.assertGreaterEqual(run["minimum_sampled_clearance_m"],0)
                             for a,b in zip(run["frames"],run["frames"][1:]):

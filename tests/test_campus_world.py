@@ -34,6 +34,35 @@ class CampusSDFTests(unittest.TestCase):
             self.assertAlmostEqual(dims[1],y1-y0)
             self.assertAlmostEqual(zz,dims[2]/2)
 
+    def test_warehouse_structural_walls_match_native_collision_world(self):
+        world=Campus(theme="warehouse")
+        scene=ET.parse(construct("warehouse")).getroot().find("world")
+        self.assertEqual(len(world.buildings),2)
+        for index, rect in enumerate(world.buildings):
+            node=scene.find(f"./model[@name='building_{index}']")
+            self.assertIsNotNone(node)
+            self.assertAlmostEqual(
+                float(node.findtext("link/collision/geometry/box/size").split()[0]),
+                rect[2]-rect[0], places=4)
+            self.assertAlmostEqual(float(node.findtext("pose").split()[2]),2.4,places=4)
+        special=ET.parse(construct("warehouse", wall_contact_test=True)).getroot()
+        self.assertEqual([float(v) for v in special.find(
+            "./world/model[@name='cdr01']/pose").text.split()[:2]],[26,2])
+
+    def test_contact_gate_only_in_physics_trials(self):
+        for theme in ("campus", "warehouse"):
+            regular=ET.parse(construct(theme)).getroot().find("world")
+            special=ET.parse(construct(theme,wall_contact_test=True)).getroot().find("world")
+            self.assertEqual(len(regular.findall(".//plugin[@name='gz::sim::systems::TouchPlugin']")),0)
+            wall_index=0 if theme=="campus" else 1
+            wall=special.find(f"./model[@name='building_{wall_index}']")
+            touch=wall.find("./plugin[@name='gz::sim::systems::TouchPlugin']")
+            self.assertIsNotNone(touch)
+            self.assertEqual(touch.findtext("create_contact_sensor_for_collision"),"true")
+            relay=special.find("./plugin[@name='gz::sim::systems::TriggeredPublisher']")
+            self.assertEqual(relay.findtext("output"),"data: false")
+            self.assertEqual(relay.find("output").attrib["topic"],"/model/cdr01/enable")
+
     def test_every_visible_solid_fixture_has_gazebo_collision_from_manifest(self):
         for theme in ("campus","warehouse"):
             campus=Campus(theme=theme)

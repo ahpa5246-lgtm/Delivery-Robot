@@ -48,10 +48,10 @@ function DeliveryMissions(): React.JSX.Element {
         </Alert>
       ) : (
         <>
-          <Alert severity={state.source === "campus_kinematic_replay" ? "warning" : "info"}>
+          <Alert severity={state.live === false ? "warning" : "info"}>
             Source: {text("source")}.{" "}
-            {state.source === "campus_kinematic_replay"
-              ? "Modeled kinematic replay; energy and state of charge are estimates. No live robot connection."
+            {state.live === false
+              ? "Offline mathematical replay with estimated energy; synthetic range is not LiDAR, no live robot connection."
               : "Verify recording provenance before interpreting these values."}
           </Alert>
           <Typography variant="h4">{text("phase")}</Typography>
@@ -59,6 +59,12 @@ function DeliveryMissions(): React.JSX.Element {
           <Divider />
           {[
             ["Recording time", number("timestamp_s", "s")],
+            ["Map / collision world", text("world")],
+            ["Collision verification", text("collision_checked")],
+            ["Range to synthetic obstruction", number("obstacle_range_m", "m")],
+            ["Nearest modeled clearance", number("minimum_clearance_m", "m")],
+            ["Obstacle sensed", text("obstacle_detected")],
+            ["Replanning operations", text("replans")],
             ["Speed", number("speed_mps", "m/s")],
             ["Travelled distance", number("distance_m", "m")],
             ["Estimated energy", number("energy_estimated_wh", "Wh")],
@@ -72,7 +78,7 @@ function DeliveryMissions(): React.JSX.Element {
           <Divider />
           <Typography variant="caption" color="text.secondary">
             Synchronized to native playback and seeking through {TOPIC}. This panel does not command
-            a robot or synthesize sensor readings.
+            a robot. Synthetic measurements are generated offline and explicitly labeled.
           </Typography>
         </>
       )}

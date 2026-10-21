@@ -5,11 +5,20 @@ on:
       - 'scripts/generate_gazebo_world.py'
       - 'scripts/generate_campus_gazebo.py'
       - 'cdr_sim/campus.py'
+      - 'cdr_sim/closed_loop.py'
+      - 'scripts/check_gazebo_collision.py'
+      - 'scripts/gazebo_contact_trigger.py'
+      - 'tests/test_gazebo_contact.py'
+      - 'scripts/export_gazebo_observation.py'
+      - 'tests/test_gazebo_observation.py'
       - 'world/campus_layout.json'
       - 'tests/test_campus_world.py'
       - 'tests/test_gazebo_geometry.py'
       - '.github/workflows/gazebo-headless.yml'
   workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -25,6 +34,7 @@ jobs:
           python3 scripts/generate_gazebo_world.py
           python3 scripts/generate_campus_gazebo.py
           python3 -m unittest discover -s tests -p 'test_gazebo_geometry.py' -v
+          python3 -m unittest discover -s tests -p 'test_gazebo_contact.py' -v
           mkdir -p experiments/gazebo_smoke
       - name: Install ROS Jazzy Gazebo integration in ephemeral container and run headless
         run: |
@@ -36,6 +46,10 @@ jobs:
             gz sdf -k /work/simulation/campus_v0.sdf > /work/experiments/gazebo_smoke/sdf_validation.txt 2>&1
             gz sdf -k /work/simulation/campus_delivery.sdf > /work/experiments/gazebo_smoke/campus_sdf_validation.txt 2>&1
             gz sdf -k /work/simulation/warehouse_delivery.sdf > /work/experiments/gazebo_smoke/warehouse_sdf_validation.txt 2>&1
+            for theme in campus warehouse; do
+              gz sdf -k "/work/simulation/${theme}_collision_test.sdf" \
+                > "/work/experiments/gazebo_smoke/${theme}_contact_sdf_validation.txt" 2>&1
+            done
             gz sim -s -r -v 3 /work/simulation/campus_v0.sdf > /work/experiments/gazebo_smoke/server.log 2>&1 &
             server_pid=$!
             trap "kill $server_pid 2>/dev/null || true" EXIT
@@ -59,7 +73,13 @@ jobs:
             ros2 launch ros_gz_bridge ros_gz_bridge.launch.py bridge_name:=cdr01_bridge config_file:=/work/simulation/ros_gz_bridge.yaml > /work/experiments/gazebo_smoke/ros_bridge.log 2>&1 &
             bridge_pid=$!
             sleep 5
-            ros2 topic list > /work/experiments/gazebo_smoke/ros_topics.txt
+            # Discovery is asynchronous: do not misdiagnose a working bridge
+            # because its ROS graph takes more than five seconds to appear.
+            for attempt in $(seq 1 30); do
+              ros2 topic list > /work/experiments/gazebo_smoke/ros_topics.txt
+              if grep -Fxq "/robot1/odom" /work/experiments/gazebo_smoke/ros_topics.txt; then break; fi
+              sleep 1
+            done
             grep -Fx "/robot1/odom" /work/experiments/gazebo_smoke/ros_topics.txt
             timeout 12 ros2 topic echo --once /robot1/odom > /work/experiments/gazebo_smoke/ros_odometry.txt 2>&1 || true
             test -s /work/experiments/gazebo_smoke/ros_odometry.txt
@@ -72,7 +92,71 @@ jobs:
             kill $watchdog_pid 2>/dev/null || true
             kill $bridge_pid 2>/dev/null || true
             echo "PASS: ROS2 watchdog relays motion and auto-stops Gazebo on command timeout" >> /work/experiments/gazebo_smoke/outcome.txt
+            # Physical wall challenge using the EXACT manifest-derived SDF
+            # collision geometry, not the 2-D analytical surrogate.
+            for theme in campus warehouse; do
+              export GZ_PARTITION="cdr_collision_${theme}"
+              world_file="/work/simulation/${theme}_collision_test.sdf"
+              gz sim -s -r -v 2 "$world_file" > "/work/experiments/gazebo_smoke/${theme}_server.log" 2>&1 &
+              collision_server=$!
+              sleep 10
+              gz topic -l | grep -F "/model/cdr01/odometry"
+              # SceneBroadcaster reports actual rigid-body poses; DiffDrive
+              # odometry alone can continue advancing during wheel slip.
+              pose_topic="/world/campus_test/pose/info"
+              gz topic -l | grep -Fx "$pose_topic"
+              timeout 50 gz topic -e -t "$pose_topic" > "/work/experiments/gazebo_smoke/${theme}_world_pose.txt" 2>&1 &
+              pose_observer=$!
+              contact_topic="/cdr_wall/touched"
+              gz topic -l | grep -Fx "$contact_topic"
+              timeout 50 gz topic -e -t "$contact_topic" \
+                > "/work/experiments/gazebo_smoke/${theme}_contact_events.txt" 2>&1 &
+              contact_observer=$!
+              timeout 50 gz topic -e -t /model/cdr01/odometry > "/work/experiments/gazebo_smoke/${theme}_collision_odom.txt" 2>&1 &
+              observer=$!
+              # Deterministic bounded contact stimulus. The previous
+              # file-tail live monitor read buffered Pose_V too late, allowing
+              # 50s of positive drive and a fall beyond the paved test map.
+              # The acceptance gate below must prove actual wall contact and
+              # wheel-vs-body slippage; time-limited commands alone never pass.
+              echo "linear=0.65 for 60 cycles, then linear=0 for 30 cycles" \
+                > "/work/experiments/gazebo_smoke/${theme}_stimulus.txt"
+              for i in $(seq 1 60); do
+                gz topic -t /model/cdr01/cmd_vel -m gz.msgs.Twist -p "linear: {x: 0.65}" \
+                  >> "/work/experiments/gazebo_smoke/${theme}_commands.log" 2>&1
+                sleep 0.1
+              done
+              for i in $(seq 1 30); do
+                gz topic -t /model/cdr01/cmd_vel -m gz.msgs.Twist -p "linear: {x: 0}" >/dev/null 2>&1
+                sleep 0.1
+              done
+              sleep 2
+              kill $observer 2>/dev/null || true
+              kill $pose_observer 2>/dev/null || true
+              kill $contact_observer 2>/dev/null || true
+              wait $observer 2>/dev/null || true
+              wait $pose_observer 2>/dev/null || true
+              wait $contact_observer 2>/dev/null || true
+              kill $collision_server 2>/dev/null || true
+              wait $collision_server 2>/dev/null || true
+              python3 /work/scripts/check_gazebo_collision.py                 "/work/experiments/gazebo_smoke/${theme}_collision_odom.txt"                 "/work/experiments/gazebo_smoke/${theme}_collision_summary.json" --world "$theme" \
+                --pose-file "/work/experiments/gazebo_smoke/${theme}_world_pose.txt" \
+                --contact-file "/work/experiments/gazebo_smoke/${theme}_contact_events.txt"
+              echo "PASS: ${theme} SDF wall contact disabled DiffDrive and actual body stopped" >> /work/experiments/gazebo_smoke/outcome.txt
+            done
           '
+      - name: Convert validated Gazebo physics observations to indexed MCAP
+        run: |
+          python3 -m pip install -r requirements-telemetry.txt
+          python3 -m unittest discover -s tests -p 'test_gazebo_observation.py' -v
+          for theme in campus warehouse; do
+            python3 scripts/export_gazebo_observation.py \
+              --world "$theme" \
+              --input "experiments/gazebo_smoke/${theme}_collision_odom.txt" \
+              --pose-input "experiments/gazebo_smoke/${theme}_world_pose.txt" \
+              --contact-input "experiments/gazebo_smoke/${theme}_contact_events.txt" \
+              --output "experiments/gazebo_smoke/${theme}_gazebo_verified.mcap"
+          done
       - name: Upload actual Gazebo startup and observation logs
         if: always()
         uses: actions/upload-artifact@v4

@@ -13,6 +13,8 @@ const path = require('node:path');
   const context=await browser.newContext({viewport:{width:1600,height:1000}});
   const page=await context.newPage(); const errors=[]; const models=[];
   page.on('pageerror',e=>errors.push(e.message));
+  const consoleErrors=[];
+  page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text());});
   page.on('response',r=>{if(r.url().includes('/models/'))models.push({url:r.url(),status:r.status()});});
   await page.goto(base+'/');
   const perception=page.getByRole('tab',{name:'Perception',exact:true});
@@ -22,12 +24,77 @@ const path = require('node:path');
   await page.waitForTimeout(1200);
   assert.equal(await page.evaluate(()=>{let el=document.elementFromPoint(10,100);while(el){const c=getComputedStyle(el).backgroundColor;const v=c.match(/[\d.]+/g)?.map(Number);if(v&&v.length>=3&&(v.length===3||v[3]>0))return v.slice(0,3).every(n=>n<50);el=el.parentElement;}return false;}),true);
   const play=page.getByRole('button',{name:'Play',exact:true});assert.equal(await play.isEnabled(),true);
-  await page.waitForFunction(()=>performance.getEntriesByType('resource').some(r=>r.name.endsWith('/models/rbot-chassis.stl')),null,{timeout:20000});
+  try {
+    await page.waitForFunction(()=>performance.getEntriesByType('resource').some(r=>r.name.endsWith('/models/rbot-chassis.stl')),null,{timeout:45000});
+  } catch (failure) {
+    await page.screenshot({path:path.join(out,'native-startup-failure.png')}).catch(()=>{});
+    console.error('NATIVE STARTUP DIAGNOSTIC',JSON.stringify({
+      models,errors,consoleErrors,excerpt:(await page.locator('body').innerText()).slice(0,1800),
+      canvasCount:await page.locator('canvas').count(),
+    }));
+    throw failure;
+  }
   assert.ok(models.some(m=>m.url.endsWith('rbot-chassis.stl')&&m.status===200),'licensed CAD chassis must load: '+JSON.stringify(models));
+  await page.waitForFunction(
+    () => performance.getEntriesByType('resource').some(r=>r.name.endsWith('/models/environment/native-campus.urdf')),
+    null,{timeout:25000}
+  );
+  await page.waitForTimeout(650);
+  assert.ok(models.some(m=>m.url.endsWith('/models/environment/native-campus.urdf')&&m.status===200),
+    'campus environment must load from local URL: '+JSON.stringify(models));
+  assert.ok(models.some(m=>m.url.endsWith('/models/environment/world/cafe-table.dae')&&m.status===200),
+    'licensed café-table mesh must load: '+JSON.stringify(models));
   assert.ok(models.every(m=>m.status===200),JSON.stringify(models));
   const position = async()=>{const text=await page.locator('body').innerText();const match=text.slice(text.indexOf('position')).match(/\bx\s+(-?[\d.]+)\s+y\s+(-?[\d.]+)/);assert.ok(match,'decoded odometry position is visible');return [Number(match[1]),Number(match[2])];};
+  assert.ok(await page.locator('body').innerText().then(t => t.includes('Environment view:')),'environment selector mounted');
   const firstPosition=await position();
   await page.screenshot({path:path.join(out,'native-perception-start.png')});
+  // Validate *both* authored worlds in the same real WebGL renderer, not merely
+  // that an invisible URDF responded with 200 OK.
+  const environmentMenu = page.getByRole('button', {name:'Environment view',exact:true});
+  await environmentMenu.waitFor();
+  await environmentMenu.click();
+  await page.getByRole('menuitem',{name:'Logistics warehouse',exact:true}).click();
+  await page.waitForFunction(() => document.body.innerText.includes('Environment view: logistics'));
+  await page.waitForFunction(() => document.body.innerText.includes('MODELED WAREHOUSE'));
+  const warehouseSource = await page.locator('body').innerText();
+  assert.match(warehouseSource, /warehouse_synthetic_reactive_replay/,
+    'warehouse layer must use warehouse-specific MCAP data, not campus route');
+  await page.waitForTimeout(700);
+  await page.waitForFunction(
+    () => performance.getEntriesByType('resource').some(r=>r.name.endsWith('/models/environment/world/warehouse-cargo.dae')),
+    null,{timeout:25000}
+  );
+  await page.waitForTimeout(350);
+  await page.screenshot({path:path.join(out,'native-logistics-overview.png')});
+  assert.ok(models.some(m=>m.url.endsWith('/models/environment/world/warehouse-cargo.dae')&&m.status===200),
+    'source-authored AWS cargo mesh must load with original materials');
+  assert.ok(models.some(m=>m.url.endsWith('/models/environment/world/warehouse-shelf.dae')&&m.status===200),
+    'actual AWS warehouse shelving mesh must render in native scene');
+  await environmentMenu.click();
+  await page.getByRole('menuitem',{name:'University campus',exact:true}).click();
+  await page.waitForFunction(() => document.body.innerText.includes('Environment view: campus'));
+  await page.waitForFunction(() => document.body.innerText.includes('MODELED CAMPUS'));
+  assert.match(await page.locator('body').innerText(), /campus_synthetic_reactive_replay/,
+    'campus layer must reload matching campus recording');
+  await page.waitForTimeout(450);
+  await page.screenshot({path:path.join(out,'native-campus-overview.png')});
+  await environmentMenu.click();
+  await page.getByRole('menuitem',{name:'Grid only',exact:true}).click();
+  await page.waitForFunction(() => document.body.innerText.includes('Environment view: grid'));
+  await page.screenshot({path:path.join(out,'native-grid-only.png')});
+  await environmentMenu.click();
+  await page.getByRole('menuitem',{name:'University campus',exact:true}).click();
+  await page.waitForFunction(() => document.body.innerText.includes('Environment view: campus'));
+  await environmentMenu.click();
+  await page.getByRole('menuitem',{name:'Robot focus',exact:true}).click();
+  await page.waitForFunction(() => document.body.innerText.includes('Environment view: robot'));
+  await page.waitForTimeout(650);
+  await page.screenshot({path:path.join(out,'native-robot-focus.png')});
+  await environmentMenu.click();
+  await page.getByRole('menuitem',{name:'University campus',exact:true}).click();
+  await page.waitForFunction(() => document.body.innerText.includes('Environment view: campus'));
+
   await play.click();await page.waitForTimeout(1800);
   await page.getByRole('button',{name:'Pause',exact:true}).click();
   const time=page.getByTestId('PlaybackTime-text').locator('input');
@@ -38,7 +105,7 @@ const path = require('node:path');
   await page.screenshot({path:path.join(out,'native-perception-motion.png')});
   await page.getByRole('tab',{name:'Missions',exact:true}).click();
   await page.getByText('Mission playback',{exact:true}).waitFor();
-  await page.waitForTimeout(500);assert.match(await page.locator('body').innerText(),/campus_kinematic_replay/);assert.match(await page.locator('body').innerText(),/8[45]\.\d+ %/);
+  await page.waitForTimeout(500);assert.match(await page.locator('body').innerText(),/campus_(synthetic_reactive|kinematic)_replay/);assert.match(await page.locator('body').innerText(),/8[45]\.\d+ %/);
   await page.screenshot({path:path.join(out,'native-missions.png')});
   const slider=page.getByTestId('playback-slider');const sb=await slider.boundingBox();assert.ok(sb);
   await page.mouse.click(sb.x+sb.width*.55,sb.y+sb.height/2);
@@ -51,7 +118,12 @@ const path = require('node:path');
   const split=page.locator('.mosaic-split').first();const box=await split.boundingBox();assert.ok(box);
   await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.mouse.move(box.x-100,box.y+box.height/2,{steps:8});await page.mouse.up();await page.waitForTimeout(1000);
   const resized=await split.boundingBox();assert.ok(Math.abs(resized.x-box.x)>50,'native panel resizes');
-  await page.getByRole('tab',{name:'Controls',exact:true}).click();await page.getByRole('tab',{name:'Planning',exact:true}).click();await page.waitForTimeout(500);
+  await page.getByRole('tab',{name:'Controls',exact:true}).click();
+  await page.waitForTimeout(550);
+  await page.screenshot({path:path.join(out,'native-controls.png')});
+  await page.getByRole('tab',{name:'Planning',exact:true}).click();
+  await page.waitForTimeout(550);
+  await page.screenshot({path:path.join(out,'native-planning.png')});
   assert.ok(Math.abs((await split.boundingBox()).x-resized.x)<5,'workspace switching preserves resize');
   await page.reload();await page.getByRole('tab',{name:'Planning',exact:true}).waitFor();await page.waitForTimeout(1200);
   assert.equal(await page.getByRole('tab',{name:'Planning',exact:true}).getAttribute('aria-selected'),'true');
@@ -76,7 +148,7 @@ const path = require('node:path');
   await missing.getByRole('tab',{name:'Missions',exact:true}).click();await missing.getByText(/No mission message at the current playback time/).waitFor();
   await missing.screenshot({path:path.join(out,'native-missing-source.png')});
   assert.deepEqual(errors,[]);
-  await fs.writeFile(path.join(out,'results.json'),JSON.stringify({status:'passed',checks:['real MCAP','licensed CAD fetch','default dark','default workspace','play','pause','keyboard toggle','seek','Missions','Diagnostics','resize','workspace persistence','reload persistence','add panel','1024px playback','768px capture','missing source error','empty mission state'],models,errors},null,2));
+  await fs.writeFile(path.join(out,'results.json'),JSON.stringify({status:'passed',checks:['native camera and environment menu','campus overview','logistics overview','grid-only isolation','real MCAP','licensed CAD fetch','default dark','default workspace','play','pause','keyboard toggle','seek','Missions','Diagnostics','resize','workspace persistence','reload persistence','add panel','1024px playback','768px capture','missing source error','empty mission state'],models,errors},null,2));
   console.log('PASS: native engine MCAP, CAD, play/pause/seek, workspaces, persistence and responsive captures. '+out);
  } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

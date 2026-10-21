@@ -31,6 +31,7 @@ const appConfig: ReturnType<typeof mainConfig> = (env, argv) => {
     ...(config.plugins ?? []),
     new CopyPlugin({
       patterns: [
+        { from: path.resolve(__dirname, "src/delivery/mina.svg"), to: "mina.svg" },
         { from: path.resolve(__dirname, "../LICENSE"), to: "licenses/LICHTBLICK-MPL-2.0.txt" },
         { from: path.resolve(__dirname, "../../../docs/licenses"), to: "licenses/fonts" },
         {
@@ -41,13 +42,42 @@ const appConfig: ReturnType<typeof mainConfig> = (env, argv) => {
           from: path.resolve(__dirname, "../../../integrations/upstream_samples/rbot-nav2/LICENSE"),
           to: "licenses/RBOT-Apache-2.0.txt",
         },
-        {
-          from: path.resolve(__dirname, "../../../artifacts/campus.mcap"),
-          to: "recordings/campus.mcap",
-        },
+        ...["campus.mcap", "campus-reactive.mcap", "warehouse-reactive.mcap"].map((name) => ({
+          from: path.resolve(__dirname, "../../../artifacts", name),
+          to: `recordings/${name}`,
+        })),
         {
           from: path.resolve(__dirname, "../../../assets/robot/cdr01-lichtblick.urdf"),
           to: "models/cdr01.urdf",
+        },
+        ...["native-campus.urdf", "native-logistics.urdf"].map((name) => ({
+          from: path.resolve(__dirname, "../../../assets/world", name),
+          to: `models/environment/${name}`,
+        })),
+        // The upstream SketchUp COLLADA file refers to two local image ids
+        // as texture URLs in its effects. Keep the upstream DAE unchanged on
+        // disk; resolve those ids only in the compiled browser copy.
+        {
+          from: path.resolve(__dirname, "../../../dashboard/assets/world/cafe-table.dae"),
+          to: "models/environment/world/cafe-table.dae",
+          transform: (source: Buffer) => {
+            const xml = source.toString("utf8");
+            if (!xml.includes("<init_from>ID7</init_from>") ||
+                !xml.includes("<init_from>ID16</init_from>")) {
+              throw new Error("Unexpected café table COLLADA source; verify texture ids");
+            }
+            return xml
+              .replace("<init_from>ID7</init_from>", "<init_from>Wood_Floor_Dark.jpg</init_from>")
+              .replace("<init_from>ID16</init_from>", "<init_from>Maple.jpg</init_from>");
+          },
+        },
+        ...["warehouse-shelf.dae", "warehouse-cargo.dae", "Maple.jpg", "Wood_Floor_Dark.jpg"].map((name) => ({
+          from: path.resolve(__dirname, "../../../dashboard/assets/world", name),
+          to: `models/environment/world/${name}`,
+        })),
+        {
+          from: path.resolve(__dirname, "../../../dashboard/assets/materials/textures"),
+          to: "models/environment/materials/textures",
         },
         ...["rbot-chassis.stl", "rbot-wheel.stl"].map((name) => ({
           from: path.resolve(__dirname, "../../../dashboard/assets/robot", name),

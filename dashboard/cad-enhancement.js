@@ -153,8 +153,11 @@
      loadedAssets[names[i]]=data[i].value;
      loaded.add(names[i]);
    }
-   const east=map.buildings[2],eastCenter=[(east[0]+east[2])/2,3.25,-(east[1]+east[3])/2];
-   if(theme==='campus' && loadedAssets.office?.type==='dae'){
+   // Warehouse uses a different collision map with only two wall boxes.
+   // Never read a campus east-wing rectangle in the logistics theme.
+   if(theme==='campus' && map.buildings?.[2] && loadedAssets.office?.type==='dae'){
+     const east=map.buildings[2];
+     const eastCenter=[(east[0]+east[2])/2,3.25,-(east[1]+east[3])/2];
      const office=fitObject(loadedAssets.office.scene,2.9,eastCenter);
      if(office){office.name='licensed-office';environment.add(office);}
    }

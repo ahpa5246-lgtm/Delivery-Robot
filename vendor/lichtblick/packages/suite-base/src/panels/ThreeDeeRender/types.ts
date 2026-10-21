@@ -18,6 +18,13 @@ import { CameraState } from "@lichtblick/suite-base/panels/ThreeDeeRender/camera
 export type InterfaceMode = "3d" | "image";
 
 export type Shared3DPanelState = {
+  /** Optional Delivery-only command, scoped to one saved layout and panel. */
+  deliveryViewRequest?: {
+    id: number;
+    layoutId: string;
+    panelId: string;
+    view: "robot" | "campus" | "logistics" | "grid";
+  };
   cameraState: CameraState;
   followMode: FollowMode;
   followTf: undefined | string;

@@ -16,7 +16,7 @@ void main(async () => {
   const url = new URL(location.href);
   if (!url.searchParams.has("reference") && !url.searchParams.has("ds")) {
     url.searchParams.set("ds", "remote-file");
-    url.searchParams.set("ds.url", new URL("/recordings/campus.mcap", url).href);
+    url.searchParams.set("ds.url", new URL("/recordings/campus-reactive.mcap", url).href);
     history.replaceState(undefined, "", url);
   }
   return url.searchParams.has("reference")

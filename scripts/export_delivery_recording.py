@@ -15,11 +15,14 @@ import sys
 
 if __package__ in (None, ''):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from cdr_sim.campus import ReplayOptions, replay
+from cdr_sim.campus import Campus, ReplayOptions, replay
+from cdr_sim.closed_loop import closed_loop_replay
 
 SOURCE = 'campus_kinematic_replay'
 ROOT = Path(__file__).resolve().parents[1]
 DEFINITIONS = {
+    'std_msgs/ColorRGBA': 'float32 r\nfloat32 g\nfloat32 b\nfloat32 a\n',
+
     'std_msgs/Header': 'uint32 seq\ntime stamp\nstring frame_id\n',
     'geometry_msgs/Point': 'float64 x\nfloat64 y\nfloat64 z\n',
     'geometry_msgs/Vector3': 'float64 x\nfloat64 y\nfloat64 z\n',
@@ -36,7 +39,9 @@ SCHEMAS = {
     '/tf': ('tf2_msgs/TFMessage', 'geometry_msgs/TransformStamped[] transforms\n'),
     '/odom': ('nav_msgs/Odometry', 'std_msgs/Header header\nstring child_frame_id\ngeometry_msgs/PoseWithCovariance pose\ngeometry_msgs/TwistWithCovariance twist\n'),
     '/cdr01/path': ('nav_msgs/Path', 'std_msgs/Header header\ngeometry_msgs/PoseStamped[] poses\n'),
+    '/cdr01/planned_path': ('nav_msgs/Path', 'std_msgs/Header header\ngeometry_msgs/PoseStamped[] poses\n'),
     '/robot_description': ('std_msgs/String', 'string data\n'),
+    '/cdr01/dynamic_obstacle': ('visualization_msgs/Marker', 'std_msgs/Header header\nstring ns\nint32 id\nint32 type\nint32 action\ngeometry_msgs/Pose pose\ngeometry_msgs/Vector3 scale\nstd_msgs/ColorRGBA color\nduration lifetime\nbool frame_locked\ngeometry_msgs/Point[] points\nstd_msgs/ColorRGBA[] colors\nstring text\nstring mesh_resource\nbool mesh_use_embedded_materials\n'),
 }
 
 
@@ -70,12 +75,36 @@ def pose(frame: dict, yaw: float) -> bytes:
                        0.0, 0.0, math.sin(yaw / 2), math.cos(yaw / 2))
 
 
-def export_recording(output: Path, *, seed: int = 0, scenario: str = 'clear') -> int:
+def synthetic_obstacle_marker(index: int, ns: int, obstacle: dict) -> bytes:
+    """ROS1 Marker for synthetic ground-truth geometry, not real sensor data."""
+    x, y = obstacle['center_m']
+    r = obstacle['radius_m']
+    payload = header(index, ns) + string('synthetic_ground_truth')
+    payload += struct.pack('<iii', 0, 2, 0)  # id, SPHERE, ADD
+    payload += struct.pack('<7d', x, y, 0.38, 0, 0, 0, 1)
+    payload += struct.pack('<3d', 2*r, 2*r, 0.76)
+    payload += struct.pack('<4f', 0.95, 0.36, 0.13, 0.95)
+    payload += struct.pack('<ii?', 0, 0, False)
+    payload += struct.pack('<II', 0, 0)
+    payload += string('Modeled obstacle, NOT LiDAR') + string('')
+    payload += struct.pack('<?', False)
+    return payload
+
+
+def export_recording(output: Path, *, seed: int = 0, scenario: str = 'clear', world: str = 'campus') -> int:
     """Write indexed MCAP and return sample count. Deterministic replay timestamps start at 0."""
     from mcap.writer import Writer
     if type(seed) is not int or seed < 0:
         raise ValueError('seed must be a nonnegative integer')
-    result = replay(ReplayOptions(seed=seed, scenario=scenario))
+    if world not in ('campus', 'warehouse'):
+        raise ValueError('unknown world')
+    model_world = Campus(theme=world)
+    if scenario == 'reactive_obstacle':
+        result = closed_loop_replay(ReplayOptions(seed=seed), model_world)
+    else:
+        result = replay(ReplayOptions(seed=seed, scenario=scenario), campus=model_world)
+    source = (f'{world}_synthetic_reactive_replay' if scenario == 'reactive_obstacle'
+              else f'{world}_kinematic_replay')
     # The simulator can force its final frame at the same time as a sampled one.
     # Keep the final state for that timestamp, preserving strict per-topic order.
     frames = list({round(f['time_s'] * 1e9): f for f in result['frames']}.values())
@@ -87,24 +116,33 @@ def export_recording(output: Path, *, seed: int = 0, scenario: str = 'clear') ->
         writer.start(profile='ros1', library='delivery-robot-campus-exporter')
         channels = {}
         for topic, (name, body) in SCHEMAS.items():
+            if topic in ('/cdr01/dynamic_obstacle', '/cdr01/planned_path') and scenario != 'reactive_obstacle':
+                continue
             schema_id = writer.register_schema(name=name, encoding='ros1msg', data=ros_schema(body))
             channels[topic] = writer.register_channel(topic=topic, message_encoding='ros1', schema_id=schema_id,
-                metadata={'source': SOURCE, 'latching': '1' if topic == '/robot_description' else '0'})
+                metadata={'source': source, 'latching': '1' if topic == '/robot_description' else '0'})
         fields = {'timestamp_s': 'number', 'source': 'string', 'live': 'boolean', 'phase': 'string',
                   'status': 'string', 'reason': 'string', 'scenario': 'string', 'seed': 'integer',
                   'speed_mps': 'number', 'distance_m': 'number', 'energy_estimated_wh': 'number',
-                  'soc_estimated': 'number', 'energy_model': 'string'}
+                  'soc_estimated': 'number', 'energy_model': 'string',
+                  'world': 'string', 'sensor_model': 'string',
+                  'obstacle_range_m': 'number', 'minimum_clearance_m': 'number',
+                  'obstacle_detected': 'boolean', 'replans': 'integer',
+                  'collision_checked': 'boolean'}
         schema_id = writer.register_schema(name='cdr.DeliveryMission', encoding='jsonschema', data=json.dumps({
             'type': 'object', 'properties': {k: {'type': v} for k, v in fields.items()},
             'required': list(fields), 'additionalProperties': False}).encode())
         channels['/cdr01/mission'] = writer.register_channel(topic='/cdr01/mission', message_encoding='json', schema_id=schema_id,
-            metadata={'source': SOURCE, 'live': 'false', 'energy': 'modeled_not_measured'})
-        writer.add_metadata('delivery.provenance', {'source': SOURCE, 'live': 'false', 'ros2_native': 'false',
+            metadata={'source': source, 'world': world, 'live': 'false', 'energy': 'modeled_not_measured'})
+        writer.add_metadata('delivery.provenance', {'source': source, 'world': world,
+            'sensor_model': result.get('sensor_model', 'none'), 'live': 'false', 'ros2_native': 'false',
             'hardware_verified': 'false', 'gazebo_verified': 'false', 'robot_model': 'schematic_visual_proxy_not_validated_CAD'})
         def emit(topic, ns, data, seq=0):
             writer.add_message(channel_id=channels[topic], log_time=ns, publish_time=ns, sequence=seq, data=data)
         poses = []
         yaw = 0.0
+        active_route_index = 0
+        plan_history = result.get('routes', []) if scenario == 'reactive_obstacle' else []
         for index, frame in enumerate(frames):
             ns = round(frame['time_s'] * 1e9)
             if index + 1 < len(frames):
@@ -124,13 +162,34 @@ def export_recording(output: Path, *, seed: int = 0, scenario: str = 'clear') ->
             emit('/odom', ns, odom, index)
             poses.append(h + p)
             emit('/cdr01/path', ns, h + struct.pack('<I', len(poses)) + b''.join(poses), index)
+            # The planned A* path is NOT the odometry breadcrumb trail.
+            # Publish the most recently known plan at each frame (latched by
+            # repeated samples so seeking or opening new panels works).
+            if plan_history:
+                while (active_route_index + 1 < len(plan_history) and
+                       plan_history[active_route_index + 1]['time_s'] <= frame['time_s'] + 1e-8):
+                    active_route_index += 1
+                route_points = plan_history[active_route_index]['points']
+                future_poses = b''.join(
+                    h + pose({'x_m': x, 'y_m': y}, 0.0) for x, y in route_points
+                )
+                emit('/cdr01/planned_path', ns, h + struct.pack('<I', len(route_points)) + future_poses, index)
+            if scenario == 'reactive_obstacle':
+                emit('/cdr01/dynamic_obstacle', ns, synthetic_obstacle_marker(index, ns, result['obstacle']), index)
             final = index == len(frames)-1
-            mission = {'timestamp_s': frame['time_s'], 'source': SOURCE, 'live': False,
+            mission = {'timestamp_s': frame['time_s'], 'source': source, 'live': False,
                 'phase': frame['phase'], 'status': result['status'] if final else 'RUNNING',
                 'reason': (result['reason'] or '') if final else '', 'scenario': scenario, 'seed': seed,
                 'speed_mps': frame['speed_mps'], 'distance_m': frame['distance_m'],
                 'energy_estimated_wh': frame['energy_estimated_wh'], 'soc_estimated': frame['soc'],
-                'energy_model': 'estimated_not_measured'}
+                'energy_model': 'estimated_not_measured',
+                'world': world, 'sensor_model': result.get('sensor_model', 'none'),
+                'obstacle_range_m': frame.get('obstacle_range_m', -1.0),
+                'minimum_clearance_m': frame.get('minimum_clearance_m',
+                    result.get('minimum_sampled_clearance_m', -1.0)),
+                'obstacle_detected': frame.get('obstacle_detected', False),
+                'replans': frame.get('replans', result.get('replans', 0)),
+                'collision_checked': bool(result.get('collision_checked', False))}
             emit('/cdr01/mission', ns, json.dumps(mission, separators=(',', ':'), allow_nan=False).encode(), index)
         writer.finish()
     return len(frames)
@@ -140,9 +199,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--seed', type=int, default=0)
-    parser.add_argument('--scenario', choices=('clear', 'construction', 'sensor_dropout', 'estop'), default='clear')
+    parser.add_argument('--scenario', choices=('clear', 'construction', 'sensor_dropout', 'estop', 'reactive_obstacle'), default='clear')
+    parser.add_argument('--world', choices=('campus', 'warehouse'), default='campus')
     args = parser.parse_args()
-    count = export_recording(args.output, seed=args.seed, scenario=args.scenario)
+    count = export_recording(args.output, seed=args.seed, scenario=args.scenario, world=args.world)
     print(f'Exported {count} offline campus kinematic samples to {args.output}. Not live ROS2 or measured telemetry.')
 
 

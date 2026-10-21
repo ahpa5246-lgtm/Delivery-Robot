@@ -90,6 +90,16 @@ class Campus:
             fixtures=tuple(spec["worlds"][self.theme]["fixtures"])
         else:
             fixtures=()  # Custom miniature test maps do not inherit campus props.
+        # Each world has its *own* building geometry. Using the campus four
+        # wings in the warehouse generated invisible phantom collision zones.
+        # Explicit callers with custom buildings keep their geometry.
+        default_buildings = tuple(tuple(b["footprint_m"]) for b in spec["buildings"])
+        if self.theme == "warehouse" and self.buildings == default_buildings and (
+            abs(self.width-m["width_m"]) <= 1e-7 and abs(self.height-m["height_m"]) <= 1e-7
+        ):
+            structures = tuple(tuple(a["footprint_m"])
+                               for a in spec["worlds"]["warehouse"]["structural_obstacles"])
+            object.__setattr__(self, "buildings", structures)
         object.__setattr__(self, "_fixtures", fixtures)
         object.__setattr__(self, "_obstacles", self.buildings + tuple(
             tuple(f["footprint_m"]) for f in fixtures))
@@ -360,8 +370,8 @@ def replay(options: ReplayOptions = ReplayOptions(), campus: Campus | None = Non
 
     def frame(force: bool = False) -> None:
         if force or not frames or time_s-frames[-1]["time_s"] >= 0.79:
-            frames.append({"time_s": round(time_s, 2), "x_m": round(position[0], 3),
-                           "y_m": round(position[1], 3), "speed_mps": round(velocity, 3),
+            frames.append({"time_s": round(time_s, 2), "x_m": round(position[0], 6),
+                           "y_m": round(position[1], 6), "speed_mps": round(velocity, 3),
                            "soc": round(soc(), 6), "energy_estimated_wh": round(energy, 4),
                            "distance_m": round(distance, 3),
                            "phase": phase})
@@ -472,8 +482,8 @@ def replay(options: ReplayOptions = ReplayOptions(), campus: Campus | None = Non
                 break
             waypoint = route[1]
             step_v = min(options.speed_mps, velocity+options.accel_mps2*options.dt_s)
-            step = min(step_v*options.dt_s,
-                       hypot(waypoint[0]-position[0],waypoint[1]-position[1]))
+            to_waypoint = hypot(waypoint[0]-position[0], waypoint[1]-position[1])
+            step = min(step_v*options.dt_s, to_waypoint)
             if step < 1e-8:
                 status, reason, phase = "PAUSED_SAFE", "ZERO_PROGRESS", "PAUSED_SAFE"
                 event(phase, reason)
@@ -491,7 +501,12 @@ def replay(options: ReplayOptions = ReplayOptions(), campus: Campus | None = Non
             distance += step
             time_s += options.dt_s
             energy += step*options.drive_wh_per_m+options.base_power_w*options.dt_s/3600
-            frame()
+            # Record every turn/waypoint. Sparse straight-line interpolation
+            # across two different safe segments can cut a warehouse shelf
+            # corner, even though *actual* simulation microsteps were safe.
+            # These samples ensure that the MCAP poses themselves trace
+            # piecewise-safe straight segments at a higher precision.
+            frame(force=step >= to_waypoint - 1e-9)
             if soc() < options.reserve_soc:
                 status, reason, phase = "PAUSED_SAFE", "BATTERY_RESERVE_REACHED", "PAUSED_SAFE"
                 velocity = 0.0

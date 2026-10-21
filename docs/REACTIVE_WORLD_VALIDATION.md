@@ -1,0 +1,118 @@
+# Collision-aware delivery demonstration: evidence and limitations
+
+This development branch keeps Lichtblick as an **MCAP viewer**, not a simulator.
+Visual mesh triangles are not sent to the navigation algorithm by the browser.
+All route/physics decisions are produced before playback and then encoded into
+recordings. In particular, pause/seek never issues commands to hardware.
+
+## Map / rendering / replay consistency
+
+`world/campus_layout.json` is the explicit source of collision rectangles and
+robot radius, and drives offline A* and both Gazebo SDF static worlds.
+
+- **Campus:** `/recordings/campus-reactive.mcap` and
+  `/models/environment/native-campus.urdf`
+- **Warehouse:** `/recordings/warehouse-reactive.mcap` and
+  `/models/environment/native-logistics.urdf`
+- `/recordings/campus.mcap` remains an explicit **legacy clear-route** reference,
+  never a default source for the logistics view.
+
+In the warehouse, the formerly inherited campus wing rectangles have been
+removed. The source manifest now declares two structural wall footprints
+derived exactly from the rear and east wall visuals in the warehouse URDF.
+The warehouse Gazebo collision geometry and 2-D planner use those same
+footprints; this prevents invisible campus-building collision obstacles.
+
+The Environment view switch reloads the recording matching the chosen theme,
+then applies the camera and native URDF layer. Provenance metadata marks the
+exact collision world. In the Missions panel, **Collision verification** refers
+to the static + scenario-dynamic **2-D swept-disk test**, not 3-D Gazebo contact.
+Textures, canopies, windows and road markings remain visual-only.
+
+## Reacting to a modeled obstruction
+
+`cdr_sim/closed_loop.py` computes an offline closed-loop trace with:
+1. A reference A* path against the shared known 2-D world and conservative
+   robot-inflated collision rectangles.
+2. An initially unknown circular obstacle positioned on the nominal path, in
+   a trial scenario chosen to admit a feasible bypass.
+3. An idealized radial surface range measurement; the obstacle is inserted into
+   the **known** occupancy cells only after detection.
+4. A speed ramp and a bounded deceleration update each integration step:
+   `v_next = max(0, v_current - a_max dt)`. The required stopping distance
+   is `v²/(2a_max)`, plus one update step and the configured safety margin.
+5. A new A* plan only once speed reaches zero, followed by swept-segment
+   checks against **both** original static rectangles and the circular hazard.
+   If no safe route exists, the robot remains in `PAUSED_SAFE`.
+
+Both test files compare poses and route segments against geometry rather than
+only checking a reported success flag. The ROS1 `/cdr01/planned_path` topic publishes the current A* plan,
+updated at the first successful replan; the cyan planned trajectory can
+be visually compared with the orange `/cdr01/path` odometry history.
+These must not be conflated with one another.
+The synthetic obstacle is drawn from the
+recording's ROS1 visualization Marker topic
+`/cdr01/dynamic_obstacle`; it represents *simulated world truth*, **not**
+a measured LiDAR observation. The computed `obstacle_range_m` and
+`minimum_clearance_m` fields can be plotted during playback.
+
+No feature here claims calibrated wheel slip, IMU/LiDAR variance, sensor latency,
+robot localization error, force control or a real emergency-stop circuit.
+Estimated energy values are unchanged approximations.
+
+## Independent Gazebo physics acceptance
+
+The GitHub Actions `gazebo-headless.yml` installs Gazebo Harmonic within a
+ROS Jazzy container. It already checks robot movement and ROS2 bridging.
+The warehouse wall-contact smoke uses a **separate physics trial spawn**
+at (26,2) so its east wall is reachable during the test; the normal warehouse
+SDF and MCAP route still start from the (2,2) depot. The resulting Gazebo
+observation MCAP is labeled as a wall-contact test, not the delivery route.
+
+The test now records Gazebo SceneBroadcaster world-space `Pose_V` for the
+`cdr01` model, separately from wheel-integrated `/model/cdr01/odometry`.
+Only actual rigid-body world poses are used to check approaching the expected
+wall face, non-penetration, limited lateral drift and stationary final segment.
+Wheel odometry can increase during slip and is retained for diagnostics, not
+accepted as true body motion. The dedicated physics test worlds now use Gazebo
+Harmonic `TouchPlugin` attached to the actual SDF wall collision and
+`TriggeredPublisher` to publish `/model/cdr01/enable = false` whenever
+`/cdr_wall/touched` is true. The Gazebo DiffDrive source confirms that
+disabling the controller zeroes its target velocity and ignores subsequent
+positive commands. This is **contact-triggered actuator inhibition**, not
+pre-contact LiDAR avoidance or Nav2 replanning.
+
+The independent contact gate requires: real wall-contact Boolean event,
+world-coordinate chassis reaching but not penetrating the mapped wall,
+bounded lateral drift and stationary final pose. The command stimulus is
+finite and is *not* allowed to imply success on its own. We maintain physical
+test worlds separately so normal delivery Gazebo SDFs remain unchanged. Absence of this divergence
+or penetration of the wall keeps the workflow red.
+
+This is an independent headless physics **wall contact smoke test**, not a full
+validation of all obstacles, calibrated dynamics, Nav2 execution or a physics
+simulation of the newly injected dynamic hazard. Only after the independent Gazebo wall-contact gate passes, CI exports the
+simulator's **world-space chassis pose** to `campus_gazebo_verified.mcap` and
+`warehouse_gazebo_verified.mcap`. These MCAP files carry explicit provenance
+(`gazebo_harmonic_world_pose_verified`, ROS1-wire container, **simulated** world position)
+and unknown energy/battery values are null, not fabricated zero estimates.
+They show physics wall contact, not reactive Nav2 obstacle avoidance.
+The physical result is only verified if this specific workflow job and artifact pass. Failed or missing
+Gazebo evidence must not be represented as verified.
+
+## Reproduce
+
+```bash
+python3 -m unittest tests.test_closed_loop tests.test_reactive_mcap tests.test_world_collision_v4 -v
+bash scripts/setup_telemetry.sh
+bash scripts/start_telemetry.sh
+```
+
+Open the port 8080 and choose **Load matching reactive demo**. During playback
+inspect Perception, Planning and Missions; switching University campus /
+Logistics warehouse must change both the geometry and the MCAP source. For
+physics, inspect the separate GitHub Actions Gazebo Harmonic smoke workflow.
+
+The map is synthetic, not a surveyed campus. Gazebo CAD and visualization
+meshes need not have identical collision geometry. Do not report physically
+measured sensor data or field safety from these tests.

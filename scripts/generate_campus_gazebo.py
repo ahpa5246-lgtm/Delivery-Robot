@@ -18,7 +18,10 @@ from scripts.generate_gazebo_world import generate, child
 OUTPUT = ROOT / "simulation" / "campus_delivery.sdf"
 
 
-def construct(theme: str = "campus"):
+def construct(theme: str = "campus", *, wall_contact_test: bool = False):
+    # Contact-gated SDF tests are separate from the two delivery worlds.
+    if theme not in ("campus", "warehouse"):
+        raise ValueError("invalid world theme")
     # Gazebo's collision and the offline A* planner share the SAME rectangles.
     campus = Campus(theme=theme)
     source = generate()
@@ -34,11 +37,13 @@ def construct(theme: str = "campus"):
             world.remove(node)
 
     robot = world.find("./model[@name='cdr01']")
-    home = campus.stops["depot"]
+    # Warehouse contact trial starts 5.7m before the east wall, whereas
+    # the normal warehouse recording still starts at the depot (2,2).
+    home = ((26.0, 2.0) if theme == "warehouse" else (2.0, 2.0)) if wall_contact_test else campus.stops["depot"]
     robot.find("pose").text = f"{home[0]} {home[1]} 0 0 0 0"
 
     for index, (x0,y0,x1,y1) in enumerate(campus.buildings):
-        height = 2.8 if index < 3 else 0.8
+        height = (4.8 if theme == "warehouse" else (2.8 if index < 3 else 0.8))
         building = child(world, "model", name=f"building_{index}")
         child(building, "static", "true")
         child(building, "pose", f"{(x0+x1)/2} {(y0+y1)/2} {height/2} 0 0 0")
@@ -50,6 +55,30 @@ def construct(theme: str = "campus"):
         material=child(visual,"material")
         child(material,"ambient","0.19 0.29 0.34 1")
         child(material,"diffuse","0.25 0.42 0.48 1")
+
+    if wall_contact_test:
+        # Gazebo Harmonic TouchPlugin detects actual world-physics contact
+        # from the test building. TriggeredPublisher latches DiffDrive
+        # disabled: future positive commands are ignored until re-enabled.
+        # Neither system is inserted into normal campus/warehouse missions.
+        contact_system=child(world,"plugin",filename="gz-sim-contact-system",
+                             name="gz::sim::systems::Contact")
+        wall_index=0 if theme=="campus" else 1
+        wall=world.find(f"./model[@name='building_{wall_index}']")
+        touch=child(wall,"plugin",filename="gz-sim-touchplugin-system",
+                    name="gz::sim::systems::TouchPlugin")
+        child(touch,"target","cdr01")
+        child(touch,"namespace","cdr_wall")
+        child(touch,"time","0.001")
+        child(touch,"enabled","true")
+        child(touch,"create_contact_sensor_for_collision","true")
+        relay=child(world,"plugin",filename="gz-sim-triggered-publisher-system",
+                    name="gz::sim::systems::TriggeredPublisher")
+        trigger=child(relay,"input",type="gz.msgs.Boolean",topic="/cdr_wall/touched")
+        child(trigger,"match","data: true")
+        output=child(relay,"output",type="gz.msgs.Boolean",
+                     topic="/model/cdr01/enable")
+        output.text="data: false"
 
     heights={"tree":1.50,"bench":.74,"table":.85,"light":2.8,
              "bike_rack":.70,"shelf":2.15,"cargo":.93}
@@ -81,7 +110,9 @@ def construct(theme: str = "campus"):
         child(material,"ambient","0.14 0.75 0.57 1")
         child(material,"diffuse","0.24 0.81 0.67 1")
     ET.indent(sdf,space="  ")
-    output=OUTPUT if theme=="campus" else ROOT/"simulation"/"warehouse_delivery.sdf"
+    output = (ROOT/"simulation"/f"{theme}_collision_test.sdf" if wall_contact_test
+              else OUTPUT if theme=="campus"
+              else ROOT/"simulation"/"warehouse_delivery.sdf")
     output.parent.mkdir(parents=True,exist_ok=True)
     ET.ElementTree(sdf).write(output,encoding="utf-8",xml_declaration=True)
     return output
@@ -90,3 +121,6 @@ def construct(theme: str = "campus"):
 if __name__ == "__main__":
     for theme in ("campus","warehouse"):
         print("Wrote Gazebo world with authoritative collision fixtures:",construct(theme))
+    for theme in ("campus", "warehouse"):
+        print("Wrote contact-gated Gazebo physical challenge:",
+              construct(theme, wall_contact_test=True))

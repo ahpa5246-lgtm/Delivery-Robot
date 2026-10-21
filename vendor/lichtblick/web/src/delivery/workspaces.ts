@@ -9,6 +9,7 @@ import { LayoutData } from "@lichtblick/suite-base/context/CurrentLayoutContext/
 import { defaultPlaybackConfig } from "@lichtblick/suite-base/providers/CurrentLayoutProvider/reducers";
 import { ILayoutManager } from "@lichtblick/suite-base/services/ILayoutManager";
 import { Layout } from "@lichtblick/suite-base/services/ILayoutStorage";
+import { deliveryViewCamera } from "./viewPresets";
 
 const plot = (fields: string[], title: string) => ({
   title,
@@ -28,8 +29,20 @@ const plot = (fields: string[], title: string) => ({
   isSynced: true,
   sidebarDimension: 180,
 });
+const environmentLayer = (name: "campus" | "logistics", visible: boolean) => ({
+  deliveryEnvironmentVersion: 1,
+  layerId: "foxglove.Urdf" as const,
+  visible,
+  frameLocked: true,
+  label: name === "campus" ? "University campus · visual scenery" : "Logistics warehouse · visual scenery",
+  sourceType: "url" as const,
+  url: `/models/environment/native-${name}.urdf`,
+  framePrefix: "",
+  displayMode: "visual" as const,
+});
+
 const scene = {
-  followTf: "base_link",
+  followTf: "odom",
   followMode: "follow-position",
   scene: {
     backgroundColor: "#08090b",
@@ -37,11 +50,7 @@ const scene = {
     transforms: { showLabel: false, axisScale: 0.2, lineColor: "#4b5058" },
   },
   cameraState: {
-    distance: 4,
-    phi: 58,
-    thetaOffset: 45,
-    targetOffset: [0, 0, 0],
-    near: 0.05,
+    ...deliveryViewCamera.campus,
   },
   topics: {
     "/robot_description": { visible: false },
@@ -51,7 +60,14 @@ const scene = {
       lineWidth: 0.035,
       gradient: ["#e6a85c", "#8d663d"],
     },
+    "/cdr01/planned_path": {
+      visible: true,
+      type: "line",
+      lineWidth: 0.055,
+      gradient: ["#5bd5c5", "#118c81"],
+    },
     "/odom": { visible: false },
+    "/cdr01/dynamic_obstacle": { visible: true },
   },
   layers: {
     delivery_robot: {
@@ -65,9 +81,11 @@ const scene = {
       framePrefix: "",
       displayMode: "visual",
     },
+    delivery_campus: environmentLayer("campus", true),
+    delivery_logistics: environmentLayer("logistics", false),
     grid: {
       layerId: "foxglove.Grid",
-      visible: true,
+      visible: false,
       size: 30,
       divisions: 30,
       color: "#454951",
@@ -115,13 +133,13 @@ export const workspacePresets = [
     name: "Planning",
     data: data(split("3D!delivery", "Plot!distance"), {
       "3D!delivery": scene,
-      "Plot!distance": plot(["distance_m"], "Travelled distance · m"),
+      "Plot!distance": plot(["distance_m", "minimum_clearance_m"], "Distance and static/dynamic clearance · m"),
     }),
   },
   {
     name: "Controls",
     data: data(split("Plot!motion", "RawMessages!odom", 60), {
-      "Plot!motion": plot(["speed_mps"], "Recorded motion · no actuator commands"),
+      "Plot!motion": plot(["speed_mps", "obstacle_range_m"], "Speed and modeled sensor range"),
       "RawMessages!odom": { topicPath: "/odom" },
     }),
   },
@@ -166,29 +184,50 @@ export const workspacePresets = [
 ];
 
 // Rebase only our tagged bundled model. A user's other URDF URL stays untouched.
+// Migrate only Delivery-tagged panels. Preserve edits to cameras, topics and all
+// user-provided URDFs; do not reset or replace native saved layouts.
 export function rebaseDeliveryAssets(layoutData: LayoutData, baseUrl: string): LayoutData | undefined {
   let next: LayoutData | undefined;
+  const ownedAssets = [
+    ["delivery_robot", "/models/cdr01.urdf", "deliveryAssetVersion"],
+    ["delivery_campus", "/models/environment/native-campus.urdf", "deliveryEnvironmentVersion"],
+    ["delivery_logistics", "/models/environment/native-logistics.urdf", "deliveryEnvironmentVersion"],
+  ] as const;
   for (const [id, config] of Object.entries(layoutData.configById)) {
     if (!id.startsWith("3D!")) {
       continue;
     }
     const layers = config.layers as typeof scene.layers | undefined;
-    const model = layers?.delivery_robot;
-    if (model?.deliveryAssetVersion !== 1) {
+    if (layers?.delivery_robot?.deliveryAssetVersion !== 1) {
       continue;
     }
-    const current = new URL("/models/cdr01.urdf", baseUrl).href;
-    let oldPath: string;
-    try {
-      oldPath = new URL(model.url, baseUrl).pathname;
-    } catch {
-      continue;
+    const changed: Record<string, object> = {};
+    for (const [key, assetPath, marker] of ownedAssets) {
+      const layer = layers[key] as
+        | { url: string; deliveryAssetVersion?: number; deliveryEnvironmentVersion?: number }
+        | undefined;
+      const canonical = new URL(assetPath, baseUrl).href;
+      if (!layer && key !== "delivery_robot") {
+        changed[key] = { ...scene.layers[key], url: canonical };
+        continue;
+      }
+      if (!layer || layer[marker] !== 1) {
+        continue;
+      }
+      try {
+        if (new URL(layer.url, baseUrl).pathname !== assetPath || layer.url === canonical) {
+          continue;
+        }
+      } catch {
+        continue;
+      }
+      changed[key] = { ...layer, url: canonical };
     }
-    if (oldPath !== "/models/cdr01.urdf" || model.url === current) {
-      continue;
+    if (Object.keys(changed).length > 0) {
+      next ??= structuredClone(layoutData);
+      const editable = next.configById[id] as { layers: typeof scene.layers };
+      editable.layers = { ...editable.layers, ...changed } as typeof scene.layers;
     }
-    next ??= structuredClone(layoutData);
-    (next.configById[id]!.layers as typeof scene.layers).delivery_robot.url = current;
   }
   return next;
 }
@@ -214,6 +253,14 @@ export async function ensureWorkspaces(
                     delivery_robot: {
                       ...scene.layers.delivery_robot,
                       url: new URL("/models/cdr01.urdf", baseUrl).href,
+                    },
+                    delivery_campus: {
+                      ...scene.layers.delivery_campus,
+                      url: new URL("/models/environment/native-campus.urdf", baseUrl).href,
+                    },
+                    delivery_logistics: {
+                      ...scene.layers.delivery_logistics,
+                      url: new URL("/models/environment/native-logistics.urdf", baseUrl).href,
                     },
                   },
                 },

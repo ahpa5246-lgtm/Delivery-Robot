@@ -1,0 +1,62 @@
+name: Native campus and logistics scene acceptance
+on:
+  push:
+    paths:
+      - 'assets/world/native-*.urdf'
+      - 'vendor/lichtblick/web/src/delivery/**'
+      - 'vendor/lichtblick/web/webpack.config.ts'
+      - 'tests/native-platform-browser.cjs'
+      - 'tests/test_native_environment.py'
+      - '.github/workflows/native-scene.yml'
+  pull_request:
+    paths:
+      - 'assets/world/native-*.urdf'
+      - 'vendor/lichtblick/web/src/delivery/**'
+      - 'vendor/lichtblick/web/webpack.config.ts'
+      - 'tests/native-platform-browser.cjs'
+      - 'tests/test_native_environment.py'
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  scene:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify static scene geometry and local assets
+        run: python3 -m unittest discover -s tests -p 'test_native_environment.py' -v
+      - name: Install Chromium for real browser verification
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium
+      - name: Build original native Lichtblick renderer and modeled recording
+        run: bash scripts/setup_telemetry.sh
+      - name: Run native browser regression against bundled scene
+        run: |
+          node scripts/serve_telemetry.cjs >/tmp/delivery-native-scene.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:8080/models/environment/native-campus.urdf >/dev/null; then break; fi
+            sleep 2
+          done
+          curl -fIs http://127.0.0.1:8080/models/environment/world/cafe-table.dae
+          curl -fIs http://127.0.0.1:8080/models/environment/world/warehouse-shelf.dae
+          CHROMIUM_PATH=/usr/bin/chromium TELEMETRY_EVIDENCE_DIR=/tmp/native-scene-evidence \
+            node tests/native-platform-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-scene-browser-evidence
+          path: /tmp/native-scene-evidence/
+          if-no-files-found: ignore
