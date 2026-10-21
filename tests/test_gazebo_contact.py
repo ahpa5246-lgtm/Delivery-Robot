@@ -1,6 +1,7 @@
 """Synthetic fixture tests for parser/checker, not actual Gazebo evidence."""
 import unittest
 from scripts.check_gazebo_collision import parse_ground_truth, evaluate_contact
+from scripts.gazebo_contact_trigger import reached_contact
 
 
 def packet(i, x, *, y=2.0, name="cdr01"):
@@ -36,6 +37,16 @@ class ContactTests(unittest.TestCase):
         self.assertTrue(evaluate_contact(
             parse_ground_truth("".join(packet(i,2+i*.65) for i in range(50))),
             "campus")["passed_wall_collision_gate"] is False)
+
+    def test_live_contact_trigger_uses_actual_body_not_wheel_odom(self):
+        approaching=parse_ground_truth(packet(1,7.63))
+        touching=parse_ground_truth(packet(2,7.69))
+        escaped=parse_ground_truth(packet(3,9.0))
+        self.assertFalse(reached_contact(approaching,"campus"))
+        self.assertTrue(reached_contact(touching,"campus"))
+        self.assertFalse(reached_contact(escaped,"campus"))
+        warehouse_pose=parse_ground_truth(packet(2,31.40))
+        self.assertTrue(reached_contact(warehouse_pose,"warehouse"))
 
     def test_warehouse_wall_contact_and_fail_closed(self):
         good = parse_ground_truth("".join(

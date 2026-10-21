@@ -7,6 +7,7 @@ on:
       - 'cdr_sim/campus.py'
       - 'cdr_sim/closed_loop.py'
       - 'scripts/check_gazebo_collision.py'
+      - 'scripts/gazebo_contact_trigger.py'
       - 'tests/test_gazebo_contact.py'
       - 'scripts/export_gazebo_observation.py'
       - 'tests/test_gazebo_observation.py'
@@ -108,13 +109,38 @@ jobs:
               pose_observer=$!
               timeout 50 gz topic -e -t /model/cdr01/odometry > "/work/experiments/gazebo_smoke/${theme}_collision_odom.txt" 2>&1 &
               observer=$!
-              # gz-harmonic CLI has no '-r' repeat flag; send real Twist
-              # messages at ~10 Hz, as in the previously passing motion smoke.
+              # This is a finite wall challenge, not a command to grind the
+              # differential-drive wheels into a wall for 50 seconds. On the
+              # previous run contact happened near t+12s; prolonged pushing
+              # caused yaw drift and eventually drove the robot off pavement.
+              # Observe *actual* Pose_V in parallel and stop once the body
+              # reaches the wall. A missing trigger is a hard failure.
+              contact_reached=0
               for i in $(seq 1 230); do
-                gz topic -t /model/cdr01/cmd_vel -m gz.msgs.Twist -p "linear: {x: 0.65}"                   >> "/work/experiments/gazebo_smoke/${theme}_commands.log" 2>&1
+                gz topic -t /model/cdr01/cmd_vel -m gz.msgs.Twist -p "linear: {x: 0.65}" \
+                  >> "/work/experiments/gazebo_smoke/${theme}_commands.log" 2>&1
+                sleep 0.1
+                if [ $((i % 5)) -eq 0 ] && python3 /work/scripts/gazebo_contact_trigger.py \
+                  "/work/experiments/gazebo_smoke/${theme}_world_pose.txt" --world "$theme"; then
+                  contact_reached=1
+                  break
+                fi
+              done
+              if [ "$contact_reached" -ne 1 ]; then
+                echo "FAIL: ${theme} chassis never reached SDF wall contact" >&2
+                exit 1
+              fi
+              # Short positive command tests collision resistance. Then zero
+              # velocity requests remove wall pressure and prevent side slip.
+              for i in $(seq 1 4); do
+                gz topic -t /model/cdr01/cmd_vel -m gz.msgs.Twist -p "linear: {x: 0.65}" >/dev/null 2>&1
                 sleep 0.1
               done
-              sleep 3
+              for i in $(seq 1 30); do
+                gz topic -t /model/cdr01/cmd_vel -m gz.msgs.Twist -p "linear: {x: 0}" >/dev/null 2>&1
+                sleep 0.1
+              done
+              sleep 2
               kill $observer 2>/dev/null || true
               kill $pose_observer 2>/dev/null || true
               wait $observer 2>/dev/null || true
