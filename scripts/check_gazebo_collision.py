@@ -32,7 +32,10 @@ def _blocks(raw: str, token: str):
 
 
 def _number(blob: str, field: str, default: float = 0.0) -> float:
-    found = re.search(r"(?m)^\s*" + re.escape(field) + r":\s*([-+0-9.eE]+)", blob)
+    # Protobuf text may print several scalar fields on the same line
+    # (and real Gazebo frequently prints one per line). Parse either form.
+    found = re.search(r"(?<![A-Za-z0-9_])" + re.escape(field)
+                      + r":\s*([-+0-9.eE]+)", blob)
     return float(found.group(1)) if found else default
 
 
