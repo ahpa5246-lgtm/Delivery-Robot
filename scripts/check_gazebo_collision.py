@@ -128,6 +128,12 @@ def wheel_odometry_displacement(raw: str) -> float | None:
     return positions[-1]-positions[0]
 
 
+def physical_contact_event_seen(raw: str) -> bool:
+    # /cdr_wall/touched is only emitted by Gazebo TouchPlugin attached to
+    # the mapped SDF collision wall, never by wheel odometry or an MCAP mock.
+    return re.search(r"(?m)^\s*data:\s*true\b", raw) is not None
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("odometry", type=Path, help="diagnostic wheel-integrated odometry only")
@@ -135,6 +141,8 @@ def main() -> None:
     p.add_argument("--world", choices=("campus","warehouse"), required=True)
     p.add_argument("--pose-file", type=Path, required=True,
                    help="Gazebo /world/campus_test/pose/info, not wheel odometry")
+    p.add_argument("--contact-file", type=Path, required=True,
+                   help="Gazebo TouchPlugin wall contact event, not an inferred stop")
     args = p.parse_args()
     pose = parse_ground_truth(args.pose_file.read_text(errors="replace"))
     result = evaluate_contact(pose,args.world)
@@ -148,9 +156,14 @@ def main() -> None:
     result["wheel_odom_forward_m"] = wheel_motion
     result["actual_body_forward_m"] = body_motion
     result["wheel_minus_body_forward_m"] = measured_slip
-    result["contact_resistance_proven"] = (measured_slip is not None and measured_slip >= .20)
+    result["contact_event_seen"] = physical_contact_event_seen(
+        args.contact_file.read_text(errors="replace"))
+    # A touch sensor *event* together with a nonpenetrating and stopped
+    # chassis is stronger evidence than a large wheel slip alone. Disabling
+    # DiffDrive at first contact may eliminate most wheel/body divergence.
+    result["contact_resistance_proven"] = result["contact_event_seen"]
     result["passed_wall_collision_gate"] = (
-        result["passed_wall_collision_gate"] and result["contact_resistance_proven"])
+        result["passed_wall_collision_gate"] and result["contact_event_seen"])
     args.summary.write_text(json.dumps(result,indent=2)+"\n")
     print(json.dumps(result))
     if not result["passed_wall_collision_gate"]:

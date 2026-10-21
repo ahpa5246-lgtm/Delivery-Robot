@@ -73,17 +73,20 @@ The test now records Gazebo SceneBroadcaster world-space `Pose_V` for the
 `cdr01` model, separately from wheel-integrated `/model/cdr01/odometry`.
 Only actual rigid-body world poses are used to check approaching the expected
 wall face, non-penetration, limited lateral drift and stationary final segment.
-Wheel odometry may continue increasing during contact and cannot prove
-collision alone. The new gate also requires measurable divergence between
-wheel-integrated progress and actual chassis progress while a short positive
-command is still applied. The headless wall-contact **test stimulus** now sends 60 finite positive
-velocity requests followed by 30 explicit zero-velocity requests. This
-is deliberately not a sensor-driven Nav2 controller: the older live text-file
-monitoring method buffered pose messages too late, allowing the robot to slip
-off the pavement. The **post-run** safety gate must still prove physical
-contact using world-space body poses and wheel/body divergence. If the
-limited stimulus stops before reaching the wall, or if the robot penetrates
-the wall or falls, the test fails. Absence of this divergence
+Wheel odometry can increase during slip and is retained for diagnostics, not
+accepted as true body motion. The dedicated physics test worlds now use Gazebo
+Harmonic `TouchPlugin` attached to the actual SDF wall collision and
+`TriggeredPublisher` to publish `/model/cdr01/enable = false` whenever
+`/cdr_wall/touched` is true. The Gazebo DiffDrive source confirms that
+disabling the controller zeroes its target velocity and ignores subsequent
+positive commands. This is **contact-triggered actuator inhibition**, not
+pre-contact LiDAR avoidance or Nav2 replanning.
+
+The independent contact gate requires: real wall-contact Boolean event,
+world-coordinate chassis reaching but not penetrating the mapped wall,
+bounded lateral drift and stationary final pose. The command stimulus is
+finite and is *not* allowed to imply success on its own. We maintain physical
+test worlds separately so normal delivery Gazebo SDFs remain unchanged. Absence of this divergence
 or penetration of the wall keeps the workflow red.
 
 This is an independent headless physics **wall contact smoke test**, not a full

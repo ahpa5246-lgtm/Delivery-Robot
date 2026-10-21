@@ -49,6 +49,20 @@ class CampusSDFTests(unittest.TestCase):
         self.assertEqual([float(v) for v in special.find(
             "./world/model[@name='cdr01']/pose").text.split()[:2]],[26,2])
 
+    def test_contact_gate_only_in_physics_trials(self):
+        for theme in ("campus", "warehouse"):
+            regular=ET.parse(construct(theme)).getroot().find("world")
+            special=ET.parse(construct(theme,wall_contact_test=True)).getroot().find("world")
+            self.assertEqual(len(regular.findall(".//plugin[@name='gz::sim::systems::TouchPlugin']")),0)
+            wall_index=0 if theme=="campus" else 1
+            wall=special.find(f"./model[@name='building_{wall_index}']")
+            touch=wall.find("./plugin[@name='gz::sim::systems::TouchPlugin']")
+            self.assertIsNotNone(touch)
+            self.assertEqual(touch.findtext("create_contact_sensor_for_collision"),"true")
+            relay=special.find("./plugin[@name='gz::sim::systems::TriggeredPublisher']")
+            self.assertEqual(relay.findtext("output"),"data: false")
+            self.assertEqual(relay.find("output").attrib["topic"],"/model/cdr01/enable")
+
     def test_every_visible_solid_fixture_has_gazebo_collision_from_manifest(self):
         for theme in ("campus","warehouse"):
             campus=Campus(theme=theme)

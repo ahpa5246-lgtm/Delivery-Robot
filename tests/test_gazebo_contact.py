@@ -1,6 +1,6 @@
 """Synthetic fixture tests for parser/checker, not actual Gazebo evidence."""
 import unittest
-from scripts.check_gazebo_collision import parse_ground_truth, evaluate_contact, wheel_odometry_displacement
+from scripts.check_gazebo_collision import parse_ground_truth, evaluate_contact, wheel_odometry_displacement, physical_contact_event_seen
 from scripts.gazebo_contact_trigger import reached_contact
 
 
@@ -60,6 +60,11 @@ pose {{ position {{ x: {distance} y: 0 }} }}
         self.assertIsNone(wheel_odometry_displacement(""))
         # An ideal zero-slip preplanned stop cannot establish wall contact.
         self.assertLess(0, wheel_odometry_displacement(wheel)-5.685)
+
+    def test_requires_real_contact_boolean(self):
+        self.assertTrue(physical_contact_event_seen("data: true\\n".replace("\\n","\n")))
+        self.assertFalse(physical_contact_event_seen("data: false\n"))
+        self.assertFalse(physical_contact_event_seen(""))
 
     def test_warehouse_wall_contact_and_fail_closed(self):
         good = parse_ground_truth("".join(

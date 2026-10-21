@@ -19,8 +19,9 @@ OUTPUT = ROOT / "simulation" / "campus_delivery.sdf"
 
 
 def construct(theme: str = "campus", *, wall_contact_test: bool = False):
-    if wall_contact_test and theme != "warehouse":
-        raise ValueError("dedicated wall contact scenario is for warehouse only")
+    # Contact-gated SDF tests are separate from the two delivery worlds.
+    if theme not in ("campus", "warehouse"):
+        raise ValueError("invalid world theme")
     # Gazebo's collision and the offline A* planner share the SAME rectangles.
     campus = Campus(theme=theme)
     source = generate()
@@ -55,6 +56,30 @@ def construct(theme: str = "campus", *, wall_contact_test: bool = False):
         child(material,"ambient","0.19 0.29 0.34 1")
         child(material,"diffuse","0.25 0.42 0.48 1")
 
+    if wall_contact_test:
+        # Gazebo Harmonic TouchPlugin detects actual world-physics contact
+        # from the test building. TriggeredPublisher latches DiffDrive
+        # disabled: future positive commands are ignored until re-enabled.
+        # Neither system is inserted into normal campus/warehouse missions.
+        contact_system=child(world,"plugin",filename="gz-sim-contact-system",
+                             name="gz::sim::systems::Contact")
+        wall_index=0 if theme=="campus" else 1
+        wall=world.find(f"./model[@name='building_{wall_index}']")
+        touch=child(wall,"plugin",filename="gz-sim-touchplugin-system",
+                    name="gz::sim::systems::TouchPlugin")
+        child(touch,"target","cdr01")
+        child(touch,"namespace","cdr_wall")
+        child(touch,"time","0.001")
+        child(touch,"enabled","true")
+        child(touch,"create_contact_sensor_for_collision","true")
+        relay=child(world,"plugin",filename="gz-sim-triggered-publisher-system",
+                    name="gz::sim::systems::TriggeredPublisher")
+        trigger=child(relay,"input",type="gz.msgs.Boolean",topic="/cdr_wall/touched")
+        child(trigger,"match","data: true")
+        output=child(relay,"output",type="gz.msgs.Boolean",
+                     topic="/model/cdr01/enable")
+        output.text="data: false"
+
     heights={"tree":1.50,"bench":.74,"table":.85,"light":2.8,
              "bike_rack":.70,"shelf":2.15,"cargo":.93}
     for fixture in campus.fixtures:
@@ -85,7 +110,7 @@ def construct(theme: str = "campus", *, wall_contact_test: bool = False):
         child(material,"ambient","0.14 0.75 0.57 1")
         child(material,"diffuse","0.24 0.81 0.67 1")
     ET.indent(sdf,space="  ")
-    output = (ROOT/"simulation"/"warehouse_collision_test.sdf" if wall_contact_test
+    output = (ROOT/"simulation"/f"{theme}_collision_test.sdf" if wall_contact_test
               else OUTPUT if theme=="campus"
               else ROOT/"simulation"/"warehouse_delivery.sdf")
     output.parent.mkdir(parents=True,exist_ok=True)
@@ -96,5 +121,6 @@ def construct(theme: str = "campus", *, wall_contact_test: bool = False):
 if __name__ == "__main__":
     for theme in ("campus","warehouse"):
         print("Wrote Gazebo world with authoritative collision fixtures:",construct(theme))
-    print("Wrote dedicated warehouse east-wall physical challenge:",
-          construct("warehouse", wall_contact_test=True))
+    for theme in ("campus", "warehouse"):
+        print("Wrote contact-gated Gazebo physical challenge:",
+              construct(theme, wall_contact_test=True))
