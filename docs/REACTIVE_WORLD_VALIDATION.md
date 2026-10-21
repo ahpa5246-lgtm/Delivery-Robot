@@ -69,16 +69,18 @@ at (26,2) so its east wall is reachable during the test; the normal warehouse
 SDF and MCAP route still start from the (2,2) depot. The resulting Gazebo
 observation MCAP is labeled as a wall-contact test, not the delivery route.
 
-The new test additionally loads the two manifest-derived SDF worlds, drives
-CDR-01 toward the **first actual SDF building collision shape** and checks that
-the odometry approaches but does not penetrate its x=8 m wall.
+The test now records Gazebo SceneBroadcaster world-space `Pose_V` for the
+`cdr01` model, separately from wheel-integrated `/model/cdr01/odometry`.
+Only actual rigid-body world poses are used to check approaching the expected
+wall face, non-penetration, limited lateral drift and stationary final segment.
+Wheel odometry may continue increasing during contact and cannot prove collision.
 
 This is an independent headless physics **wall contact smoke test**, not a full
 validation of all obstacles, calibrated dynamics, Nav2 execution or a physics
 simulation of the newly injected dynamic hazard. Only after the independent Gazebo wall-contact gate passes, CI exports the
-simulator's raw odometry to `campus_gazebo_verified.mcap` and
+simulator's **world-space chassis pose** to `campus_gazebo_verified.mcap` and
 `warehouse_gazebo_verified.mcap`. These MCAP files carry explicit provenance
-(`gazebo_harmonic_observation`, ROS1-wire container, **simulated** odometry)
+(`gazebo_harmonic_world_pose_verified`, ROS1-wire container, **simulated** world position)
 and unknown energy/battery values are null, not fabricated zero estimates.
 They show physics wall contact, not reactive Nav2 obstacle avoidance.
 The physical result is only verified if this specific workflow job and artifact pass. Failed or missing
