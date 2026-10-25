@@ -1,5 +1,33 @@
 # Delivery-Robot — Campus Autonomous Delivery Robot (CDR-01)
 
+## Download, setup and project overview
+
+Campus delivery robot simulation and telemetry workspaces.
+
+Planar missions; obstacle-aware campus model; modeled MCAP recordings; native Lichtblick workspace.
+
+![Project workflow illustration](docs/project-overview.svg)
+
+[Download source ZIP](https://github.com/ahpa5246-lgtm/Delivery-Robot/archive/refs/heads/main.zip) · [Changes and branches](https://github.com/ahpa5246-lgtm/Delivery-Robot/branches) · [Verification notes](docs/QUALITY_REVIEW.md)
+
+The ZIP contains source code. Installation steps and external runtime requirements are listed below.
+
+```bash
+git clone https://github.com/ahpa5246-lgtm/Delivery-Robot.git
+cd Delivery-Robot
+```
+
+From the repository directory:
+
+```text
+python -m venv .venv
+# Activate .venv before installing packages.
+python scripts/serve_dashboard.py
+```
+
+The diagram is a project illustration. Test results and runtime limitations are recorded in [the review](docs/QUALITY_REVIEW.md); it is not a production-readiness certification.
+
+
 ## Native Lichtblick platform (development branch)
 
 The actual MPL-2.0 Lichtblick React engine is included as ordinary source files in
@@ -200,3 +228,4 @@ The Garden mode now opens the *robot-inside-Garden* engine at `/robot-garden` di
 ### Garden Gazebo physics (experimental, recorded)
 
 A genuine headless Gazebo flat-pad physics experiment can now be recorded and source-labeled inside the 3D Gaussian Garden. The main dashboard offers **REPLAY RECORDED GAZEBO TRAJECTORY** once a user-selected Garden origin and experimental run exist. This does **not** simulate the real lawn or hedges as collision objects. See [run instructions](docs/GARDEN_PHYSICS_PIPELINE.md). The archive `assets/gaussian-garden.zip` stays out of Git.
+
